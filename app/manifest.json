@@ -1,0 +1,66 @@
+{
+	"manifest_version": 2,
+
+	"name": "Youtube Music App",
+	"description": "Runs your music in the \"watch later\" playlist",
+	"version": "1.0.0",
+
+	"app": {
+		"background": {
+			"scripts": [ "background.js" ]
+		}
+	},
+
+	"commands": {
+		"pausePlay": {
+			"suggested_key": {
+				"default": "Shift+Alt+P"
+			},
+			"description": "Pause or play the current video",
+			"global": true
+		},
+		"raiseVolume": {
+			"suggested_key": {
+				"default": "Shift+Alt+R" 
+			},
+			"description": "Raise the volume",
+			"global": true
+		},
+		"lowerVolume": {
+			"suggested_key": {
+				"default": "Shift+Alt+L" 
+			},
+			"description": "Lower the volume",
+			"global": true
+		},
+		"getSong": {
+			"suggested_key": {
+				"default": "Shift+Alt+F"
+			},
+			"description": "Focuses the widow",
+			"global": true
+		},
+		"launch": {
+			"description": "Launches the app",
+			"global": true
+		}
+	},
+
+	"icons": {
+		"128": "icons/128.png",
+		"48": "icons/48.png",
+		"16": "icons/16.png"
+	},
+
+	"webview": {
+		"partitions": [{
+			"name": "static",
+			"accessible_resources": ["*"]
+		}]
+	},
+
+	"permissions": [
+		"storage",
+		"webview"
+	]
+}

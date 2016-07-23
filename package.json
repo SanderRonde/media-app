@@ -1,0 +1,9 @@
+{
+  "name": "youtube-music-app",
+  "version": "1.0.0",
+  "devDependencies": {
+    "grunt": "*",
+    "grunt-contrib-copy": "*",
+    "grunt-contrib-uglify":  "*" 
+  }
+}

@@ -1,0 +1,36 @@
+.addContainer {
+	display: none;
+}
+
+video {
+	width: 100vw;
+	height: calc(100vh - 15px);
+}
+
+#player-api {
+	width: 100vw;
+	height: calc(100vh - 15px);
+	position: fixed;
+	border: 20px solid white;
+	left: -20px;
+	top: -20px;
+	right: 0;
+	bottom: 0;
+}
+
+#player {
+	max-width: none!important;
+}
+
+#masthead-positioner {
+	display: none;
+}
+
+.ytp-chrome-bottom {
+	width: calc(100vw - 40px);
+	left: 12px;
+}
+
+.ytp-tooltip {
+	transform: translate(100px, 100px);
+}
