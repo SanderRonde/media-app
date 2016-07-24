@@ -20,5 +20,15 @@ chrome.commands.onCommand.addListener((cmd) => {
 		case 'launch':
 			launch();
 			break;
+		case 'lowerVolume':
+			chrome.runtime.sendMessage({
+				cmd: 'lowerVolume'
+			});
+			break;
+		case 'raiseVolume':
+			chrome.runtime.sendMessage({
+				cmd: 'raiseVolume'
+			});
+			break;
 	}
 });

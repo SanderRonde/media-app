@@ -1,21 +1,31 @@
-.addContainer {
+
+html {
+	overflow: hidden;
+}
+.ad-container {
 	display: none;
 }
 
+.ytp-chrome-bottom {
+	min-width: calc(100vh - 44px);
+}
+
 video {
-	width: 100vw;
-	height: calc(100vh - 15px);
+	min-width: 100vw;
+	min-height: calc(100vh - 5px);
+	left: 0!important;
 }
 
 #player-api {
-	width: 100vw;
-	height: calc(100vh - 15px);
 	position: fixed;
 	border: 20px solid white;
 	left: -20px;
-	top: -20px;
+	top: -30px;
 	right: 0;
 	bottom: 0;
+	margin-left: 0;
+	min-width: 100vw;
+	min-height: calc(100vh - 5px);
 }
 
 #player {
@@ -26,11 +36,52 @@ video {
 	display: none;
 }
 
-.ytp-chrome-bottom {
-	width: calc(100vw - 40px);
-	left: 12px;
+#masthead-positioner-height-offset {
+	display: none;
 }
 
-.ytp-tooltip {
-	transform: translate(100px, 100px);
+#player-playlist, #content, #footer-container, #feed-privacy-lb {
+	display: none;
+}
+
+#yt-ca-volumeBar {
+	pointer-events: none;
+	transition: opacity 200ms ease-in-out, transform 200ms ease-in-out;
+	opacity: 0;
+	transform: translateY(50px);
+	position: fixed;
+    top: calc(((100vh / 3) * 2) - 12.5px);
+    left: calc((100vw / 2) - 250px);
+    width: 500px;
+    height: 25px;
+    z-index: 1000000000000000000000;
+    border: 5px solid #F44336;
+    color: white;
+    font-size: 175%;
+    font-weight: bolder;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+#yt-ca-volumeBar.visible {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+#yt-ca-volumeBarBar {
+	height: 100%;
+    width: 100%;
+    position: absolute;
+    background-color: #F44336;
+	transform: scaleX(0.5);
+    transform-origin: 0 0;
+	transition: transform 50ms ease-in;
+	z-index: -1;
+	top: 0;
+}
+
+#yt-ca-volumeBarNumber {
+	text-align: center;
+    position: relative;
+    height: 100%;
+	opacity: 10;
 }
