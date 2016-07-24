@@ -69,17 +69,28 @@ function sendMessageToPlaylistSaver(message, cb) {
 chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 	switch (message.cmd) {
 		case 'getUrl':
-			sendMessageToPlaylistSaver({
-				cmd: 'getUrl'
-			}, (response) => {
-				respond(response.url);
-			});
+			try {
+				sendMessageToPlaylistSaver({
+					cmd: 'getUrl'
+				}, (response) => {
+					respond(response.url);
+				});
+			} catch(e) {
+				chrome.storage.sync.get((data) => {
+					respond(data.url);
+				});
+			}
 			break;
 		case 'setUrl':
-			port.postMessage({
-				cmd: 'setUrl',
-				url: message.url
-			});
+			try {
+				port.postMessage({
+					cmd: 'setUrl',
+					url: message.url
+				});
+			} catch (e) {}
+			break;
+		case 'updateColor':
+			chrome.app.window.get('mainwindow').contentWindow.updateColors(message.color);
 			break;
 	}
 });

@@ -69,6 +69,7 @@ function addRuntimeListeners(view) {
 }
 
 function addViewListeners(view) {
+
 	view.addContentScripts([{
 		name: 'js',
 		matches: ['*://*/*'],
@@ -86,126 +87,131 @@ function addViewListeners(view) {
 	}]);
 
 	function loadResizer() {
-		hacksecute(view, () => {
-			if (window.exuectedYTCA) {
-				return;
-			}
-			window.exuectedYTCA = true;
-
-			const player = document.querySelector('.html5-video-player');
-			const playerApi = document.getElementById('player-api');
-			const volumeBar = document.createElement('div');
-			const volumeBarBar = document.createElement('div');
-			const volumeBarNumber = document.createElement('div');
-			volumeBar.id = 'yt-ca-volumeBar';
-			volumeBarBar.id = 'yt-ca-volumeBarBar';
-			volumeBarNumber.id = 'yt-ca-volumeBarNumber';
-
-			let volumeBarTimeout = null;
-
-			volumeBar.appendChild(volumeBarNumber);
-			volumeBar.appendChild(volumeBarBar);
-			document.body.appendChild(volumeBar);
-
-			function prepareVideo() {
-				player.setPlaybackQuality('hd1080');
-				if (player.getPlaybackQuality() !== 'hd1080') {
-					player.setPlaybackQuality('hd720');
+		if (false) { //TODO check for ads
+			hacksecute(view, () => {
+				window.location.reload();
+			});
+		} else {
+			hacksecute(view, () => {
+				if (window.exuectedYTCA) {
+					return;
 				}
+				window.exuectedYTCA = true;
 
-				setTimeout(() => {
-					if (document.querySelector('.ytp-size-button')
-						.getAttribute('title') === 'Theatermodus') {
-						function resizeWhenReady() {
-							if (player.getPlayerState() === 3) {
-								window.setTimeout(resizeWhenReady, 500);
-							} else {
-								player.setSizeStyle(true, true);
-							}
-						}
-						resizeWhenReady();
+				const player = document.querySelector('.html5-video-player');
+				const playerApi = document.getElementById('player-api');
+				const volumeBar = document.createElement('div');
+				const volumeBarBar = document.createElement('div');
+				const volumeBarNumber = document.createElement('div');
+				volumeBar.id = 'yt-ca-volumeBar';
+				volumeBarBar.id = 'yt-ca-volumeBarBar';
+				volumeBarNumber.id = 'yt-ca-volumeBarNumber';
+
+				let volumeBarTimeout = null;
+
+				volumeBar.appendChild(volumeBarNumber);
+				volumeBar.appendChild(volumeBarBar);
+				document.body.appendChild(volumeBar);
+
+				function prepareVideo() {
+					player.setPlaybackQuality('hd1080');
+					if (player.getPlaybackQuality() !== 'hd1080') {
+						player.setPlaybackQuality('hd720');
 					}
-					console.log('after');
-				}, 2500);
-			}
 
-			prepareVideo();
-
-			function updateSizes() {
-				playerApi.style.width = window.innerWidth + 'px';
-				playerApi.style.height = (window.innerHeight - 15) + 'px';
-
-				player.setSize();
-
-				if (document.querySelector('.ytp-size-button')
-						.getAttribute('title') === 'Theatermodus') {
-					player.setSizeStyle(true, true);
-				}
-			}
-
-			updateSizes();
-			window.addEventListener('resize', updateSizes);
-
-			//Code that has to be executed "inline"
-			function increaseVolume() {
-				let vol = player.getVolume();
-				if (player.isMuted()) {
-					//Treat volume as 0
-					vol = 0;
-					player.unMute();
+					setTimeout(() => {
+						if (document.querySelector('.ytp-size-button')
+							.getAttribute('title') === 'Theatermodus') {
+							function resizeWhenReady() {
+								if (player.getPlayerState() === 3) {
+									window.setTimeout(resizeWhenReady, 500);
+								} else {
+									player.setSizeStyle(true, true);
+								}
+							}
+							resizeWhenReady();
+						}
+					}, 2500);
 				}
 
-				vol += 5;
-				vol = (vol > 100 ? 100 : vol);
-				player.setVolume(vol);
-			}
+				prepareVideo();
 
-			function lowerVolume() {
-				let vol = player.getVolume();
-				if (!player.isMuted()) {
-					vol -= 5;
-					
-					vol = (vol < 0 ? 0 : vol);
+				function updateSizes() {
+					playerApi.style.width = window.innerWidth + 'px';
+					playerApi.style.height = (window.innerHeight - 15) + 'px';
+
+					player.setSize();
+
+					if (document.querySelector('.ytp-size-button')
+							.getAttribute('title') === 'Theatermodus') {
+						player.setSizeStyle(true, true);
+					}
+				}
+
+				updateSizes();
+				window.addEventListener('resize', updateSizes);
+
+				//Code that has to be executed "inline"
+				function increaseVolume() {
+					let vol = player.getVolume();
+					if (player.isMuted()) {
+						//Treat volume as 0
+						vol = 0;
+						player.unMute();
+					}
+
+					vol += 5;
+					vol = (vol > 100 ? 100 : vol);
 					player.setVolume(vol);
 				}
-			}
 
-			function showVolumeBar() {
-				const volume = player.getVolume()
-				localStorage.setItem('volume', volume);
-				volumeBarNumber.innerHTML = volume;
-				volumeBarBar.style.transform = `scaleX(${volume / 100})`;
-				volumeBar.classList.add('visible');
-				if (volumeBarTimeout !== null) {
-					window.clearTimeout(volumeBarTimeout);
+				function lowerVolume() {
+					let vol = player.getVolume();
+					if (!player.isMuted()) {
+						vol -= 5;
+						
+						vol = (vol < 0 ? 0 : vol);
+						player.setVolume(vol);
+					}
 				}
-				volumeBarTimeout = window.setTimeout(() => {
-					volumeBar.classList.remove('visible');
-					volumeBarTimeout = null;
-				}, 2000);
-			}
 
-			function onScroll(isDown) {
-				if (isDown) {
-					lowerVolume();
-				} else {
-					increaseVolume();
+				function showVolumeBar() {
+					const volume = player.getVolume()
+					localStorage.setItem('volume', volume);
+					volumeBarNumber.innerHTML = volume;
+					volumeBarBar.style.transform = `scaleX(${volume / 100})`;
+					volumeBar.classList.add('visible');
+					if (volumeBarTimeout !== null) {
+						window.clearTimeout(volumeBarTimeout);
+					}
+					volumeBarTimeout = window.setTimeout(() => {
+						volumeBar.classList.remove('visible');
+						volumeBarTimeout = null;
+					}, 2000);
 				}
-				showVolumeBar();
-			}
 
-			function addListeners() {
-				var videoEl = document.querySelector('video');
-				videoEl.addEventListener('wheel', (e) => {
-					onScroll(e.deltaY > 0);
-				});
-				let prevVolume = localStorage.getItem('volume');
-				prevVolume = (prevVolume === 0 ? 0 : prevVolume || 100);
-				player.setVolume(prevVolume);
-			}
+				function onScroll(isDown) {
+					if (isDown) {
+						lowerVolume();
+					} else {
+						increaseVolume();
+					}
+					showVolumeBar();
+				}
 
-			addListeners();
-		});
+				function addListeners() {
+					var videoEl = document.querySelector('video');
+					videoEl.addEventListener('wheel', (e) => {
+						onScroll(e.deltaY > 0);
+					});
+					let prevVolume = localStorage.getItem('volume');
+					prevVolume = (prevVolume === 0 ? 0 : prevVolume || 100);
+					player.setVolume(prevVolume);
+				}
+
+				addListeners();
+			});
+		}
 	}
 
 	view.addEventListener('contentload', (e) => {
@@ -240,6 +246,63 @@ function setup(url) {
 	document.body.appendChild(view);
 }
 
+function setupMenuButtons() {
+	const app = chrome.app.window.current();
+	const titleBar = document.querySelector('#titleBar');
+
+	function updateButtonsState() {
+		if (app.isMaximized()) {
+			titleBar.classList.add('fullscreen');
+		} else {
+			titleBar.classList.remove('fullscreen');
+		}
+	}
+
+	app.onMaximized.addListener(updateButtonsState);
+	app.onRestored.addListener(updateButtonsState);
+	window.addEventListener('focus', () => {
+		titleBar.classList.add('focused');
+	});
+	window.addEventListener('blur', () => {
+		titleBar.classList.remove('focused');
+	});
+
+	document.querySelector('#minimize').addEventListener('click', () => {
+		app.minimize();
+	});
+	document.querySelector('#maximize').addEventListener('click', () => {
+		if (app.isMaximized()) {
+			app.restore();
+		} else {
+			app.maximize();
+		}
+	});
+	document.querySelector('#close').addEventListener('click', () => {
+		//Save progress
+		const webviewUrl = document.querySelector('#mainView').executeScript({
+			code: `(${(() => {
+				const vidId = location.href.split('v=')[1].split('&')[0];
+				let vidIndex = location.href.split('index=')[1];
+				if (vidIndex.indexOf('&') > -1) {
+					vidIndex = vidIndex.split('&')[0];
+				}
+				const [mins, secs] = document.querySelector('.ytp-time-current').innerHTML.split(':');
+				const address = 'https://www.youtube.com/watch';
+				const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
+				chrome.runtime.sendMessage({
+					cmd: 'setUrl',
+					url: url
+				});
+			}).toString()})()`
+		});
+
+		window.setTimeout(() => {
+			app.close();
+		}, 0);
+	});
+}
+
+setupMenuButtons();
 chrome.runtime.sendMessage({
 	cmd: 'getUrl'
 }, (response) => {
@@ -252,56 +315,6 @@ chrome.runtime.sendMessage({
 	}
 });
 
-const app = chrome.app.window.current();
-const titleBar = document.querySelector('#titleBar');
-
-function updateButtonsState() {
-	if (app.isMaximized()) {
-		titleBar.classList.add('fullscreen');
-	} else {
-		titleBar.classList.remove('fullscreen');
-	}
+window.updateColors = (color) => {
+	document.querySelector('#titleBar').style.backgroundColor = `rgb(${color})`;
 }
-
-app.onMaximized.addListener(updateButtonsState);
-app.onRestored.addListener(updateButtonsState);
-window.addEventListener('focus', () => {
-	titleBar.classList.add('focused');
-});
-window.addEventListener('blur', () => {
-	titleBar.classList.remove('focused');
-});
-
-document.querySelector('#minimize').addEventListener('click', () => {
-	app.minimize();
-});
-document.querySelector('#maximize').addEventListener('click', () => {
-	if (app.isMaximized()) {
-		app.restore();
-	} else {
-		app.maximize();
-	}
-});
-document.querySelector('#close').addEventListener('click', () => {
-	//Save progress
-	const webviewUrl = document.querySelector('#mainView').executeScript({
-		code: `(${(() => {
-			const vidId = location.href.split('v=')[1].split('&')[0];
-			let vidIndex = location.href.split('index=')[1];
-			if (vidIndex.indexOf('&') > -1) {
-				vidIndex = vidIndex.split('&')[0];
-			}
-			const [mins, secs] = document.querySelector('.ytp-time-current').innerHTML.split(':');
-			const address = 'https://www.youtube.com/watch';
-			const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
-			chrome.runtime.sendMessage({
-				cmd: 'setUrl',
-				url: url
-			});
-		}).toString()})()`
-	});
-
-	window.setTimeout(() => {
-		app.close();
-	}, 0);
-});
