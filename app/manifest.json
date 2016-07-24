@@ -33,11 +33,15 @@
 			"description": "Lower the volume",
 			"global": true
 		},
-		"getSong": {
+		"focusWindow": {
 			"suggested_key": {
 				"default": "Shift+Alt+F"
 			},
 			"description": "Focuses the widow",
+			"global": true
+		},
+		"getSong": {
+			"description": "Gets the currently playing song",
 			"global": true
 		},
 		"launch": {

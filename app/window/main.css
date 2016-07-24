@@ -1,0 +1,144 @@
+body {
+	margin: 0;
+	padding: 0;
+}
+
+#mainView {
+	width: 100vw;
+	height: calc(100vh - 8px);
+}
+
+#titleBar {
+	height: 26px;
+	display: flex;
+	justify-content: flex-end;
+	-webkit-app-region: drag;
+}
+
+#titleBar > div {
+	width: 45px;
+	height: 100%;
+	background-color: white;
+	display: flex;
+	justify-content: center;
+	margin-right: 1px;
+	-webkit-app-region: no-drag;
+}
+
+#minimize, #maximize, #close {
+	transition: background-color 250ms ease-in-out;
+}
+
+#minimize:hover, #maximize:hover {
+	background-color: rgb(229, 229, 229);
+}
+
+.unFadeOnFocus {
+	opacity: 0.4;
+	transition: opacity 250ms ease-in-out;
+}
+
+#minimizeLine {
+	background-color: black;
+	height: 1px;
+	width: 10px;
+	margin-top: 13px;
+}
+
+#minimize:hover #minimizeLine {
+	opacity: 1;
+}
+
+#maximize:hover #maximizeBox, #maximize:hover #maximizeBoxes, #close:hover #closeCross {
+	opacity: 1;
+}
+
+#titleBar.focused .unFadeOnFocus {
+	opacity: 1;
+}
+
+#titleBar > #close {
+	margin-right: 0;
+}
+
+#titleBar > #maximize {
+    width: 45px;
+}
+
+#maximizeBoxCont, #maximizeBoxesCont {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	flex-direction: row;
+	height: 100%;
+}
+
+#maximizeBox {
+    width: 8px;
+    height: 8px;
+    border: 1px solid black;
+    margin-top: 8px;
+}
+
+#maximizedBoxesCont {
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+}
+
+#maximizeBoxes {
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+}
+
+.maximizeBox {
+    height: 7px;
+    width: 7px;
+    border: 1px solid black;
+    position: absolute;
+    margin-top: 9px;
+    background-color: inherit;
+    margin-left: 15px;
+}
+
+#maximizeBoxesFrontBox {
+    margin-top: 7px;
+    margin-left: 17px;
+}
+
+#close:hover {
+	background-color: #E81123;
+}
+
+.closeCrossLine {
+	stroke: rgb(153,153,153);
+}
+
+#titleBar.focused .closeCrossLine {
+    stroke: black;
+}
+
+#close:hover .closeCrossLine {
+    stroke: white;
+}
+
+#closeCross {
+    margin-top: 7px;
+}
+
+#titleBar #maximizedBoxesCont {
+	display: none;
+}
+
+#titleBar #maximizeBoxCont {
+	display: flex;
+}
+
+#titleBar.fullscreen #maximizedBoxesCont {
+	display: flex;
+}
+
+#titleBar.fullscreen #maximizeBoxCont {
+	display: none;
+}
