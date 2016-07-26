@@ -15,6 +15,31 @@ function createTag(fn) {
 function hacksecute(view, fn) {
 	view.executeScript({
 		code: `(${createTag(fn).toString()})();`
+			.replace(/\$\{EXTENSIONIDSTRING\}/,
+				chrome.runtime.getURL('').split('://')[1].split('/')[0])
+	});
+}
+
+let taskIds = 0;
+const taskListeners = {};
+window.returnTaskValue = (result, id) => {
+	taskListeners[id] && taskListeners[id](result);
+	delete taskListeners[id];
+};
+
+function sendTaskToPage(name, callback) {
+	chrome.storage.local.get('tasks', (data) => {
+		data.tasks = data.tasks || [];
+		data.tasks.push({
+			name: name,
+			id: ++taskIds
+		});
+
+		taskListeners[taskIds] = callback;
+
+		chrome.storage.local.set({
+			tasks: data.tasks
+		});
 	});
 }
 
@@ -74,7 +99,7 @@ function addViewListeners(view) {
 		name: 'js',
 		matches: ['*://*/*'],
 		js: {
-			files: ['/content/content.js'],
+			files: ['/content/comm.js', '/content/content.js'],
 		},
 		run_at: 'document_end'
 	}, {
@@ -87,131 +112,202 @@ function addViewListeners(view) {
 	}]);
 
 	function loadResizer() {
-		if (false) { //TODO check for ads
-			hacksecute(view, () => {
-				window.location.reload();
-			});
-		} else {
-			hacksecute(view, () => {
-				if (window.exuectedYTCA) {
-					return;
-				}
-				window.exuectedYTCA = true;
+		hacksecute(view, () => {
+			if (window.exuectedYTCA) {
+				return;
+			}
+			window.exuectedYTCA = true;
 
-				const player = document.querySelector('.html5-video-player');
-				const playerApi = document.getElementById('player-api');
-				const volumeBar = document.createElement('div');
-				const volumeBarBar = document.createElement('div');
-				const volumeBarNumber = document.createElement('div');
-				volumeBar.id = 'yt-ca-volumeBar';
-				volumeBarBar.id = 'yt-ca-volumeBarBar';
-				volumeBarNumber.id = 'yt-ca-volumeBarNumber';
+			const player = document.querySelector('.html5-video-player');
+			const playerApi = document.getElementById('player-api');
+			const volumeBar = document.createElement('div');
+			const volumeBarBar = document.createElement('div');
+			const volumeBarNumber = document.createElement('div');
+			volumeBar.id = 'yt-ca-volumeBar';
+			volumeBarBar.id = 'yt-ca-volumeBarBar';
+			volumeBarNumber.id = 'yt-ca-volumeBarNumber';
 
-				let volumeBarTimeout = null;
+			let volumeBarTimeout = null;
 
-				volumeBar.appendChild(volumeBarNumber);
-				volumeBar.appendChild(volumeBarBar);
-				document.body.appendChild(volumeBar);
+			volumeBar.appendChild(volumeBarNumber);
+			volumeBar.appendChild(volumeBarBar);
+			document.body.appendChild(volumeBar);
 
-				function prepareVideo() {
-					player.setPlaybackQuality('hd1080');
-					if (player.getPlaybackQuality() !== 'hd1080') {
-						player.setPlaybackQuality('hd720');
-					}
-
-					setTimeout(() => {
-						if (document.querySelector('.ytp-size-button')
-							.getAttribute('title') === 'Theatermodus') {
-							function resizeWhenReady() {
-								if (player.getPlayerState() === 3) {
-									window.setTimeout(resizeWhenReady, 500);
-								} else {
-									player.setSizeStyle(true, true);
-								}
-							}
-							resizeWhenReady();
-						}
-					}, 2500);
+			function prepareVideo() {
+				player.setPlaybackQuality('hd1080');
+				if (player.getPlaybackQuality() !== 'hd1080') {
+					player.setPlaybackQuality('hd720');
 				}
 
-				prepareVideo();
-
-				function updateSizes() {
-					playerApi.style.width = window.innerWidth + 'px';
-					playerApi.style.height = (window.innerHeight - 15) + 'px';
-
-					player.setSize();
-
+				setTimeout(() => {
 					if (document.querySelector('.ytp-size-button')
-							.getAttribute('title') === 'Theatermodus') {
-						player.setSizeStyle(true, true);
+						.getAttribute('title') === 'Theatermodus') {
+						function resizeWhenReady() {
+							if (player.getAdState() === 1) {
+								window.location.reload();
+							}
+
+							if (player.getPlayerState() === 3) {
+								window.setTimeout(resizeWhenReady, 250);
+							} else {
+								player.setSizeStyle(true, true);
+							}
+						}
+						resizeWhenReady();
 					}
+				}, 2500);
+			}
+
+			prepareVideo();
+
+			function updateSizes() {
+				playerApi.style.width = window.innerWidth + 'px';
+				playerApi.style.height = (window.innerHeight - 15) + 'px';
+
+				player.setSize();
+
+				if (document.querySelector('.ytp-size-button')
+						.getAttribute('title') === 'Theatermodus') {
+					player.setSizeStyle(true, true);
+				}
+			}
+
+			updateSizes();
+			window.addEventListener('resize', updateSizes);
+
+			//Code that has to be executed "inline"
+			function increaseVolume() {
+				let vol = player.getVolume();
+				if (player.isMuted()) {
+					//Treat volume as 0
+					vol = 0;
+					player.unMute();
 				}
 
-				updateSizes();
-				window.addEventListener('resize', updateSizes);
+				vol += 5;
+				vol = (vol > 100 ? 100 : vol);
+				player.setVolume(vol);
+			}
 
-				//Code that has to be executed "inline"
-				function increaseVolume() {
-					let vol = player.getVolume();
-					if (player.isMuted()) {
-						//Treat volume as 0
-						vol = 0;
-						player.unMute();
-					}
-
-					vol += 5;
-					vol = (vol > 100 ? 100 : vol);
+			function lowerVolume() {
+				let vol = player.getVolume();
+				if (!player.isMuted()) {
+					vol -= 5;
+					
+					vol = (vol < 0 ? 0 : vol);
 					player.setVolume(vol);
 				}
+			}
 
-				function lowerVolume() {
-					let vol = player.getVolume();
-					if (!player.isMuted()) {
-						vol -= 5;
-						
-						vol = (vol < 0 ? 0 : vol);
-						player.setVolume(vol);
+			function showVolumeBar() {
+				const volume = player.getVolume()
+				localStorage.setItem('volume', volume);
+				volumeBarNumber.innerHTML = volume;
+				volumeBarBar.style.transform = `scaleX(${volume / 100})`;
+				volumeBar.classList.add('visible');
+				if (volumeBarTimeout !== null) {
+					window.clearTimeout(volumeBarTimeout);
+				}
+				volumeBarTimeout = window.setTimeout(() => {
+					volumeBar.classList.remove('visible');
+					volumeBarTimeout = null;
+				}, 2000);
+			}
+
+			function onScroll(isDown) {
+				if (isDown) {
+					lowerVolume();
+				} else {
+					increaseVolume();
+				}
+				showVolumeBar();
+			}
+
+			function addListeners() {
+				var videoEl = document.querySelector('video');
+				videoEl.addEventListener('wheel', (e) => {
+					onScroll(e.deltaY > 0);
+				});
+				let prevVolume = localStorage.getItem('volume');
+				prevVolume = (prevVolume === 0 ? 0 : prevVolume || 100);
+				player.setVolume(prevVolume);
+			}
+
+			addListeners();
+
+			function executeTask(name, id) {
+				let result = null;
+				switch (name) {
+					case 'getTime':
+						const time = document.querySelector('.html5-video-player').getCurrentTime();
+						result = time;
+						break;
+					default:
+						if (name.indexOf('getSongName') > -1) {
+							let timestampContainers = document
+								.querySelector('#eow-description')
+								.querySelectorAll('a[href="#"]')
+							const index = ~~name.split('getSongName')[1];
+							const textNodes = [];
+							let currentNode = timestampContainers[index].previousSibling;
+
+							//Search back until a <br> is found
+							while (currentNode.tagName !== 'BR') {
+								if (!currentNode.tagName) {
+									textNodes.push(currentNode.nodeValue);
+								}
+								currentNode = currentNode.previousSibling;
+							}
+
+							currentNode = timestampContainers[index].nextSibling;
+
+							//Search forward until a <br> is found
+							while (currentNode.tagName !== 'BR') {
+								if (!currentNode.tagName) {
+									textNodes.push(currentNode.nodeValue);
+								}
+								currentNode = currentNode.nextSibling;
+							}
+
+							//Go through list and find something that resembles a song
+							for (let i = 0; i < textNodes.length; i++) {
+								if (/.+-.+/.test(textNodes[i])) {
+									//This is a song
+									result = textNodes[i];
+									break;
+								}
+							}
+
+							if (!result) {
+								//Just try this instead
+								result = textNodes[0];
+							}
+						}
+						break;
+				}
+
+				localStorage.setItem(`taskResult${id}`, result);
+			}
+
+			function checkForTasks() {
+				let tasks;
+				if ((tasks = localStorage.getItem('tasks'))) {
+					try {
+						tasks = JSON.parse(tasks);
+					} catch(e) {
+						tasks = [];
+					}
+					if (Array.isArray(tasks) && tasks.length > 0) {
+						tasks.forEach((task) => {
+							executeTask(task.name, task.id);
+						});
+						localStorage.setItem('tasks', '[]');
 					}
 				}
+			}
 
-				function showVolumeBar() {
-					const volume = player.getVolume()
-					localStorage.setItem('volume', volume);
-					volumeBarNumber.innerHTML = volume;
-					volumeBarBar.style.transform = `scaleX(${volume / 100})`;
-					volumeBar.classList.add('visible');
-					if (volumeBarTimeout !== null) {
-						window.clearTimeout(volumeBarTimeout);
-					}
-					volumeBarTimeout = window.setTimeout(() => {
-						volumeBar.classList.remove('visible');
-						volumeBarTimeout = null;
-					}, 2000);
-				}
-
-				function onScroll(isDown) {
-					if (isDown) {
-						lowerVolume();
-					} else {
-						increaseVolume();
-					}
-					showVolumeBar();
-				}
-
-				function addListeners() {
-					var videoEl = document.querySelector('video');
-					videoEl.addEventListener('wheel', (e) => {
-						onScroll(e.deltaY > 0);
-					});
-					let prevVolume = localStorage.getItem('volume');
-					prevVolume = (prevVolume === 0 ? 0 : prevVolume || 100);
-					player.setVolume(prevVolume);
-				}
-
-				addListeners();
-			});
-		}
+			window.setInterval(checkForTasks, 50);
+		});
 	}
 
 	view.addEventListener('contentload', (e) => {
@@ -230,6 +326,12 @@ function addViewListeners(view) {
 
 	window.addEventListener('focus', () => {
 		view.focus();
+	});
+
+	view.addEventListener('keydown', (e) => {
+		if (e.key === '?') {
+			window.getCurrentSong();
+		}
 	});
 
 	addRuntimeListeners(view);
@@ -302,6 +404,95 @@ function setupMenuButtons() {
 	});
 }
 
+let songFoundTimeout = null;
+let songFoundName = '';
+function downloadSong() {
+	//Search for it on youtube
+	const view = document.createElement('webview');
+	view.id = 'youtubeSearchPageView';
+
+	view.addContentScripts([{
+		name: 'youtubeSearchJs',
+		matches: ['*://*/*'],
+		js: {
+			files: ['/youtubeSearch/youtubeSearch.js']
+		},
+		run_at: 'document_end'
+	}, {
+		name: 'youtubeSearchCss',
+		matches: ['*://*/*'],
+		css: {
+			files: ['/youtubeSearch/youtubeSearch.css']
+		},
+		run_at: "document_start"
+	}]);
+
+	view.src = `https://www.youtube.com/results?search_query=${
+		encodeURIComponent(songFoundName.trim().replace(/ /g, '+')).replace(/%2B/g, '+')
+	}&page=&utm_source=opensearch`;
+	document.body.appendChild(view);
+}
+document.getElementById('getSongDownload').addEventListener('click', downloadSong);
+document.body.addEventListener('keydown', (e) => {
+	if (e.key === 'd') {
+		downloadSong();
+	} else if (e.key === 'Escape') {
+		document.getElementById('youtubeSearchPageView').remove();
+	}
+});
+
+function displayFoundSong(name) {
+	document.getElementById('getSongName').innerHTML = name;
+	const dialog = document.getElementById('getSongDialog');
+	dialog.classList.add('visible');
+	dialog.classList.add('hoverable');
+	if (songFoundTimeout !== null) {
+		window.clearTimeout(songFoundTimeout);
+	}
+	songFoundName = name;
+	songFoundTimeout = window.setTimeout(() => {
+		dialog.classList.remove('visible');
+		window.setTimeout(() => {
+			dialog.classList.remove('hoverable');
+		}, 200);
+	}, 5000);
+}
+
+window.getCurrentSong = () => {
+	sendTaskToPage('getTimestamps', (timestamps) => {
+		if (!timestamps) {
+			//Do some OCR magic
+			
+		} else {
+			function getSongIndex(time) {
+				for (let i = 0; i < timestamps.length; i++) {
+					if (timestamps[i] <= time && timestamps[i + 1] >= time) {
+						return i;
+					}
+				}
+				return timestamps.length - 1;
+			}
+
+			sendTaskToPage('getTime', (time) => {
+				const index = getSongIndex(~~time);
+				sendTaskToPage('getSongName' + index, (name) => {
+					displayFoundSong(name);
+				});
+			});
+		}
+	});
+}
+
+window.updateColors = (color) => {
+	document.querySelector('#titleBar').style.backgroundColor = `rgb(${color})`;
+}
+
+window.downloadVideo = (url) => {
+	document.getElementById('youtubeSearchPageView').remove();
+
+	window.open(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`, '_blank')
+}
+
 setupMenuButtons();
 chrome.runtime.sendMessage({
 	cmd: 'getUrl'
@@ -313,8 +504,4 @@ chrome.runtime.sendMessage({
 			setup(data.url);
 		});
 	}
-});
-
-window.updateColors = (color) => {
-	document.querySelector('#titleBar').style.backgroundColor = `rgb(${color})`;
-}
+})

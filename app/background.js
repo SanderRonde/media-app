@@ -41,9 +41,9 @@ chrome.commands.onCommand.addListener((cmd) => {
 			chrome.app.window.get('mainwindow').focus();
 			break;
 		case 'getSong':
-			chrome.runtime.sendMessage({
-				cmd: 'getSong'
-			});
+			let appWindow = chrome.app.window.get('mainwindow');
+			appWindow.focus();
+			appWindow.contentWindow.getCurrentSong();
 			break;
 	}
 });
@@ -67,6 +67,7 @@ function sendMessageToPlaylistSaver(message, cb) {
 }
 
 chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
+	console.log('Got a message', message);
 	switch (message.cmd) {
 		case 'getUrl':
 			try {
@@ -89,8 +90,15 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 				});
 			} catch (e) {}
 			break;
+		case 'downloadvideo':
+			chrome.app.window.get('mainwindow').contentWindow.downloadVideo(message.url);
+			break;
 		case 'updateColor':
 			chrome.app.window.get('mainwindow').contentWindow.updateColors(message.color);
+			break;
+		case 'taskResult':
+			const appWindow = chrome.app.window.get('mainwindow').contentWindow;
+			appWindow.returnTaskValue && appWindow.returnTaskValue(message.result, message.id);
 			break;
 	}
 });

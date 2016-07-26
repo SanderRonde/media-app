@@ -142,3 +142,79 @@ body {
 #titleBar.fullscreen #maximizeBoxCont {
 	display: none;
 }
+
+#getSongDialogHorizontalCenter {
+	display: flex;
+	justify-content: center;
+	height: 100%;
+	position: absolute;
+	width: 100%;
+	pointer-events: none;
+}
+
+#getSongDialogVerticalCenter {
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+}
+
+#getSongDialog {
+	display: flex;
+	background-color: transparent;
+	height: 38px;
+	color: white;
+	margin-top: calc(((100vh / 3) * 2) - 19px);
+	border: 5px solid #F44336;
+	pointer-events: all;
+	opacity: 0;
+	transform: translateY(50px);
+	transition: opacity 200ms ease-in-out, transform 200ms ease-in-out;
+}
+
+#getSongName {
+	font-size: 200%;
+	padding: 0 10px;
+	background-color: rgb(244, 67, 54);
+	border: none;
+	color: white;
+	font-weight: bold;
+	text-shadow: rgb(0, 0, 0) -1px -1px 0px, rgb(0, 0, 0) 1px -1px 0px, rgb(0, 0, 0) -1px 1px 0px, rgb(0, 0, 0) 1px 1px 0px;
+	width: 100%;
+	max-width: none;
+}
+
+#getSongDownload {
+	fill: white;
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+	background-color: #F44336;
+	cursor: pointer;
+}
+
+#getSongNameCont {
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+	background-color: #F44336;
+}
+
+#getSongDownload:hover {
+	fill: rgb(220,220,220);
+}
+
+#getSongDialog.visible, #getSongDialog.hoverable:hover {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+#youtubeSearchPageView {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 460px;
+	height: calc(100vh - 150px);
+	margin-top: 70px;
+	margin-left: calc(50vw - 235px);
+	border: 5px solid #F44336;
+}
