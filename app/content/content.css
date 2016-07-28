@@ -12,7 +12,7 @@ html {
 
 video {
 	min-width: 100vw;
-	min-height: calc(100vh - 15px);
+	min-height: calc(100vh - 5px);
 	left: 0!important;
 	background-color: white;
 }
@@ -26,7 +26,8 @@ video {
 	bottom: 0;
 	margin-left: 0;
 	min-width: 100vw;
-	min-height: calc(100vh - 15px);
+	min-height: calc(100vh - 5px);
+	border-bottom: 0;
 }
 
 #player {

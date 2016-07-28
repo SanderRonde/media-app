@@ -1,7 +1,3 @@
-chrome.storage.sync.set({
-	test: 'test'
-});
-
 window.saveProgress = () => {
 	const vidId = location.href.split('v=')[1].split('&')[0];
 	let vidIndex = location.href.split('index=')[1];
@@ -56,13 +52,51 @@ function updateColors() {
 		}
 	}
 
-	chrome.runtime.sendMessage({
-		cmd: 'updateColor',
-		color: mostUsedColor
-	});
 	document.querySelector('video').style.backgroundColor = `rgb(${mostUsedColor})`;
+}
+
+function uncirculizeWord(word) {
+	return {
+		bbox: word.bbox,
+		text: word.text,
+		confidence: word.confidence,
+		choices: word.choices
+	}
+}
+
+const imageModel = [];
+function uploadImageModel(newData) {
+	imageModel.push({
+		lines: newData.lines.map((line) => {
+			return {
+				bbox: line.bbox,
+				text: line.text,
+				confidence: line.confidence,
+				words: line.words.map(uncirculizeWord)
+			}
+		}),
+		text: newData.text,
+		words: newData.words.map(uncirculizeWord)
+	});
+	chrome.storage.local.set({
+		imageModel: imageModel
+	});
+}
+
+function updateImageModel() {
+	ctx.drawImage(document.querySelector('video'), 0, 0, canv.width, canv.height);
+	const img = new Image();
+	img.src = canv.toDataURL('image/png');
+
+	Tesseract.recognize(img, {
+		lang: 'eng'
+	}).then((result) => {
+		uploadImageModel(result);
+	});
 }
 
 window.setInterval(updateColors, 10000);
 updateColors();
-window.setInterval(window.saveProgress, 120000);
+//window.setInterval(updateImageModel, 5000);
+//updateImageModel();
+window.setInterval(window.saveProgress, 30000);

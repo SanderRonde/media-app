@@ -28,6 +28,15 @@ function commToPage(task, callback) {
 	localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
+function uncirculizeWord(word) {
+	return {
+		bbox: word.bbox,
+		text: word.text,
+		confidence: word.confidence,
+		choices: word.choices
+	}
+}
+
 function doTask(name, id) {
 	function done(result) {
 		chrome.runtime.sendMessage({
@@ -44,7 +53,6 @@ function doTask(name, id) {
 			timestampContainers = Array.from(timestampContainers).filter((timestamp) => {
 				return /(\d)\:(\d)(:(\d))*/.test(timestamp.innerHTML);
 			});
-			console.log(timestampContainers);
 			let timestamps = null;
 			if (timestampContainers.length > 4) {
 				//At least 5 songs should be played to make it a tracklist
@@ -60,6 +68,30 @@ function doTask(name, id) {
 			} else {
 				done(false);
 			}
+			break;
+		case 'getImageOCR':
+			ctx.drawImage(document.querySelector('video'), 0, 0, canv.width, canv.height);
+			const img = new Image();
+			img.src = canv.toDataURL('image/png');
+
+			Tesseract.recognize(img, {
+				lang: 'eng'
+			}).then((result) => {
+				debugger;
+				done(JSON.stringify({
+					lines: result.lines.map((line) => {
+						return {
+							bbox: line.bbox,
+							text: line.text,
+							confidence: line.confidence,
+							words: line.words.map(uncirculizeWord)
+						}
+					}),
+					text: result.text,
+					words: result.words.map(uncirculizeWord)
+				}));
+			});
+
 			break;
 		case 'getTime':
 			commToPage('getTime', done);

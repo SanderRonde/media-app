@@ -99,7 +99,11 @@ function addViewListeners(view) {
 		name: 'js',
 		matches: ['*://*/*'],
 		js: {
-			files: ['/content/comm.js', '/content/content.js'],
+			files: [
+			 	//'/content/tesseract.js',
+				'/content/comm.js',
+				'/content/content.js'
+			],
 		},
 		run_at: 'document_end'
 	}, {
@@ -113,10 +117,10 @@ function addViewListeners(view) {
 
 	function loadResizer() {
 		hacksecute(view, () => {
-			if (window.exuectedYTCA) {
+			if (window.exuectedYTCA === location.href) {
 				return;
 			}
-			window.exuectedYTCA = true;
+			window.exuectedYTCA = location.href;
 
 			const player = document.querySelector('.html5-video-player');
 			const playerApi = document.getElementById('player-api');
@@ -140,21 +144,16 @@ function addViewListeners(view) {
 				}
 
 				setTimeout(() => {
-					if (document.querySelector('.ytp-size-button')
-						.getAttribute('title') === 'Theatermodus') {
-						function resizeWhenReady() {
-							if (player.getAdState() === 1) {
-								window.location.reload();
-							}
-
-							if (player.getPlayerState() === 3) {
-								window.setTimeout(resizeWhenReady, 250);
-							} else {
-								player.setSizeStyle(true, true);
-							}
+					function reloadIfAd() {
+						if (player.getAdState() === 1) {
+							window.location.reload();
 						}
-						resizeWhenReady();
+
+						if (player.getPlayerState() === 3) {
+							window.setTimeout(reloadIfAd, 250);
+						}
 					}
+					reloadIfAd();
 				}, 2500);
 			}
 
@@ -175,6 +174,19 @@ function addViewListeners(view) {
 			updateSizes();
 			window.addEventListener('resize', updateSizes);
 
+			function setPlayerVolume(volume) {
+				player.setVolume(volume);
+
+				localStorage.setItem('yt-player-volume', JSON.stringify({
+					data: JSON.stringify({
+						volume: volume,
+						muted: (volume === 0)
+					}),
+					creation: Date.now(),
+					expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
+				}));
+			}
+
 			//Code that has to be executed "inline"
 			function increaseVolume() {
 				let vol = player.getVolume();
@@ -186,7 +198,7 @@ function addViewListeners(view) {
 
 				vol += 5;
 				vol = (vol > 100 ? 100 : vol);
-				player.setVolume(vol);
+				setPlayerVolume(vol);
 			}
 
 			function lowerVolume() {
@@ -195,7 +207,7 @@ function addViewListeners(view) {
 					vol -= 5;
 					
 					vol = (vol < 0 ? 0 : vol);
-					player.setVolume(vol);
+					setPlayerVolume(vol);
 				}
 			}
 
@@ -228,9 +240,6 @@ function addViewListeners(view) {
 				videoEl.addEventListener('wheel', (e) => {
 					onScroll(e.deltaY > 0);
 				});
-				let prevVolume = localStorage.getItem('volume');
-				prevVolume = (prevVolume === 0 ? 0 : prevVolume || 100);
-				player.setVolume(prevVolume);
 			}
 
 			addListeners();
@@ -316,7 +325,7 @@ function addViewListeners(view) {
 
 	view.addEventListener('loadcommit', (e) => {
 		if (e.isTopLevel) {
-			loadResizer();
+			window.setTimeout(loadResizer, 1000);
 		}
 	})
 
@@ -340,7 +349,7 @@ function addViewListeners(view) {
 function setup(url) {
 	const view = document.createElement('webview');
 	view.id = 'mainView';
-	view.setAttribute('partition', 'persistent:youtube-music-app');
+	view.setAttribute('partition', 'persist:youtube-music-app');
 
 	addViewListeners(view);
 
@@ -458,11 +467,147 @@ function displayFoundSong(name) {
 	}, 5000);
 }
 
+function getSongFromOCR(callback) {
+	chrome.storage.local.get('imageModel', (data) => {
+		let imageModelData = data.imageModel;
+
+		sendTaskToPage('getImageOCR', (snapshotData) => {
+			snapshotData = JSON.parse(snapshotData);
+			//Get the most-occurring "model"
+
+			//Try to find models where there is a big difference in confidence
+			//between a few words that keep changing between models
+
+			//First filter out noise by finding "words" that keeps sharing position
+			const words = [];
+			imageModelData.forEach((snapshot) => {
+				snapshot.words.forEach((snapshotWord) => {
+					words.push({
+						text: snapshotWord.text,
+						confidence: snapshotWord.confidence,
+						bbox: snapshotWord.bbox,
+						choices: snapshotWord.choises
+					})
+				});
+			});
+
+			//Group same "words" together
+			const wordPos = {};
+			words.forEach((word) => {
+				const key = JSON.stringify({
+					text: word.text,
+					bbox: word.bbox
+				});
+				wordPos[key] = ~~wordPos[key] + 1;
+			});
+
+			//Now filter out any sections that do not contain at least the 3 most popular words
+			let wordPosArr = [];
+			for (let word in wordPos) {
+				if (wordPos.hasOwnProperty(word)) {
+					wordPosArr.push({
+						word: JSON.parse(word),
+						amount: wordPos[word]
+					});
+				}
+			}
+			wordPosArr = wordPosArr.sort((a, b) => {
+				return a.amount - b.amount;
+			}).slice(0, 2);
+			imageModelData = imageModelData.filter((snapshot) => {
+				for (let i = 0; i < snapshot.words.length; i++) {
+					let found = false;
+					wordPosArr.forEach((mostPopularWord) => {
+						if (snapshot.words[i].text === mostPopularWord.word.text && 
+							JSON.stringify(snapshot.words[i].bbox) === JSON.stringify(mostPopularWord.word.bbox)) {
+							found = true;
+						} 
+					});
+					if (found) {
+						return true;
+					}
+				}
+				return false;
+			});
+
+			//In theory these should all be the same except for a few lines so put all lines in an obj and count
+			const lineAmounts = {};
+			imageModelData.forEach((snapshot) => {
+				snapshot.lines.forEach((snapshotLine) => {
+					lineAmounts[snapshotLine.text] = ~~lineAmounts[snapshotLine.text] + 1;
+				});
+			});
+
+			//Remove everything that is always present
+			let lineAmountsArr = [];
+			for (let lineText in lineAmounts) {
+				if (lineAmounts.hasOwnProperty(lineText)) {
+					lineAmountsArr.push({
+						text: lineText,
+						amount: lineAmounts[lineText]
+					});
+				}
+			}
+
+			lineAmountsArr = lineAmountsArr.filter((line) => {
+				if (line.amount === data.length) {
+					//Filter this line from the snapshot we just took
+					snapshotData.lines.filter((dataLine) => {
+						return dataLine.text !== line.text;
+					});
+				}
+				return line.amount !== data.length;
+			});
+
+			//The remaining lines should be unique across slides
+
+			//Now these lines also can contain some words that always exist in them, so repeat the process
+			const lineWordAmounts = {};
+			lineAmountsArr.forEach((snapshotLine) => {
+				console.log(snapshotLine);
+				snapshotLine.words.forEach((snapshotWord) => {
+					lineWordAmounts[snapshotWord.text] = ~~lineWordAmounts[snapshotWord.text] + 1;
+				});
+			});
+
+			//Remove everything that is always present
+			let lineWordAmountsArr = [];
+			for (let lineWord in lineWordAmounts) {
+				if (lineWordAmounts.hasOwnProperty(lineWord)) {
+					lineWordAmountsArr.push({
+						text: lineWord,
+						amount: lineWordAmounts[lineWord]
+					});
+				}
+			}
+
+			const snapshotWords = snapshotData.lines.map((snapshotLine) => {
+				return snapshotLine.words.map((snapshotLineWord) => {
+					return snapshotLineWord.text;
+				});
+			}).reduce((a, b) => {
+				return a.concat(b);
+			});
+			lineWordAmountsArr = lineWordAmountsArr.filter((word) => {
+				if (line.amount === data.length) {
+					//Filter this word from the words in the snapshot we just took
+					snapshotWords.splice(snapshotWords.indexOf(word.text), 1);
+				}
+
+				return word.amount !== data.length;
+			});
+
+			//Remaining words should be the song's name
+			callback(snapshotWords);
+		});
+	});
+}
+
 window.getCurrentSong = () => {
 	sendTaskToPage('getTimestamps', (timestamps) => {
-		if (!timestamps) {
+		if (!timestamps || false) {
 			//Do some OCR magic
-			
+			getSongFromOCR(displayFoundSong);
 		} else {
 			function getSongIndex(time) {
 				for (let i = 0; i < timestamps.length; i++) {
@@ -483,25 +628,22 @@ window.getCurrentSong = () => {
 	});
 }
 
-window.updateColors = (color) => {
-	document.querySelector('#titleBar').style.backgroundColor = `rgb(${color})`;
-}
-
 window.downloadVideo = (url) => {
 	document.getElementById('youtubeSearchPageView').remove();
-
 	window.open(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`, '_blank')
 }
 
-setupMenuButtons();
-chrome.runtime.sendMessage({
-	cmd: 'getUrl'
-}, (response) => {
-	if (response && response.url) {
-		setup(response.url);
+window.respondUrl = (response) => {
+	if (response && typeof response === 'string') {
+		setup(response);
 	} else {
 		chrome.storage.sync.get('url', (data) => {
 			setup(data.url);
 		});
 	}
-})
+}
+
+setupMenuButtons();
+chrome.runtime.sendMessage({
+	cmd: 'getUrl'
+});
