@@ -66,8 +66,12 @@ function sendMessageToPlaylistSaver(message, cb) {
 	port.postMessage(message);
 }
 
+function getApp() {
+	return chrome.app.window.get('mainwindow');
+}
+
 function getAppWindow() {
-	return chrome.app.window.get('mainwindow').contentWindow;
+	return getApp().contentWindow;
 }
 
 chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
@@ -99,6 +103,14 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 		case 'taskResult':
 			const appWindow = getAppWindow();
 			appWindow.returnTaskValue && appWindow.returnTaskValue(message.result, message.id);
+			break;
+		case 'toggleFullscreen':
+			const app = getApp();
+			if (app.isFullscreen()) {
+				app.restore();
+			} else {
+				app.fullscreen();
+			}
 			break;
 	}
 });

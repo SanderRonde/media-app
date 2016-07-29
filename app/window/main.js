@@ -138,11 +138,6 @@ function addViewListeners(view) {
 			document.body.appendChild(volumeBar);
 
 			function prepareVideo() {
-				player.setPlaybackQuality('hd1080');
-				if (player.getPlaybackQuality() !== 'hd1080') {
-					player.setPlaybackQuality('hd720');
-				}
-
 				setTimeout(() => {
 					function reloadIfAd() {
 						if (player.getAdState() === 1) {
@@ -151,6 +146,16 @@ function addViewListeners(view) {
 
 						if (player.getPlayerState() === 3) {
 							window.setTimeout(reloadIfAd, 250);
+						} else {
+							player.setPlaybackQuality('hd1080');
+							if (player.getPlaybackQuality() !== 'hd1080') {
+								player.setPlaybackQuality('hd720');
+							}
+							
+							if (document.querySelector('.ytp-size-button')
+									.getAttribute('title') === 'Theatermodus') {
+								player.setSizeStyle(true, true);
+							}
 						}
 					}
 					reloadIfAd();
@@ -164,11 +169,6 @@ function addViewListeners(view) {
 				playerApi.style.height = (window.innerHeight - 15) + 'px';
 
 				player.setSize();
-
-				if (document.querySelector('.ytp-size-button')
-						.getAttribute('title') === 'Theatermodus') {
-					player.setSizeStyle(true, true);
-				}
 			}
 
 			updateSizes();
@@ -362,15 +362,13 @@ function setupMenuButtons() {
 	const titleBar = document.querySelector('#titleBar');
 
 	function updateButtonsState() {
-		if (app.isMaximized()) {
-			titleBar.classList.add('fullscreen');
-		} else {
-			titleBar.classList.remove('fullscreen');
-		}
+		titleBar.classList[app.isMaximized() ? 'add' : 'remove']('maximized');
+		titleBar.classList[app.isFullscreen() ? 'add' : 'remove']('fullscreen');
 	}
 
 	app.onMaximized.addListener(updateButtonsState);
 	app.onRestored.addListener(updateButtonsState);
+	app.onFullscreened.addListener(updateButtonsState);
 	window.addEventListener('focus', () => {
 		titleBar.classList.add('focused');
 	});
@@ -378,15 +376,14 @@ function setupMenuButtons() {
 		titleBar.classList.remove('focused');
 	});
 
+	document.querySelector('#fullscreen').addEventListener('click', () => {
+		app[app.isFullscreen() ? 'restore' : 'fullscreen']();
+	});
 	document.querySelector('#minimize').addEventListener('click', () => {
 		app.minimize();
 	});
 	document.querySelector('#maximize').addEventListener('click', () => {
-		if (app.isMaximized()) {
-			app.restore();
-		} else {
-			app.maximize();
-		}
+		app[app.isMaximized() ? 'restore' : 'maximize']();
 	});
 	document.querySelector('#close').addEventListener('click', () => {
 		//Save progress
@@ -442,11 +439,57 @@ function downloadSong() {
 	document.body.appendChild(view);
 }
 document.getElementById('getSongDownload').addEventListener('click', downloadSong);
+
+function handleEscapePress(index) {
+	if (escapePresses >= 3) {
+		//Close app
+		const app = chrome.app.window.current();
+		const webviewUrl = document.querySelector('#mainView').executeScript({
+			code: `(${(() => {
+				const vidId = location.href.split('v=')[1].split('&')[0];
+				let vidIndex = location.href.split('index=')[1];
+				if (vidIndex.indexOf('&') > -1) {
+					vidIndex = vidIndex.split('&')[0];
+				}
+				const [mins, secs] = document.querySelector('.ytp-time-current').innerHTML.split(':');
+				const address = 'https://www.youtube.com/watch';
+				const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
+				chrome.runtime.sendMessage({
+					cmd: 'setUrl',
+					url: url
+				});
+			}).toString()})()`
+		});
+
+		window.setTimeout(() => {
+			app.close();
+		}, 0);
+		return;
+	}
+
+	window.setTimeout(() => {
+		//Remove it from the array
+		escapePresses--; 	
+	}, 1000);
+}
+
+let escapePresses = 0;
 document.body.addEventListener('keydown', (e) => {
 	if (e.key === 'd') {
 		downloadSong();
 	} else if (e.key === 'Escape') {
-		document.getElementById('youtubeSearchPageView').remove();
+		const youtubeSearchPageView = document.getElementById('youtubeSearchPageView');
+		if (youtubeSearchPageView) {
+			youtubeSearchPageView.remove();
+			return;
+		}
+
+		escapePresses++
+		handleEscapePress();
+	} else if (e.key === 'F11') {
+		chrome.runtime.sendMessage({
+			cmd: 'toggleFullscreen'
+		});
 	}
 });
 

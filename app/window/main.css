@@ -1,14 +1,12 @@
 body {
 	margin: 0;
 	padding: 0;
-	background-color: purple;
 }
 
 #mainView {
 	width: 100vw;
 	height: calc(100vh + 15px);
 	margin-top: -26px;
-	/* opacity: 0; */
 }
 
 #titleBar {
@@ -17,6 +15,8 @@ body {
 	justify-content: flex-end;
 	-webkit-app-region: drag;
 	background-color: transparent;
+	position: relative;
+	z-indeX: 10000000;
 }
 
 #titleBar > div {
@@ -27,13 +27,11 @@ body {
 	justify-content: center;
 	margin-right: 1px;
 	-webkit-app-region: no-drag;
+	transition: background-color 250ms ease-in-out, transform 250ms ease-in-out;
+	transform: translateY(0);
 }
 
-#minimize, #maximize, #close {
-	transition: background-color 250ms ease-in-out;
-}
-
-#minimize:hover, #maximize:hover {
+#minimize:hover, #maximize:hover, #fullscreen:hover {
 	background-color: rgb(229, 229, 229);
 }
 
@@ -53,7 +51,10 @@ body {
 	opacity: 1;
 }
 
-#maximize:hover #maximizeBox, #maximize:hover #maximizeBoxes, #close:hover #closeCross {
+#maximize:hover #maximizeBox,
+#maximize:hover #maximizeBoxes,
+#close:hover #closeCross,
+#fullscreen:hover #fullscreenImagesCont {
 	opacity: 1;
 }
 
@@ -116,7 +117,8 @@ body {
 }
 
 .closeCrossLine {
-	stroke: rgb(153,153,153);
+	stroke: black;
+	opacity: 0.4;
 }
 
 #titleBar.focused .closeCrossLine {
@@ -139,11 +141,11 @@ body {
 	display: flex;
 }
 
-#titleBar.fullscreen #maximizedBoxesCont {
+#titleBar.maximized #maximizedBoxesCont {
 	display: flex;
 }
 
-#titleBar.fullscreen #maximizeBoxCont {
+#titleBar.maximized #maximizeBoxCont {
 	display: none;
 }
 
@@ -221,4 +223,78 @@ body {
 	margin-top: 70px;
 	margin-left: calc(50vw - 235px);
 	border: 5px solid #F44336;
+}
+
+#fullscreenLine {
+    height: 12px;
+    background-color: black;
+    width: 1px;
+    transform: rotate(45deg);
+    margin-top: 8px;
+}
+
+.arrowLeftLine {
+    height: 7px;
+    background-color: black;
+    width: 1px;
+    position: absolute;
+    transform: rotate(-22.5deg);
+    margin-left: -2px;
+}
+
+.arrowRightLine {
+    height: 7px;
+    background-color: black;
+    width: 1px;
+    position: absolute;
+    transform: rotate(22.5deg);
+    margin-left: 2px;
+}
+
+#bottomLeftArrow {
+    margin-top: 24px;
+    margin-left: -9px;
+    transform: rotate(225deg);
+}
+
+.fullscreenArrow {
+    position: absolute;
+}
+
+#topRightArrow {
+    margin-top: 6px;
+    margin-left: 8px;
+    transform: rotate(45deg);
+}
+
+#titleBar #enterFullscreen {
+	display: block;
+}
+
+#titleBar #exitFullscreen {
+	display: none;
+}
+
+#titleBar.fullscreen #enterFullscreen {
+	display: none;
+}
+
+#titleBar.fullscreen #exitFullscreen {
+	display: block;
+}
+
+#fullscreenImagesCont {
+    margin-top: 8px;
+}
+
+#titleBar.fullscreen > div {
+    transform: translateY(-26px);
+}
+
+#titleBar:hover > div {
+    transform: translateY(0);
+}
+
+#titleBar.focused .closeCrossLine, #close:hover .closeCrossLine {
+    opacity: 1;
 }
