@@ -164,6 +164,13 @@ function addViewListeners(view) {
 
 			prepareVideo();
 
+			document.body.addEventListener('keydown', (e) => {
+				if (e.key === 'h') {
+					//Hide or show video
+					document.body.classList.toggle('showHiddens');
+				}
+			});
+
 			function updateSizes() {
 				playerApi.style.width = window.innerWidth + 'px';
 				playerApi.style.height = (window.innerHeight - 15) + 'px';

@@ -1,7 +1,11 @@
-
 html {
 	overflow: hidden;
 }
+
+.showHiddens body {
+	overflow: scroll;
+}
+
 .ad-container {
 	display: none;
 }
@@ -34,6 +38,10 @@ video {
 	max-width: none!important;
 }
 
+.showHiddens #player {
+	display: none;
+}
+
 #masthead-positioner {
 	display: none;
 }
@@ -42,8 +50,32 @@ video {
 	display: none;
 }
 
-#player-playlist, #content, #footer-container, #feed-privacy-lb, .alerts-wrapper {
+.showHiddens #masthead-positioner {
+	display: block;
+}
+
+.showHiddens #masthead-positioner-height-offset {
+	display: block;
+}
+
+.yt-dialog-base {
 	display: none;
+}
+
+#player-playlist,
+#content,
+#footer-container,
+#feed-privacy-lb,
+.alerts-wrapper {
+	display: none;
+}
+
+.showHiddens #player-playlist,
+.showHiddens #content,
+.showHiddens #footer-container,
+.showHiddens #feed-privacy-lb,
+.showHiddens .alerts-wrapper {
+	display: block;
 }
 
 #yt-ca-volumeBar {
