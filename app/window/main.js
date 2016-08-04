@@ -686,11 +686,15 @@ window.getCurrentSong = () => {
 				const tracks = Array.from(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
 					const nameContainer = songContainer.querySelector('.trackFormat.iBlock');
 					const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
-					const artist = namesContainers[0].childNodes[0].nodeValue; 
-					const songName = namesContainers[1].childNodes[0].nodeValue;
+					const artist = namesContainers[0].innerText; 
+					const songName = namesContainers[1].innerText;
+					let remix = '';
+					if (namesContainers[2]) {
+						remix = ` (${namesContainers[2].innerText} ${namesContainers[3].innerText})`;
+					}
 					return {
 						startTime: timestampToSeconds(songContainer.querySelector('.cueValueField').innerText),
-						songName: `${artist} - ${songName}`
+						songName: `${artist} - ${songName}${remix}`
 					}
 				});
 
