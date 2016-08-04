@@ -119,3 +119,7 @@ video {
     height: 100%;
 	opacity: 10;
 }
+
+body.showHiddens {
+	overflow: scroll;
+}
