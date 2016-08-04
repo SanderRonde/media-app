@@ -66,7 +66,21 @@ function doTask(name, id) {
 				});
 				done(timestamps);
 			} else {
-				done(false);
+				//Try to find any links to 1001tracklists in the description
+				const tracklistLinks = Array.from(descr.querySelectorAll('a')).map((anchor) => {
+					if (anchor.getAttribute('href').match(/http(s)?:\/\/www\.1001tracklists\.com\/tracklist\//)) {
+						return anchor.getAttribute('href');
+					} 
+					return null;
+				}).filter((anchor) => {
+					return anchor !== null;
+				});
+
+				if (tracklistLinks.length > 0) {
+					done(tracklistLinks[0]);
+				} else {
+					done(false);
+				}
 			}
 			break;
 		case 'getImageOCR':

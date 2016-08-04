@@ -653,23 +653,57 @@ function getSongFromOCR(callback) {
 	});
 }
 
+function timestampToSeconds(timestamp) {
+	const split = timestamp.split(':');
+	let seconds = 0;
+	for (let i = split.length - 1; i >= 0; i--) {
+		seconds = Math.pow(60, (split.length - (i + 1))) * ~~split[i];
+	}
+	return seconds;
+}
+
+function getSongIndex(timestamps, time) {
+	for (let i = 0; i < timestamps.length; i++) {
+		if (timestamps[i] <= time && timestamps[i + 1] >= time) {
+			return i;
+		}
+	}
+	return timestamps.length - 1;
+}
+
 window.getCurrentSong = () => {
 	sendTaskToPage('getTimestamps', (timestamps) => {
-		if (!timestamps || false) {
+		const enableOCR = false;
+		if (enableOCR && !timestamps) {
 			//Do some OCR magic
 			getSongFromOCR(displayFoundSong);
-		} else {
-			function getSongIndex(time) {
-				for (let i = 0; i < timestamps.length; i++) {
-					if (timestamps[i] <= time && timestamps[i + 1] >= time) {
-						return i;
+		} else if (!Array.isArray(timestamps)) {
+			//It's a link to the tracklist
+			fetch(timestamps).then((response) => {
+				return response.text();
+			}).then((html) => {
+    			const doc = document.createRange().createContextualFragment(html);
+				const tracks = Array.from(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
+					const nameContainer = songContainer.querySelector('.trackFormat.iBlock');
+					const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
+					const artist = namesContainers[0].childNodes[0].nodeValue; 
+					const songName = namesContainers[1].childNodes[0].nodeValue;
+					return {
+						startTime: timestampToSeconds(songContainer.querySelector('.cueValueField').innerText),
+						songName: `${artist} - ${songName}`
 					}
-				}
-				return timestamps.length - 1;
-			}
+				});
 
+				sendTaskToPage('getTime', (time) => {
+					const index = getSongIndex(tracks.map((track) => {
+						return track.startTime;
+					}), ~~time);
+					displayFoundSong(tracks[index].songName);
+				});
+			});
+		} else {
 			sendTaskToPage('getTime', (time) => {
-				const index = getSongIndex(~~time);
+				const index = getSongIndex(timestamps, ~~time);
 				sendTaskToPage('getSongName' + index, (name) => {
 					displayFoundSong(name);
 				});
