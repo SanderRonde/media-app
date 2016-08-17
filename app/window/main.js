@@ -117,7 +117,7 @@ function addViewListeners(view) {
 
 	function loadResizer() {
 		hacksecute(view, () => {
-			if (window.exuectedYTCA === location.href) {
+			if (window.exuectedYTCA) {
 				return;
 			}
 			window.exuectedYTCA = location.href;
@@ -684,22 +684,28 @@ window.getCurrentSong = () => {
 			}).then((html) => {
     			const doc = document.createRange().createContextualFragment(html);
 				const tracks = Array.from(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
-					const nameContainer = songContainer.querySelector('.trackFormat.iBlock');
-					const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
-					const artist = namesContainers[0].innerText; 
-					const songName = namesContainers[1].innerText;
-					let remix = '';
-					if (namesContainers[2]) {
-						remix = ` (${namesContainers[2].innerText} ${namesContainers[3].innerText})`;
-					}
-					return {
-						startTime: timestampToSeconds(songContainer.querySelector('.cueValueField').innerText),
-						songName: `${artist} - ${songName}${remix}`
+					try {
+						const nameContainer = songContainer.querySelector('.trackFormat');
+						const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
+						const artist = namesContainers[0].innerText; 
+						const songName = namesContainers[1].innerText;
+						let remix = '';
+						if (namesContainers[2]) {
+							remix = ` (${namesContainers[2].innerText} ${namesContainers[3].innerText})`;
+						}
+						return {
+							startTime: timestampToSeconds(songContainer.querySelector('.cueValueField').innerText),
+							songName: `${artist} - ${songName}${remix}`
+						}
+					} catch(e) {
+						return null;
 					}
 				});
 
 				sendTaskToPage('getTime', (time) => {
-					const index = getSongIndex(tracks.map((track) => {
+					const index = getSongIndex(tracks.filter((track) => {
+						return !!track;
+					}).map((track) => {
 						return track.startTime;
 					}), ~~time);
 					displayFoundSong(tracks[index].songName);
