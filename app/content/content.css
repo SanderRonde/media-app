@@ -17,6 +17,7 @@ html {
 video {
 	min-width: 100vw;
 	min-height: calc(100vh - 5px);
+	top: 0!important;
 	left: 0!important;
 	background-color: white;
 }

@@ -500,6 +500,12 @@ document.body.addEventListener('keydown', (e) => {
 	}
 });
 
+Array.from(document.querySelectorAll('.toast .dismissToast')).forEach((toastButton) => {
+	toastButton.addEventListener('click', () => {
+		toastButton.parentNode.classList.remove('visible');
+	});
+});
+
 function displayFoundSong(name) {
 	document.getElementById('getSongName').innerHTML = name;
 	const dialog = document.getElementById('getSongDialog');
@@ -677,47 +683,56 @@ window.getCurrentSong = () => {
 		if (enableOCR && !timestamps) {
 			//Do some OCR magic
 			getSongFromOCR(displayFoundSong);
-		} else if (!Array.isArray(timestamps)) {
-			//It's a link to the tracklist
-			fetch(timestamps).then((response) => {
-				return response.text();
-			}).then((html) => {
-    			const doc = document.createRange().createContextualFragment(html);
-				const tracks = Array.from(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
-					try {
-						const nameContainer = songContainer.querySelector('.trackFormat');
-						const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
-						const artist = namesContainers[0].innerText; 
-						const songName = namesContainers[1].innerText;
-						let remix = '';
-						if (namesContainers[2]) {
-							remix = ` (${namesContainers[2].innerText} ${namesContainers[3].innerText})`;
+		} else if (timestamps) {
+			if (!Array.isArray(timestamps)) {
+				//It's a link to the tracklist
+				fetch(timestamps).then((response) => {
+					return response.text();
+				}).then((html) => {
+					const doc = document.createRange().createContextualFragment(html);
+					const tracks = Array.from(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
+						try {
+							const nameContainer = songContainer.querySelector('.trackFormat');
+							const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
+							const artist = namesContainers[0].innerText; 
+							const songName = namesContainers[1].innerText;
+							let remix = '';
+							if (namesContainers[2]) {
+								remix = ` (${namesContainers[2].innerText} ${namesContainers[3].innerText})`;
+							}
+							return {
+								startTime: timestampToSeconds(songContainer.querySelector('.cueValueField').innerText),
+								songName: `${artist} - ${songName}${remix}`
+							}
+						} catch(e) {
+							return null;
 						}
-						return {
-							startTime: timestampToSeconds(songContainer.querySelector('.cueValueField').innerText),
-							songName: `${artist} - ${songName}${remix}`
-						}
-					} catch(e) {
-						return null;
-					}
-				});
+					});
 
+					sendTaskToPage('getTime', (time) => {
+						const index = getSongIndex(tracks.filter((track) => {
+							return !!track;
+						}).map((track) => {
+							return track.startTime;
+						}), ~~time);
+						displayFoundSong(tracks[index].songName);
+					});
+				});
+			} else {
 				sendTaskToPage('getTime', (time) => {
-					const index = getSongIndex(tracks.filter((track) => {
-						return !!track;
-					}).map((track) => {
-						return track.startTime;
-					}), ~~time);
-					displayFoundSong(tracks[index].songName);
+					const index = getSongIndex(timestamps, ~~time);
+					sendTaskToPage('getSongName' + index, (name) => {
+						displayFoundSong(name);
+					});
 				});
-			});
+			}
 		} else {
-			sendTaskToPage('getTime', (time) => {
-				const index = getSongIndex(timestamps, ~~time);
-				sendTaskToPage('getSongName' + index, (name) => {
-					displayFoundSong(name);
-				});
-			});
+			//Show not found toast
+			const toast = document.getElementById('mainToast');
+			toast.classList.add('visible');
+			window.setTimeout(() => {
+				toast.classList.remove('visible');
+			}, 5000);
 		}
 	});
 }

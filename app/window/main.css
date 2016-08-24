@@ -16,7 +16,7 @@ body {
 	-webkit-app-region: drag;
 	background-color: transparent;
 	position: relative;
-	z-indeX: 10000000;
+	z-index: 10000000;
 }
 
 #titleBar > div {
@@ -297,4 +297,47 @@ body {
 
 #titleBar.focused .closeCrossLine, #close:hover .closeCrossLine {
     opacity: 1;
+}
+
+.toast {
+	position: absolute;
+	bottom: -100px;
+	left: 0;
+	background-color: rgb(50, 50, 50);
+	color: rgb(241, 241, 241);
+	font-size: 14px;
+	padding: 16px 18px;
+	margin: 12px;
+	transition: transform 200ms ease-in-out;
+}
+
+.toast div {
+	display: inline-block;
+	padding-left: 6px;
+	padding-right: 6px;
+}
+
+.toast .toastButton {
+	color: yellow;
+	cursor: pointer;
+	position: relative;
+	text-transform: uppercase;
+}
+
+.toast .toastButton:active::before {
+	background-color: rgba(0,0,0,.1);
+	border-radius: 2px;
+	bottom: -4px;
+	content: ' ';
+	left: -4px;
+	margin: auto;
+	padding: 4px;
+	position: absolute;
+	right: -4px;
+	top: -4px;
+	padding-right: 0;
+}
+
+.toast.visible {
+	transform: translateY(-100px);
 }
