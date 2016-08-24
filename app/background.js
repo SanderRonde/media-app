@@ -33,12 +33,20 @@ chrome.commands.onCommand.addListener((cmd) => {
 			});
 			break;
 		case 'pausePlay':
-			chrome.runtime.sendMessage({
-				cmd: 'pausePlay'
-			});
+			if (chrome.app.window.get('mainwindow') === null) {
+				launch();
+			} else {
+				chrome.runtime.sendMessage({
+					cmd: 'pausePlay'
+				});
+			}
 			break;
 		case 'focusWindow':
-			chrome.app.window.get('mainwindow').focus();
+			if (chrome.app.window.get('mainwindow') === null) {
+				launch();
+			} else {
+				chrome.app.window.get('mainwindow').focus();
+			}
 			break;
 		case 'getSong':
 			let appWindow = chrome.app.window.get('mainwindow');
