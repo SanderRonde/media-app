@@ -265,38 +265,42 @@ function addViewListeners(view) {
 								.querySelectorAll('a[href="#"]')
 							const index = ~~name.split('getSongName')[1];
 							const textNodes = [];
-							let currentNode = timestampContainers[index].previousSibling;
+							if (!isNaN(index) && timestampContainers[index]) {
+								let currentNode = timestampContainers[index].previousSibling;
 
-							//Search back until a <br> is found
-							while (currentNode.tagName !== 'BR') {
-								if (!currentNode.tagName) {
-									textNodes.push(currentNode.nodeValue);
+								//Search back until a <br> is found
+								while (currentNode && currentNode.tagName !== 'BR') {
+									if (!currentNode.tagName) {
+										textNodes.push(currentNode.nodeValue);
+									}
+									currentNode = currentNode.previousSibling;
 								}
-								currentNode = currentNode.previousSibling;
-							}
 
-							currentNode = timestampContainers[index].nextSibling;
+								currentNode = timestampContainers[index].nextSibling;
 
-							//Search forward until a <br> is found
-							while (currentNode.tagName !== 'BR') {
-								if (!currentNode.tagName) {
-									textNodes.push(currentNode.nodeValue);
+								//Search forward until a <br> is found
+								while (currentNode && currentNode.tagName !== 'BR') {
+									if (!currentNode.tagName) {
+										textNodes.push(currentNode.nodeValue);
+									}
+									currentNode = currentNode.nextSibling;
 								}
-								currentNode = currentNode.nextSibling;
-							}
 
-							//Go through list and find something that resembles a song
-							for (let i = 0; i < textNodes.length; i++) {
-								if (/.+-.+/.test(textNodes[i])) {
-									//This is a song
-									result = textNodes[i];
-									break;
+								//Go through list and find something that resembles a song
+								for (let i = 0; i < textNodes.length; i++) {
+									if (/.+-.+/.test(textNodes[i])) {
+										//This is a song
+										result = textNodes[i];
+										break;
+									}
 								}
-							}
 
-							if (!result) {
-								//Just try this instead
-								result = textNodes[0];
+								if (!result) {
+									//Just try this instead
+									result = textNodes[0];
+								}
+							} else {
+								result = null;
 							}
 						}
 						break;
