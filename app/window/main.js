@@ -127,6 +127,10 @@ function addViewListeners(view) {
 			const volumeBar = document.createElement('div');
 			const volumeBarBar = document.createElement('div');
 			const volumeBarNumber = document.createElement('div');
+			const visualizer = document.createElement('div');
+			visualizer.classList.add('ytma_visualization_cont');
+			document.body.insertBefore(visualizer, document.body.children[0]);
+
 			volumeBar.id = 'yt-ca-volumeBar';
 			volumeBarBar.id = 'yt-ca-volumeBarBar';
 			volumeBarNumber.id = 'yt-ca-volumeBarNumber';
@@ -138,40 +142,88 @@ function addViewListeners(view) {
 			volumeBar.appendChild(volumeBarBar);
 			document.body.appendChild(volumeBar);
 
-			function visualize() {
+			function cleanupData(dataArray) {
+				for (let i in dataArray) {
+					if (dataArray[i] <= -100 || dataArray[i] == -80 || dataArray[i] == -50) {
+						dataArray[i] = 0;
+						continue;
+					}
+					dataArray[i] = (dataArray[i] + 100) / 100;
+				}
 
+				const newArray = [];
+
+				//Compress it into a max of 120 bars
+				const delta = (dataArray.length / 120);
+				for (let i = 0; i < dataArray.length; i += delta) {
+					let average = dataArray.slice(i, i + delta).reduce((a, b) => {
+						return a + b;
+					}) / delta;
+					newArray.push(average);
+				}
+
+				return newArray;
 			}
 
-			function checkForVisualizer() {
+			function renderBars(data) {
+				data.bars.forEach((element, index) => {
+					element.style.transform = `scaleY(${data.parsedArray[index] * 1.5})`;
+				});
+			}
+
+			function visualize() { 
+				this.analyser.getFloatFrequencyData(this.dataArray);
+				this.parsedArray = cleanupData(this.dataArray);
+
+				renderBars(this);
+
 				if (visualizing) {
+					window.requestAnimationFrame(visualize.bind(this));
+				}
+			}
+
+			function checkForVisualizer(data) {
+				const shouldVisualize = document.body.classList.contains('showVisualizer');
+				if (visualizing === shouldVisualize) {
 					return;
 				}
-				chrome.storage.local.get('visualizer', (storage) => {
-					if (storage.visualizer === 'show' || true) {
-						visualizing = true;
-						window.requestAnimationFrame(visualize);
-					}
-				});
+				if (shouldVisualize) {
+					visualizing = true;
+					document.body.classList.add('showVisualizer');
+					window.requestAnimationFrame(visualize.bind(data));
+				} else {
+					document.body.classList.remove('showVisualizer');
+					visualizing = false;
+				}
 			}
 
 
 			function setupVisualizer() {
-				const video = document.querySelector('video');
-				const ctx = new AudioContext();
-				const gainNode = ctx.createGain();
-				const vidSrc = ctx.createMediaElementSource(video);
+				const data = { }
+				data.video = document.querySelector('video');
+				data.ctx = new AudioContext();
+				data.analyser = data.ctx.createAnalyser();
+				data.vidSrc = data.ctx.createMediaElementSource(data.video);
+				
+				data.vidSrc.connect(data.analyser);
+				data.vidSrc.connect(data.ctx.destination);
 
-				gainNode.connect(ctx.destination);
+				data.dataArray = new Float32Array(data.analyser.frequencyBinCount);
+				data.analyser.getFloatFrequencyData(data.dataArray);
 
-				window.setInterval(checkForVisualizer, 50);
+				data.bars = Array(100).join('a').split('a');
+				data.bars = data.bars.map((el) => {
+					let bar = document.createElement('div');
+					bar.classList.add('ytma_visualization_bar');
+					visualizer.appendChild(bar);
+					return bar;
+				});
 
-				const audioBufferSouceNode = audioContext.createBufferSource();
-				const analyser = audioContext.createAnalyser();
+				window.setInterval(() => {
+					checkForVisualizer(data);
+				}, 50);
 
-				audioBufferSouceNode.connect(analyser);
-				analyser.connect(audioContext.destination);
-				audioBufferSouceNode.buffer = buffer;
-
+				document.body.classList.toggle('showVisualizer');
 			}
 
 			function prepareVideo() {
@@ -416,7 +468,22 @@ function setupMenuButtons() {
 	}
 
 	app.onMaximized.addListener(updateButtonsState);
-	app.onRestored.addListener(updateButtonsState);
+	app.onMinimized.addListener(() => {
+		if (visualizing) {
+			hacksecute(document.querySelector('webview'), () => {
+				document.body.classList.remove('showVisualizer');
+			});
+		}
+	});
+	app.onRestored.addListener(() => {
+		if (!app.isMinimized() && visualizing) {
+			hacksecute(document.querySelector('webview'), () => {
+				document.body.classList.add('showVisualizer');
+			});
+		}
+		updateButtonsState();
+		
+	});
 	app.onFullscreened.addListener(updateButtonsState);
 	window.addEventListener('focus', () => {
 		titleBar.classList.add('focused');
@@ -523,6 +590,7 @@ function handleEscapePress(index) {
 }
 
 let escapePresses = 0;
+let visualizing = true;
 document.body.addEventListener('keydown', (e) => {
 	if (e.key === 'd') {
 		downloadSong();
@@ -538,6 +606,10 @@ document.body.addEventListener('keydown', (e) => {
 	} else if (e.key === 'F11') {
 		chrome.runtime.sendMessage({
 			cmd: 'toggleFullscreen'
+		});
+	} else if (e.key === 'v') {
+		hacksecute(document.querySelector('webview'), () => {
+			document.body.classList.toggle('showVisualizer');
 		});
 	}
 });

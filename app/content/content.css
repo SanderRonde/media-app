@@ -17,8 +17,8 @@ html {
 video {
 	min-width: 100vw;
 	min-height: calc(100vh - 5px);
-	top: 0!important;
 	left: 0!important;
+	top: 0!important;
 	background-color: white;
 }
 
@@ -123,4 +123,27 @@ video {
 
 body.showHiddens {
 	overflow: scroll;
+}
+
+.ytma_visualization_cont {
+	position: absolute;
+	z-index: 10000;
+	bottom: 0;
+	user-select: none;
+	pointer-events: none;
+	display: none;
+}
+
+body.showVisualizer .ytma_visualization_cont {
+	display: block;
+}
+
+.ytma_visualization_bar {
+	width: calc(1vw - 2px);
+	height: calc(100vh - 35px);
+	display: inline-block;
+	margin: 0 1px;
+	background-color: rgba(230, 230, 230, 0.5);
+	will-change: transform;
+	transform-origin: center bottom;
 }
