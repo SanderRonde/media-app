@@ -132,10 +132,47 @@ function addViewListeners(view) {
 			volumeBarNumber.id = 'yt-ca-volumeBarNumber';
 
 			let volumeBarTimeout = null;
+			let visualizing = false;
 
 			volumeBar.appendChild(volumeBarNumber);
 			volumeBar.appendChild(volumeBarBar);
 			document.body.appendChild(volumeBar);
+
+			function visualize() {
+
+			}
+
+			function checkForVisualizer() {
+				if (visualizing) {
+					return;
+				}
+				chrome.storage.local.get('visualizer', (storage) => {
+					if (storage.visualizer === 'show' || true) {
+						visualizing = true;
+						window.requestAnimationFrame(visualize);
+					}
+				});
+			}
+
+
+			function setupVisualizer() {
+				const video = document.querySelector('video');
+				const ctx = new AudioContext();
+				const gainNode = ctx.createGain();
+				const vidSrc = ctx.createMediaElementSource(video);
+
+				gainNode.connect(ctx.destination);
+
+				window.setInterval(checkForVisualizer, 50);
+
+				const audioBufferSouceNode = audioContext.createBufferSource();
+				const analyser = audioContext.createAnalyser();
+
+				audioBufferSouceNode.connect(analyser);
+				analyser.connect(audioContext.destination);
+				audioBufferSouceNode.buffer = buffer;
+
+			}
 
 			function prepareVideo() {
 				setTimeout(() => {
@@ -156,6 +193,7 @@ function addViewListeners(view) {
 									.getAttribute('title') === 'Theatermodus') {
 								player.setSizeStyle(true, true);
 							}
+							setupVisualizer();
 						}
 					}
 					reloadIfAd();
