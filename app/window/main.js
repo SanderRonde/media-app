@@ -93,8 +93,30 @@ function addRuntimeListeners(view) {
 	});
 }
 
+function blockViewAds(view) {
+	const CANCEL = {
+		cancel: true
+	}
+	const AD_URL_REGEX = new RegExp([
+		"://[^/]+.doubleclick.net",
+		"://[^/]+.googlesyndication.com",
+		"/ad_frame?", 
+		"/api/stats/ads?", 
+		"/annotations_invideo?", 
+		"ad3-w+.swf"
+	].join('|'), 'i');
+	view.request.onBeforeRequest.addListener((request) => {
+		if (AD_URL_REGEX.exec(request.url)) {
+			return CANCEL;
+		}
+	}, {
+		urls: ['*://*/*']
+	}, ['blocking']);
+}
+
 function addViewListeners(view) {
 
+	blockViewAds(view);
 	view.addContentScripts([{
 		name: 'js',
 		matches: ['*://*/*'],
