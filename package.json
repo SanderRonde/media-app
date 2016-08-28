@@ -1,0 +1,29 @@
+{
+  "name": "youtube-music-app",
+  "version": "1.0.8",
+  "description": "Runs your music in the \"watch later\" playlist",
+  "main": "gruntfile.js",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SanderRonde/youtube-music-app.git"
+  },
+  "keywords": [
+    "youtube",
+    "music",
+    "playlist",
+    "app"
+  ],
+  "author": "Sander Ronde <awsdfgvhbjn@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SanderRonde/youtube-music-app/issues"
+  },
+  "homepage": "https://github.com/SanderRonde/youtube-music-app#readme",
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-zip": "^0.17.1"
+  }
+}
