@@ -1,27 +1,29 @@
 {
-  "name": "youtube-music-app",
+  "name": "media-app",
   "version": "1.0.8",
-  "description": "Runs your music in the \"watch later\" playlist",
+  "description": "Runs Netflix and Youtube as a desktop app",
   "main": "gruntfile.js",
   "scripts": {
     "test": "grunt test"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SanderRonde/youtube-music-app.git"
+    "url": "git+https://github.com/SanderRonde/media-app.git"
   },
   "keywords": [
     "youtube",
     "music",
     "playlist",
+    "netflix",
+    "subscriptions",
     "app"
   ],
   "author": "Sander Ronde <awsdfgvhbjn@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/SanderRonde/youtube-music-app/issues"
+    "url": "https://github.com/SanderRonde/media-app/issues"
   },
-  "homepage": "https://github.com/SanderRonde/youtube-music-app#readme",
+  "homepage": "https://github.com/SanderRonde/media-app#readme",
   "devDependencies": {
     "grunt": "^1.0.1",
     "grunt-zip": "^0.17.1"

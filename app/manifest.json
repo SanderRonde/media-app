@@ -1,8 +1,8 @@
 {
 	"manifest_version": 2,
 
-	"name": "Youtube Music App",
-	"description": "Runs your music in the \"watch later\" playlist",
+	"name": "Media App",
+	"description": "Runs Netflix and Youtube as a desktop app",
 	"version": "1.0.8",
 
 	"app": {

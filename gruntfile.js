@@ -3,9 +3,9 @@ module.exports = function(grunt) {
 		pkg: grunt.file.readJSON('package.json'),
 		zip: {
 			'using-cwd': {
-				cwd: 'build/',
+				cwd: './app',
 				src: ['app/**'],
-				dest: 'build/Youtube Music App.zip'
+				dest: 'build/MediaApp.zip'
 			}
 		}
 	});

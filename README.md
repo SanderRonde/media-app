@@ -1,10 +1,10 @@
-# Youtube Music App
+# Media App
 
 Plays your watch later playlist and keeps your progress
 
-## Usage info
+## Shortcuts
 
-### Shortcuts
+### Youtube Playlists
 
 * Pressing ```H``` hides the video and shows you the page layout only
 * Pressing ```V``` shows/hides the visualizer (on by default)
