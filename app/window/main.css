@@ -3,10 +3,36 @@ body {
 	padding: 0;
 }
 
-#mainView {
+#views {
+	display: flex;
+	flex-direction: row;
+	width: 300vw;
+	transform: translateX(-100vw);
+	transition: transform 500ms ease-in-out;
+}
+
+#views.youtubeSubscriptions {
+	transform: translateX(0);
+}
+
+#views.ytmusic {
+	transform: translateX(-100vw);
+}
+
+#views.netflix {
+	transform: translateX(-200vw);
+}
+
+#views > * {
+	background-color: black;
 	width: 100vw;
 	height: calc(100vh + 15px);
 	margin-top: -26px;
+}
+
+#ytmaWebview {
+	width: 100vw;
+	height: calc(100vh + 15px);
 }
 
 #titleBar {
@@ -340,4 +366,75 @@ body {
 
 .toast.visible {
 	transform: translateY(-100px);
+}
+
+#spinnerCont {
+	position: absolute;
+	z-index: 10000;
+	width: 100vw;
+	height: 100vh;
+	background-color: white;
+	top: 0;
+	left: 0;
+	transition: opacity 500ms ease-in-out;
+	pointer-events: all;
+}
+
+#spinnerCont.hidden {
+	opacity: 0;
+	pointer-events: none;
+}
+
+#spinnerVerticalCenterer {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	height: 100%;
+}
+
+#spinnerHorizontalCenterer {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+#netflixFullPageView {
+	position: absolute;
+	top: 0;
+	display: none;
+	opacity: 0;
+	transition: opacity 250ms ease-in-out;
+	pointer-events: none;
+}
+
+#netflixCont.showFullPage > #netflixFullPageView {
+	display: block;
+	opacity: 1;
+	z-index: 10000;
+	pointer-events: all;
+}
+
+#netflixWebview,
+#netflixSelectionWebView,
+#netflixFullPageView, 
+#youtubeSubsSubBoxView,
+#youtubeSubsVideoView {
+	width: 100vw;
+	height: 100vh;
+}
+
+#netflixCont > #netflixSelectionWebView {
+	transition: transform 250ms ease-in;
+}
+
+#netflixCont.showSelection > #netflixSelectionWebView {
+	transform: translateY(-233px);
+}
+
+#youtubeSubsCont > #youtubeSubsVideoView {
+	transition: transform 350ms ease-in;
+}
+
+#youtubeSubsCont.showVideo > #youtubeSubsVideoView {
+	transform: translateY(-100vh);
 }

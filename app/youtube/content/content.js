@@ -55,48 +55,53 @@ function updateColors() {
 	document.querySelector('video').style.backgroundColor = `rgb(${mostUsedColor})`;
 }
 
-function uncirculizeWord(word) {
-	return {
-		bbox: word.bbox,
-		text: word.text,
-		confidence: word.confidence,
-		choices: word.choices
+function doTask(name, id, done) {
+	switch (name) {
+		case 'getTimestamps':
+			const descr = document.querySelector('#eow-description');
+			let timestampContainers = descr.querySelectorAll('a[href="#"]');
+			timestampContainers = Array.from(timestampContainers).filter((timestamp) => {
+				return /(\d)\:(\d)(:(\d))*/.test(timestamp.innerHTML);
+			});
+			let timestamps = null;
+			if (timestampContainers.length > 4) {
+				//At least 5 songs should be played to make it a tracklist
+				timestamps = timestampContainers.map((timestamp) => {
+					const split = timestamp.innerHTML.split(':');
+					let seconds = 0;
+					for (let i = split.length - 1; i >= 0; i--) {
+						seconds = Math.pow(60, (split.length - (i + 1))) * ~~split[i];
+					}
+					return seconds;
+				});
+				done(timestamps);
+			} else {
+				//Try to find any links to 1001tracklists in the description
+				const tracklistLinks = Array.from(descr.querySelectorAll('a')).map((anchor) => {
+					if (anchor.getAttribute('href').match(/http(s)?:\/\/www\.1001tracklists\.com\/tracklist\//)) {
+						return anchor.getAttribute('href');
+					} 
+					return null;
+				}).filter((anchor) => {
+					return anchor !== null;
+				});
+
+				if (tracklistLinks.length > 0) {
+					done(tracklistLinks[0]);
+				} else {
+					done(false);
+				}
+			}
+			break;
+		case 'getTime':
+			window.commToPage('getTime', done);
+			break;
+		default:
+			window.commToPage(name, done);
+			break;
 	}
 }
 
-const imageModel = [];
-function uploadImageModel(newData) {
-	imageModel.push({
-		lines: newData.lines.map((line) => {
-			return {
-				bbox: line.bbox,
-				text: line.text,
-				confidence: line.confidence,
-				words: line.words.map(uncirculizeWord)
-			}
-		}),
-		text: newData.text,
-		words: newData.words.map(uncirculizeWord)
-	});
-	chrome.storage.local.set({
-		imageModel: imageModel
-	});
-}
-
-function updateImageModel() {
-	ctx.drawImage(document.querySelector('video'), 0, 0, canv.width, canv.height);
-	const img = new Image();
-	img.src = canv.toDataURL('image/png');
-
-	Tesseract.recognize(img, {
-		lang: 'eng'
-	}).then((result) => {
-		uploadImageModel(result);
-	});
-}
-
-window.setInterval(updateColors, 10000);
+window.setInterval(updateColors, 1e4);
 updateColors();
-//window.setInterval(updateImageModel, 5000);
-//updateImageModel();
-window.setInterval(window.saveProgress, 30000);
+window.setInterval(window.saveProgress, 1e4);

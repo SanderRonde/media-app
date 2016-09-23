@@ -12,6 +12,18 @@
 	},
 
 	"commands": {
+		"launchNetflix": {
+			"description": "Launches the app in the netflix view",
+			"global": true
+		},
+		"launchYoutubeSubscriptions": {
+			"description": "Launches the app in the youtube subscriptions view",
+			"global": true
+		},
+		"launchYoutubeMusic": {
+			"description": "Launches the app in the youtube music view",
+			"global": true
+		},
 		"pausePlay": {
 			"suggested_key": {
 				"default": "Shift+Alt+P"

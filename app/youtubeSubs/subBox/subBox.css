@@ -1,0 +1,46 @@
+#guide,
+#masthead-positioner,
+#masthead-positioner-height-offset,
+#footer-container {
+	display: none;
+}
+
+#page {
+	padding-left: 0!important;
+}
+
+#body-container {
+	padding-bottom: 0!important;
+}
+
+@media screen and (min-width: 1310px) {
+	#content {
+		width: 1260px;
+	}
+}
+
+@media screen and (min-width: 1514px) {
+	#content {
+		width: 1464px;
+	}
+}
+
+@media screen and (min-width: 1720) {
+	#content {
+		width: 1670px;
+	}
+}
+
+@media screen and (min-width: 1919px) {
+	#content {
+		width: 1870px;
+	}
+}
+
+.yt-shelf-grid-item.possiblePodcast .yt-thumb-simple > img {
+	opacity: 0.4;
+}
+
+.yt-shelf-grid-item.selectedVideo {
+	border-bottom: 5px solid red;
+}

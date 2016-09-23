@@ -7698,3 +7698,91 @@ declare namespace chrome.windows {
 	 */
 	var onFocusChanged: WindowIdEvent;
 }
+
+declare namespace chrome.app {
+
+	interface ContentBounds {
+		left?: number;
+		top?: number;
+		width?: number;
+		height?: number;
+	}
+
+	interface BoundsSpecification extends ContentBounds {
+		minWidth?: number;
+		minHeight?: number;
+		maxWidth?: number;
+		maxHeight?: number;
+	}
+
+	interface Bounds extends BoundsSpecification {
+		setPosition: (left: number, top: number) => void;
+		setSize: (width: number, height: number) => void;
+		setMinimumSize: (minWidth: number, minHeight: number) => void;
+		setMaximumSize: (maxWidth: number, maxHeight: number) => void;
+	}
+
+	interface ChromeAppWindow {
+		focus: () => void;
+		fullscreen: () => void;
+		isFullscreen: () => boolean;
+		minimize: () => void;
+		isMinimized: () => boolean;
+		maximize: () => void;
+		isMaximized: () => boolean;
+		restore: () => void;
+		drawAttention: () => void;
+		clearAttention: () => void;
+		close: () => void;
+		show: (focused?: boolean) => void;
+		hide: () => void;
+		isAlwaysOnTop: () => boolean;
+		setAlwaysOnTop: () => void;
+		setVisibleOnAllWorspaces: (alwaysVisible?: boolean) => void;
+		contentWindow: Window;
+		id: string;
+		innerBounds: Bounds;
+		outerBounds: Bounds; 
+
+		onBoundsChanged: Listenable;
+		onClosed: Listenable;
+		onFullscreened: Listenable;
+		onMaximized: Listenable;
+		onMinimized: Listenable;
+		onRestored: Listenable;
+	}
+
+	interface FrameOptions {
+		type?: string;
+		color?: string;
+		activeColor?: string;
+		inactiveColor?: string;
+	}
+
+	interface Listenable {
+		addListener: (callback: (result: any) => void) => void;
+	}
+
+	var window: {
+		current: () => ChromeAppWindow;
+		create: (url: string, options: {
+			id?: string;
+			innerBounds?: BoundsSpecification;
+			outerBounds?: BoundsSpecification;
+			type?: 'shell'|'panel';
+			showInShelf?: boolean;
+			icon?: string;
+			frame: string|FrameOptions;
+			bounds?: ContentBounds;
+			state?: 'normal'|'fullscreen'|'maximized'|'minimized';
+			hidden?: boolean;
+			resizable?: boolean;
+			alwaysOnTop?: boolean;
+			focused?: boolean;
+			visibleOnAllWorkspaces?: boolean;
+		}, callback: (createdWindow: ChromeAppWindow) => void) => void;
+		getAll: () => Array<ChromeAppWindow>;
+		get: (id: string) => ChromeAppWindow;
+		canSetVisibleOnAllWorkspaces: boolean;
+	}
+}

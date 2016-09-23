@@ -1,4 +1,4 @@
-﻿function launch() {
+﻿function launch(view) {
 	chrome.app.window.create('window/main.html', {
 		id: 'mainwindow',
 		outerBounds: {
@@ -10,17 +10,30 @@
 		},
 		state: 'maximized',
 		resizable: true
+	}, (appWindow) => {
+		if (view) {
+			appWindow.contentWindow.baseView = view;
+		}
 	});
 }
 
 chrome.app.runtime.onLaunched.addListener(() => {
-	launch();
+	launch('ytmusic');
 });
 
 chrome.commands.onCommand.addListener((cmd) => {
 	switch (cmd) {
+		case 'launchYoutubeMusic':
+			launch('ytmusic');
+			break;
+		case 'launchNetflix':
+			launch('netflix');
+			break;
+		case 'launchYoutubeSubscriptions':
+			launch('youtubeSubscriptions');
+			break;
 		case 'launch':
-			launch();
+			launch('ytmusic');
 			break;
 		case 'lowerVolume':
 			chrome.runtime.sendMessage({
@@ -34,7 +47,7 @@ chrome.commands.onCommand.addListener((cmd) => {
 			break;
 		case 'pausePlay':
 			if (chrome.app.window.get('mainwindow') === null) {
-				launch();
+				launch('ytmusic');
 			} else {
 				chrome.runtime.sendMessage({
 					cmd: 'pausePlay'
@@ -43,7 +56,7 @@ chrome.commands.onCommand.addListener((cmd) => {
 			break;
 		case 'focusWindow':
 			if (chrome.app.window.get('mainwindow') === null) {
-				launch();
+				launch('ytmusic');
 			} else {
 				chrome.app.window.get('mainwindow').focus();
 			}
@@ -89,11 +102,11 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 				sendMessageToPlaylistSaver({
 					cmd: 'getUrl'
 				}, (response) => {
-					getAppWindow().respondUrl(response.url);
+					getAppWindow().YoutubeMusic.respondUrl(response.url);
 				});
 			} catch(e) {
 				chrome.storage.sync.get((data) => {
-					getAppWindow(data.url);
+					getAppWindow().YoutubeMusic.respondUrl(data.url);
 				});
 			}
 			break;
@@ -106,11 +119,12 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 			} catch (e) {}
 			break;
 		case 'downloadvideo':
-			getAppWindow().downloadVideo(message.url);
+			getAppWindow().YoutubeMusic.downloadVideo(message.url);
 			break;
 		case 'taskResult':
 			const appWindow = getAppWindow();
-			appWindow.returnTaskValue && appWindow.returnTaskValue(message.result, message.id);
+			appWindow.Helpers.returnTaskValue &&
+				appWindow.Helpers.returnTaskValue(message.result, message.id);
 			break;
 		case 'toggleFullscreen':
 			const app = getApp();
@@ -119,6 +133,16 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 			} else {
 				app.fullscreen();
 			}
+			break;
+		case 'loadingCompleted':
+			getAppWindow().AppWindow.onLoadingComplete(message.view);
+			break;
+		case 'changeNetflixUrl':
+			debugger;
+			getAppWindow().Netflix.changeVideo(message.url);
+			break;
+		case 'changeYoutubeSubsLink':
+			getAppWindow().YoutubeSubscriptions.changeVideo(message.link);
 			break;
 	}
 });
