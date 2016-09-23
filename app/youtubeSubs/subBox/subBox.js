@@ -1,4 +1,4 @@
-let videos = null;
+window.videos = null;
 const PODCAST_VIDS = [
 	'No Xcuses',
 	'Darklight Sessions',
@@ -23,39 +23,200 @@ const PODCAST_VIDS = [
 	'HARD with STYLE'
 ];
 
+let watchedSelected = 0;
+
+/**
+ * https://github.com/gre/bezier-easing
+ * BezierEasing - use bezier curve for transition easing function
+ * by Gaëtan Renaudeau 2014 - 2015 – MIT License
+ */
+
+// These values are established by empiricism with tests (tradeoff: performance VS precision)
+var NEWTON_ITERATIONS = 4;
+var NEWTON_MIN_SLOPE = 0.001;
+var SUBDIVISION_PRECISION = 0.0000001;
+var SUBDIVISION_MAX_ITERATIONS = 10;
+
+var kSplineTableSize = 11;
+var kSampleStepSize = 1.0 / (kSplineTableSize - 1.0);
+
+var float32ArraySupported = true;
+
+function _A (aA1, aA2) { return 1.0 - 3.0 * aA2 + 3.0 * aA1; }
+function _B (aA1, aA2) { return 3.0 * aA2 - 6.0 * aA1; }
+function _C (aA1)      { return 3.0 * aA1; }
+
+// Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
+function _calcBezier (aT, aA1, aA2) { return ((_A(aA1, aA2) * aT + _B(aA1, aA2)) * aT + _C(aA1)) * aT; }
+
+// Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.
+function _getSlope (aT, aA1, aA2) { return 3.0 * _A(aA1, aA2) * aT * aT + 2.0 * _B(aA1, aA2) * aT + _C(aA1); }
+
+function _binarySubdivide (aX, aA, aB, mX1, mX2) {
+  var currentX, currentT, i = 0;
+  do {
+    currentT = aA + (aB - aA) / 2.0;
+    currentX = _calcBezier(currentT, mX1, mX2) - aX;
+    if (currentX > 0.0) {
+      aB = currentT;
+    } else {
+      aA = currentT;
+    }
+  } while (Math.abs(currentX) > SUBDIVISION_PRECISION && ++i < SUBDIVISION_MAX_ITERATIONS);
+  return currentT;
+}
+
+function _newtonRaphsonIterate (aX, aGuessT, mX1, mX2) {
+ for (var i = 0; i < NEWTON_ITERATIONS; ++i) {
+   var currentSlope = _getSlope(aGuessT, mX1, mX2);
+   if (currentSlope === 0.0) {
+     return aGuessT;
+   }
+   var currentX = _calcBezier(aGuessT, mX1, mX2) - aX;
+   aGuessT -= currentX / currentSlope;
+ }
+ return aGuessT;
+}
+
+function bezier (mX1, mY1, mX2, mY2) {
+  if (!(0 <= mX1 && mX1 <= 1 && 0 <= mX2 && mX2 <= 1)) {
+    throw new Error('bezier x values must be in [0, 1] range');
+  }
+
+  // Precompute samples table
+  var sampleValues = float32ArraySupported ? new Float32Array(kSplineTableSize) : new Array(kSplineTableSize);
+  if (mX1 !== mY1 || mX2 !== mY2) {
+    for (var i = 0; i < kSplineTableSize; ++i) {
+      sampleValues[i] = _calcBezier(i * kSampleStepSize, mX1, mX2);
+    }
+  }
+
+  function getTForX (aX) {
+    var intervalStart = 0.0;
+    var currentSample = 1;
+    var lastSample = kSplineTableSize - 1;
+
+    for (; currentSample !== lastSample && sampleValues[currentSample] <= aX; ++currentSample) {
+      intervalStart += kSampleStepSize;
+    }
+    --currentSample;
+
+    // Interpolate to provide an initial guess for t
+    var dist = (aX - sampleValues[currentSample]) / (sampleValues[currentSample + 1] - sampleValues[currentSample]);
+    var guessForT = intervalStart + dist * kSampleStepSize;
+
+    var initialSlope = _getSlope(guessForT, mX1, mX2);
+    if (initialSlope >= NEWTON_MIN_SLOPE) {
+      return _newtonRaphsonIterate(aX, guessForT, mX1, mX2);
+    } else if (initialSlope === 0.0) {
+      return guessForT;
+    } else {
+      return _binarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize, mX1, mX2);
+    }
+  }
+
+  return function BezierEasing (x) {
+    if (mX1 === mY1 && mX2 === mY2) {
+      return x; // linear
+    }
+    // Because JavaScript number are imprecise, we should guarantee the extremes are right.
+    if (x === 0) {
+      return 0;
+    }
+    if (x === 1) {
+      return 1;
+    }
+    return _calcBezier(getTForX(x), mY1, mY2);
+  };
+};
+
+const bezierCurve = bezier(0.25, 0.1, 0.25, 1);
+
+function getCurrentTarget(time, target) {
+	return bezierCurve(time) * target;
+}
+
+function scroll(timestamp) {
+	const data = this;
+	
+	if (data.startTime === null) {
+		data.startTime = timestamp;
+	}
+
+	const passedTime = timestamp - data.startTime;
+
+	if (passedTime >= data.maxTime) {
+		window.scrollTo(0, data.to);
+	} else {
+		const currentTarget = getCurrentTarget(passedTime / data.maxTime, 
+			data.target);  
+		window.scrollTo(0, currentTarget + data.from);
+
+		window.requestAnimationFrame(scroll.bind(data));
+	}
+}
+
+function smoothScroll(to) {
+	const currentScroll = document.body.scrollTop;
+	
+	const time = Date.now();
+	const data = {
+		from: currentScroll,
+		to: to,
+		target: to - currentScroll,
+		progress: 0,
+		maxTime: 250,
+		startTime: null,
+		lastAnimationFrame: time
+	};
+
+	//Do it in ~250ms
+	window.requestAnimationFrame(scroll.bind(data));
+}
+
 class SelectedVideo {
 	_focusCurrent() {
-		this.current.classList.add('selectedVideo');
-		window.scrollTop = (this.current.getBoundingClientRect().top + 80) + 
-			(window.innerHeight / 2);
+		this.current.element.classList.add('selectedVideo');
+		smoothScroll(this.current.element.getBoundingClientRect().top + 
+			document.body.scrollTop - 302);
 	}
 
 	_deselectCurrent() {
-		this.current.classList.remove('selectedVideo');
+		this.current.element.classList.remove('selectedVideo');
 	}
 
 	goLeft() {
 		this._deselectCurrent();
-		this.current = this.videos.indexOf(this.current) - 1;
+		this.current = this.videos[this.videos.indexOf(this.current) - 1];
 		this._focusCurrent();
 	}
 
 	goRight() {
 		this._deselectCurrent();
-		this.current = this.videos.indexOf(this.current) + 1;
+		this.current = this.videos[this.videos.indexOf(this.current) + 1];
 		this._focusCurrent();
 	}
 
-	selectLastWatched() {
-		//Select last watched video or last in general
-		for (let i = 0; i < videos.length; i++) {
-			if (videos[i].watched && !videos[i].isHidden) {
-				this.current = videos[i];
+	launchCurrent() {
+		window.navToLink(this.current.links[0]);
+	}
+
+	selectLatestWatched() {
+		let foundSelected = watchedSelected;
+		//Select latest watched video or last in general
+		for (let i = 0; i < this.videos.length; i++) {
+			if (this.videos[i].watched && !this.videos[i].isHidden) {
+				this.current = this.videos[i];
+				if (foundSelected === 0) {	
+					return;
+				}
+				foundSelected--;
 			}
 		}
-		if (!this.current) {
-			this.current = videos[videos.length - 1];
+		if (this.current) {
+			return;
 		}
+		this.current = this.videos[this.videos.length - 1];
 	}
 
 	constructor(videos, previousTitle) {
@@ -70,39 +231,65 @@ class SelectedVideo {
 			}
 		}
 		if (!this.current) {
-			this.selectLastWatched();
+			this.selectLatestWatched();
 		}
 
-		this._highlightCurrent();
+		this._focusCurrent();
+	}
+}
+
+const toWatchLater = [];
+let isHandlingWatchLater = false;
+function clickWatchLater(deadline) {
+	while (deadline.timeRemaining() > 0 && toWatchLater.length > 0 && toWatchLater[0]) {
+		toWatchLater.pop().click();
+	}
+	
+	if (toWatchLater.length > 0) {
+		window.requestIdleCallback(clickWatchLater, {
+			timeout: 10000
+		});
+	} else {
+		isHandlingWatchLater = false;
+	}
+}
+
+function addVideoToWatchLater(button) {
+	toWatchLater.push(button);
+	if (!isHandlingWatchLater) {
+		isHandlingWatchLater = true;
+		window.requestIdleCallback(clickWatchLater, {
+			timeout: 10000
+		});
 	}
 }
 
 class VideoIdentifier {
+	getAmount() {
+		return this.videos.length;
+	}
+
 	_objectify(video) {
 		return {
-			video: video
+			element: video
 		};
 	}
 
 	_markWatched(video) {
-		video.watched = !!video.querySelector('.watched-badge')
+		video.watched = !!video.element.querySelector('.watched-badge')
+
+		return video;
 	}
 
 	_setVideoMetaData(video) {
-		video.title = video.querySelector('.yt-lockup-title').querySelector('a').innerText;
-		const length = video.querySelector('.video-time').innerText;
-		const [seconds, minutes, hours] = length.split(':').reverse();
-		video.length = {
-			hours: parseInt(hours, 10) || 0,
-			minutes: parseInt(minutes, 10) || 0,
-			seconds: parseInt(seconds, 10) || 0
-		};
-		video.length.totalMinutes = video.length.minutes + (video.length.minutes * 60);
-		video.length.totalSeconds = video.length.seconds + (video.length.totalMinutes * 60);
+		video.title = video.element.querySelector('.yt-lockup-title').querySelector('a').innerText;
+		return video;
 	}
 
 	_hideVideo(video) {
-		video.style.display = 'none';
+		video.element.parentNode.style.display = 'none';
+
+		return video;
 	}
 
 	_addPocastToWatchLater(video) {
@@ -111,18 +298,13 @@ class VideoIdentifier {
 				video.isPodcast = true;
 				this._hideVideo(video);
 				video.isHidden = true;
-				return;
+				addVideoToWatchLater(video.element.querySelector('.addto-watch-later-button'));
+				return video;
 			}
 		}
 		video.isPodcast = false;
-	}
 
-	_markPossiblePocast(video) {
-		if (!video.isHidden) {
-			if (video.length.totalMinutes > 50) {
-				video.isPossiblePodcast = true;
-			}
-		}
+		return video;
 	}
 
 	_applyArrayTransformation(arr, fns) {
@@ -134,38 +316,43 @@ class VideoIdentifier {
 
 	_replaceLinks(videos) {
 		videos.forEach((video) => {
-			const anchors = video.querySelectorAll('a');
+			const anchors = video.element.querySelectorAll('a');
+			video.links = [];
 			anchors.forEach((anchor) => {
 				if (!anchor.hasListener) {
 					const link = anchor.href;
-					anchor.href = `javascript:window.navToLink(${link})`;
+					anchor.href = '#';
+					anchor.addEventListener('click', (e) => {
+						window.navToLink(link);
+					});
 					anchor.hasListener = true;
+					video.links.push(link);
 				}
 			});
 		});
 	}
 
 	constructor(videos) {
-		this.videos = this._applyArrayTransformation(videos,
+		this.videos = this._applyArrayTransformation(Array.from(videos),
 			[
-				this._objectify,
-				this._markWatched,
-				this._setVideoMetaData,
-				this._addPocastsToWatchLater,
-				this._markPossiblePocast
+				this._objectify.bind(this),
+				this._markWatched.bind(this),
+				this._setVideoMetaData.bind(this),
+				this._addPocastToWatchLater.bind(this),
 			]);
-		this.selected = SelectedVideo(this.videos, (
+		this.selected = new SelectedVideo(this.videos, (
 			videos && videos.selected && videos.selected.current && videos.selected.current.title
 		) || null);
 
 		this._replaceLinks(this.videos);
+		console.log(this);
 	}
 }
 
 function identifyVideos() {
 	const vids = document.querySelectorAll('.yt-lockup-video');
-	if (!videos || videos.getAmount !== vids.length) {
-		videos = new VideoIdentifier(vids);
+	if (!window.videos || window.videos.getAmount() !== vids.length) {
+		window.videos = new VideoIdentifier(vids);
 	}
 }
 
@@ -182,13 +369,28 @@ identifyVideos();
 window.addEventListener('keydown', (e) => {
 	switch (e.key) {
 		case 'l':
-			videos.selected.selectLastWatched();
+			watchedSelected++;
+			window.videos.selected.selectLatestWatched();
+			break;
+		case 'k':
+			watchedSelected = watchedSelected - 1 || 0;
+			window.videos.selected.selectLatestWatched();
 			break;
 		case 'ArrowLeft':
-			videos.selected.goleft();
+			window.videos.selected.goLeft();
+			e.stopPropagation();
+			e.preventDefault();
 			break;
 		case 'ArrowRight':
-			videos.selected.goRight();
+			window.videos.selected.goRight();
+			e.stopPropagation();
+			e.preventDefault();
+			break;
+		case 'Enter':
+		case ' ': //Space... wtf is this google
+			window.videos.selected.launchCurrent();
+			e.stopPropagation();
+			e.preventDefault();
 			break;
 	}
 });

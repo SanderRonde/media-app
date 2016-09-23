@@ -52,8 +52,8 @@
 			"description": "Focuses the widow",
 			"global": true
 		},
-		"getSong": {
-			"description": "Gets the currently playing song",
+		"magicButton": {
+			"description": "A magic button",
 			"global": true
 		},
 		"launch": {

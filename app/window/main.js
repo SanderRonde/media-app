@@ -16,6 +16,9 @@ var Helpers;
         }).toString().replace('str', str);
     }
     function hacksecute(view, fn) {
+        if (!view.src) {
+            return;
+        }
         view.executeScript({
             code: ("(" + createTag(fn).toString() + ")();")
                 .replace(/\$\{EXTENSIONIDSTRING\}/, chrome.runtime.getURL('').split('://')[1].split('/')[0])
@@ -830,22 +833,75 @@ var YoutubeSubscriptions;
     var Commands;
     (function (Commands) {
         function lowerVolume() {
+            Helpers.hacksecute(Video.videoView, function () {
+                var player = document.querySelector('.html5-video-player');
+                var vol = player.getVolume();
+                if (!player.isMuted()) {
+                    vol -= 5;
+                    vol = (vol < 0 ? 0 : vol);
+                    player.setVolume(vol);
+                }
+            });
         }
         Commands.lowerVolume = lowerVolume;
         function raiseVolume() {
+            Helpers.hacksecute(Video.videoView, function () {
+                var player = document.querySelector('.html5-video-player');
+                var vol = player.getVolume();
+                if (player.isMuted()) {
+                    //Treat volume as 0
+                    vol = 0;
+                    player.unMute();
+                }
+                vol += 5;
+                vol = (vol > 100 ? 100 : vol);
+                player.setVolume(vol);
+            });
         }
         Commands.raiseVolume = raiseVolume;
         function togglePlay() {
+            Helpers.hacksecute(Video.videoView, function () {
+                var player = document.querySelector('.html5-video-player');
+                var state = player.getPlayerState();
+                if (state === 2) {
+                    //Paused
+                    player.playVideo();
+                }
+                else if (state === 1) {
+                    //Playing
+                    player.pauseVideo();
+                }
+                else {
+                }
+            });
         }
         Commands.togglePlay = togglePlay;
         function pause() {
+            Helpers.hacksecute(Video.videoView, function () {
+                var player = document.querySelector('.html5-video-player');
+                player.pauseVideo();
+            });
         }
         Commands.pause = pause;
         function play() {
-            if (Video.videoView.src !== '') {
+            Helpers.hacksecute(Video.videoView, function () {
+                var player = document.querySelector('.html5-video-player');
+                player.playVideo();
+            });
+            if (Video.videoView.src) {
+                showVideo();
             }
         }
         Commands.play = play;
+        function magicButton() {
+            SubBox.subBoxView.executeScript({
+                code: Helpers.stringifyFunction(function () {
+                    window.videos.selected.goLeft();
+                    window.videos.selected.launchCurrent();
+                })
+            });
+        }
+        Commands.magicButton = magicButton;
     })(Commands = YoutubeSubscriptions.Commands || (YoutubeSubscriptions.Commands = {}));
     var Video;
     (function (Video) {
@@ -853,6 +909,134 @@ var YoutubeSubscriptions;
         function setup() {
             Video.videoView = initView();
             Video.videoView.id = 'youtubeSubsVideoView';
+            window.setTimeout(function () {
+                Video.videoView.addContentScripts([{
+                        name: 'css',
+                        matches: ['*://*/*'],
+                        css: {
+                            files: [
+                                '/youtube/content/content.css',
+                                '/youtubeSubs/video/youtubeVideo.css'
+                            ]
+                        },
+                        run_at: 'document_start'
+                    }]);
+                Video.videoView.addEventListener('contentload', function () {
+                    Helpers.hacksecute(Video.videoView, function () {
+                        var player = document.querySelector('.html5-video-player');
+                        var playerApi = document.getElementById('player-api');
+                        var volumeBar = document.createElement('div');
+                        var volumeBarBar = document.createElement('div');
+                        var volumeBarNumber = document.createElement('div');
+                        var volumeBarTimeout = null;
+                        volumeBar.id = 'yt-ca-volumeBar';
+                        volumeBarBar.id = 'yt-ca-volumeBarBar';
+                        volumeBarNumber.id = 'yt-ca-volumeBarNumber';
+                        volumeBar.appendChild(volumeBarNumber);
+                        volumeBar.appendChild(volumeBarBar);
+                        document.body.appendChild(volumeBar);
+                        function prepareVideo() {
+                            setTimeout(function () {
+                                function reloadIfAd() {
+                                    if (player.getAdState() === 1) {
+                                        window.location.reload();
+                                    }
+                                    if (player.getPlayerState() === 3) {
+                                        window.setTimeout(reloadIfAd, 250);
+                                    }
+                                    else {
+                                        player.setPlaybackQuality('hd1080');
+                                        if (player.getPlaybackQuality() !== 'hd1080') {
+                                            player.setPlaybackQuality('hd720');
+                                        }
+                                        if (document.querySelector('.ytp-size-button')
+                                            .getAttribute('title') === 'Theatermodus') {
+                                            player.setSizeStyle(true, true);
+                                        }
+                                        localStorage.setItem('loaded', 'ytmusic');
+                                    }
+                                }
+                                reloadIfAd();
+                            }, 2500);
+                        }
+                        prepareVideo();
+                        document.body.addEventListener('keydown', function (e) {
+                            if (e.key === 'k') {
+                                //Hide or show video
+                                document.body.classList.toggle('showHiddens');
+                            }
+                        });
+                        function updateSizes() {
+                            playerApi.style.width = window.innerWidth + 'px';
+                            playerApi.style.height = (window.innerHeight - 15) + 'px';
+                            player.setSize();
+                        }
+                        updateSizes();
+                        window.addEventListener('resize', updateSizes);
+                        function setPlayerVolume(volume) {
+                            player.setVolume(volume);
+                            localStorage.setItem('yt-player-volume', JSON.stringify({
+                                data: JSON.stringify({
+                                    volume: volume,
+                                    muted: (volume === 0)
+                                }),
+                                creation: Date.now(),
+                                expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
+                            }));
+                        }
+                        //Code that has to be executed "inline"
+                        function increaseVolume() {
+                            var vol = player.getVolume();
+                            if (player.isMuted()) {
+                                //Treat volume as 0
+                                vol = 0;
+                                player.unMute();
+                            }
+                            vol += 5;
+                            vol = (vol > 100 ? 100 : vol);
+                            setPlayerVolume(vol);
+                        }
+                        function lowerVolume() {
+                            var vol = player.getVolume();
+                            if (!player.isMuted()) {
+                                vol -= 5;
+                                vol = (vol < 0 ? 0 : vol);
+                                setPlayerVolume(vol);
+                            }
+                        }
+                        function showVolumeBar() {
+                            var volume = player.getVolume();
+                            localStorage.setItem('volume', volume + '');
+                            volumeBarNumber.innerHTML = volume + '';
+                            volumeBarBar.style.transform = "scaleX(" + volume / 100 + ")";
+                            volumeBar.classList.add('visible');
+                            if (volumeBarTimeout !== null) {
+                                window.clearTimeout(volumeBarTimeout);
+                            }
+                            volumeBarTimeout = window.setTimeout(function () {
+                                volumeBar.classList.remove('visible');
+                                volumeBarTimeout = null;
+                            }, 2000);
+                        }
+                        function onScroll(isDown) {
+                            if (isDown) {
+                                lowerVolume();
+                            }
+                            else {
+                                increaseVolume();
+                            }
+                            showVolumeBar();
+                        }
+                        function addListeners() {
+                            var videoEl = document.querySelector('video');
+                            videoEl.addEventListener('wheel', function (e) {
+                                onScroll(e.deltaY > 0);
+                            });
+                        }
+                        addListeners();
+                    });
+                });
+            }, 10);
         }
         Video.setup = setup;
     })(Video || (Video = {}));
@@ -885,17 +1069,15 @@ var YoutubeSubscriptions;
         SubBox.setup = setup;
     })(SubBox || (SubBox = {}));
     function showVideo() {
-        console.trace();
-        console.log(arguments);
         document.getElementById('youtubeSubsCont').classList.add('showVideo');
-        debugger;
+        Video.videoView.focus();
     }
     function hideVideo() {
         document.getElementById('youtubeSubsCont').classList.remove('showVideo');
     }
     function changeVideo(url) {
         Video.videoView.src = url;
-        //showVideo();
+        showVideo();
     }
     YoutubeSubscriptions.changeVideo = changeVideo;
     function setup() {
@@ -908,11 +1090,21 @@ var YoutubeSubscriptions;
             if (AppWindow.getActiveView() !== 'youtubeSubscriptions') {
                 return;
             }
+            if (e.key === 'h') {
+                var subsCont = document.getElementById('youtubeSubsCont');
+                if (subsCont.classList.contains('showVideo')) {
+                    subsCont.classList.remove('showVideo');
+                    SubBox.subBoxView.focus();
+                }
+                else {
+                    subsCont.classList.add('showVideo');
+                    Video.videoView.focus();
+                }
+            }
         });
     }
     function init() {
         window.setTimeout(function () {
-            //Video.videoView.src = 'http://www.youtube.com/feed/subscriptions';
             SubBox.subBoxView.src = 'http://www.youtube.com/feed/subscriptions';
             addKeyboardListeners();
         }, 15);
@@ -1066,6 +1258,18 @@ var AppWindow;
         }
     }
     AppWindow.onLoadingComplete = onLoadingComplete;
+    function onMagicButton() {
+        switch (getActiveView()) {
+            case 'ytmusic':
+                return;
+            case 'netflix':
+                return;
+            case 'youtubeSubscriptions':
+                YoutubeSubscriptions.Commands.magicButton();
+                break;
+        }
+    }
+    AppWindow.onMagicButton = onMagicButton;
     function switchToview(view, force) {
         if (force === void 0) { force = false; }
         console.log("switching from view " + activeView + " to view " + view);

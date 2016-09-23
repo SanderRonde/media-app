@@ -41,6 +41,6 @@
 	opacity: 0.4;
 }
 
-.yt-shelf-grid-item.selectedVideo {
+.yt-lockup-grid.selectedVideo {
 	border-bottom: 5px solid red;
 }

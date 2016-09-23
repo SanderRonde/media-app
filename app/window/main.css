@@ -436,5 +436,5 @@ body {
 }
 
 #youtubeSubsCont.showVideo > #youtubeSubsVideoView {
-	transform: translateY(-100vh);
+	transform: translateY(calc(-100vh + 0px));
 }

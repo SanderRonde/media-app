@@ -61,10 +61,8 @@ chrome.commands.onCommand.addListener((cmd) => {
 				chrome.app.window.get('mainwindow').focus();
 			}
 			break;
-		case 'getSong':
-			let appWindow = chrome.app.window.get('mainwindow');
-			appWindow.focus();
-			appWindow.contentWindow.getCurrentSong();
+		case 'magicButton':
+			getAppWindow().AppWindow.onMagicButton();
 			break;
 	}
 });
