@@ -29,3 +29,6 @@ Download can be found [here](https://chrome.google.com/webstore/detail/pffimndgk
 ### Generic Shortcuts
 
 * Pressing ```Esc``` 3 times quickly exits the app
+* Pressing ```F1``` switches to the youtube subscriptions view
+* Pressing ```F2``` switches to the youtube music view
+* Pressing ```F3``` switches to the netflix view
