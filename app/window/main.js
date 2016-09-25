@@ -463,7 +463,8 @@ var YoutubeMusic;
     }
     YoutubeMusic.getCurrentSong = getCurrentSong;
     function downloadVideo(url) {
-        document.getElementById('youtubeSearchPageView').remove();
+        const searchPageView = document.getElementById('youtubeSearchPageView');
+        searchPageView && searchPageView.remove();
         window.open(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`, '_blank');
     }
     YoutubeMusic.downloadVideo = downloadVideo;
@@ -1008,6 +1009,11 @@ var YoutubeSubscriptions;
                         addListeners();
                     });
                 });
+                Video.videoView.addEventListener('keydown', (e) => {
+                    if (e.key === 'd') {
+                        YoutubeMusic.downloadVideo(Video.videoView.src);
+                    }
+                });
             }, 10);
         }
         Video.setup = setup;
@@ -1252,6 +1258,9 @@ var AppWindow;
         AppWindow.loadedViews.push(view);
         if (activeView === view) {
             hideSpinner();
+        }
+        else {
+            getViewByName(view).Commands.pause();
         }
     }
     AppWindow.onLoadingComplete = onLoadingComplete;

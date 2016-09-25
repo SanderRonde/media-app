@@ -198,20 +198,62 @@ class SelectedVideo {
 		this._updateSelected(video);
 	}
 
+	_getRowWidth() {
+		if (this.rowWidth && this.rowWidth.width === window.innerWidth) {
+			return this.rowWidth.amount;
+		}
+
+		let rowWidth = 1;
+		const firstVidTop = this.videos[0].element.getBoundingClientRect().top - 
+			document.body.getBoundingClientRect().top;
+
+		while (this.videos[rowWidth++].element.getBoundingClientRect().top - 
+			document.body.getBoundingClientRect().top === firstVidTop) {}
+		rowWidth--;
+
+		this.rowWidth = {
+			width: window.innerWidth,
+			amount: rowWidth
+		}
+		return rowWidth;
+	}
+
+	goUp() {
+		let width = this._getRowWidth();
+		let toSelect = this.current;
+		for (let i = 0; i < width; i++) {
+			do {
+				toSelect = this.videos[this.videos.indexOf(toSelect) - 1];
+			} while (!toSelect || toSelect.isHidden)
+		}
+		this._updateSelected(toSelect);
+	}
+
+	goDown() {
+		let width = this._getRowWidth();
+		let toSelect = this.current;
+		for (let i = 0; i < width; i++) {
+			do {
+				toSelect = this.videos[this.videos.indexOf(toSelect) + 1];
+			} while (!toSelect || toSelect.isHidden)
+		}
+		this._updateSelected(toSelect);
+	}
+
 	goLeft() {
-		this._deselectCurrent();
+		let toSelect = this.current;
 		do {
-			this.current = this.videos[this.videos.indexOf(this.current) - 1];
-		} while (!this.current.isHidden)
-		this._focusCurrent();
+			toSelect = this.videos[this.videos.indexOf(toSelect) - 1];
+		} while (!toSelect || toSelect.isHidden)
+		this._updateSelected(toSelect);
 	}
 
 	goRight() {
-		this._deselectCurrent();
+		let toSelect = this.current;
 		do {
-			this.current = this.videos[this.videos.indexOf(this.current) + 1];
-		} while (!this.current.isHidden)
-		this._focusCurrent();
+			toSelect = this.videos[this.videos.indexOf(toSelect) + 1];
+		} while (!toSelect || toSelect.isHidden)
+		this._updateSelected(toSelect);
 	}
 
 	launchCurrent() {
@@ -409,6 +451,16 @@ window.addEventListener('keydown', (e) => {
 			break;
 		case 'ArrowRight':
 			window.videos.selected.goRight();
+			e.stopPropagation();
+			e.preventDefault();
+			break;
+		case 'ArrowUp':
+			window.videos.selected.goUp();
+			e.stopPropagation();
+			e.preventDefault();
+			break;
+		case 'ArrowDown':
+			window.videos.selected.goDown();
 			e.stopPropagation();
 			e.preventDefault();
 			break;

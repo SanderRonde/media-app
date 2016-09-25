@@ -420,3 +420,11 @@ body {
 	width: 100vw;
 	height: 100vh;
 }
+
+#youtubeSubsCont > #youtubeSubsVideoView {
+	transition: transform 250ms ease-in;
+}
+
+#youtubeSubsCont.showVideo > #youtubeSubsVideoView {
+	transform: translateY(-100vh);
+}

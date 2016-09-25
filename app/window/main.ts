@@ -726,7 +726,8 @@ namespace YoutubeMusic {
 	}
 
 	export function downloadVideo(url: string) {
-		document.getElementById('youtubeSearchPageView').remove();
+		const searchPageView = document.getElementById('youtubeSearchPageView');
+		searchPageView && searchPageView.remove();
 		window.open(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`, '_blank');
 	}
 
@@ -1321,6 +1322,12 @@ namespace YoutubeSubscriptions {
 						addListeners();
 					});
 				});
+
+				videoView.addEventListener('keydown', (e) => {
+					if (e.key === 'd') {
+						YoutubeMusic.downloadVideo(videoView.src);
+					}
+				});
 			}, 10);
 		}
 	}
@@ -1589,6 +1596,8 @@ namespace AppWindow {
 		loadedViews.push(view);
 		if (activeView === view) {
 			hideSpinner();
+		} else {
+			getViewByName(view).Commands.pause();
 		}
 	}
 
