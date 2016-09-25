@@ -104,4 +104,4 @@ function doTask(name, id, done) {
 
 window.setInterval(updateColors, 1e4);
 updateColors();
-window.setInterval(window.saveProgress, 1e4);
+window.setInterval(window.saveProgress, 5e4);

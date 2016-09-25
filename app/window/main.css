@@ -415,26 +415,8 @@ body {
 }
 
 #netflixWebview,
-#netflixSelectionWebView,
-#netflixFullPageView, 
 #youtubeSubsSubBoxView,
 #youtubeSubsVideoView {
 	width: 100vw;
 	height: 100vh;
-}
-
-#netflixCont > #netflixSelectionWebView {
-	transition: transform 250ms ease-in;
-}
-
-#netflixCont.showSelection > #netflixSelectionWebView {
-	transform: translateY(-233px);
-}
-
-#youtubeSubsCont > #youtubeSubsVideoView {
-	transition: transform 350ms ease-in;
-}
-
-#youtubeSubsCont.showVideo > #youtubeSubsVideoView {
-	transform: translateY(calc(-100vh + 0px));
 }

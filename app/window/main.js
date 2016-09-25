@@ -1,16 +1,15 @@
 /// <reference path="../../typings/chrome.d.ts" />
-/// <reference path="../../typings/promise.d.ts" />
 var Helpers;
 (function (Helpers) {
     function stringifyFunction(fn) {
-        return "(" + fn.toString() + ")();";
+        return `(${fn.toString()})();`;
     }
     Helpers.stringifyFunction = stringifyFunction;
     function createTag(fn) {
-        var str = fn.toString();
-        return (function () {
+        const str = fn.toString();
+        return (() => {
             var tag = document.createElement('script');
-            tag.innerHTML = "(" + str + ")();";
+            tag.innerHTML = `(${str})();`;
             document.documentElement.appendChild(tag);
             document.documentElement.removeChild(tag);
         }).toString().replace('str', str);
@@ -20,13 +19,13 @@ var Helpers;
             return;
         }
         view.executeScript({
-            code: ("(" + createTag(fn).toString() + ")();")
+            code: `(${createTag(fn).toString()})();`
                 .replace(/\$\{EXTENSIONIDSTRING\}/, chrome.runtime.getURL('').split('://')[1].split('/')[0])
         });
     }
     Helpers.hacksecute = hacksecute;
-    var taskIds = 0;
-    var taskListeners = {};
+    let taskIds = 0;
+    const taskListeners = {};
     function returnTaskValue(result, id) {
         if (taskListeners[id]) {
             taskListeners[id](result);
@@ -36,7 +35,7 @@ var Helpers;
     Helpers.returnTaskValue = returnTaskValue;
     ;
     function sendTaskToPage(name, callback) {
-        chrome.storage.local.get('tasks', function (data) {
+        chrome.storage.local.get('tasks', (data) => {
             data['tasks'] = data['tasks'] || [];
             data['tasks'].push({
                 name: name,
@@ -50,8 +49,8 @@ var Helpers;
     }
     Helpers.sendTaskToPage = sendTaskToPage;
     function toArr(iterable) {
-        var arr = [];
-        for (var i = 0; i < iterable.length; i++) {
+        const arr = [];
+        for (let i = 0; i < iterable.length; i++) {
             arr[i] = iterable[i];
         }
         return arr;
@@ -60,10 +59,10 @@ var Helpers;
 })(Helpers || (Helpers = {}));
 var YoutubeMusic;
 (function (YoutubeMusic) {
-    var view = null;
+    let view = null;
     var Visualization;
     (function (Visualization) {
-        var visualizing = false;
+        let visualizing = false;
         function isVisualizing() {
             return visualizing;
         }
@@ -76,40 +75,40 @@ var YoutubeMusic;
     var Content;
     (function (Content) {
         function init() {
-            Helpers.hacksecute(view, function () {
+            Helpers.hacksecute(view, () => {
                 if (window.executedYTCA) {
                     return;
                 }
                 window.executedYTCA = location.href;
-                var player = document.querySelector('.html5-video-player');
-                var playerApi = document.getElementById('player-api');
-                var volumeBar = document.createElement('div');
-                var volumeBarBar = document.createElement('div');
-                var volumeBarNumber = document.createElement('div');
-                var visualizer = document.createElement('div');
+                const player = document.querySelector('.html5-video-player');
+                const playerApi = document.getElementById('player-api');
+                const volumeBar = document.createElement('div');
+                const volumeBarBar = document.createElement('div');
+                const volumeBarNumber = document.createElement('div');
+                const visualizer = document.createElement('div');
                 visualizer.classList.add('ytma_visualization_cont');
                 document.body.insertBefore(visualizer, document.body.children[0]);
                 volumeBar.id = 'yt-ca-volumeBar';
                 volumeBarBar.id = 'yt-ca-volumeBarBar';
                 volumeBarNumber.id = 'yt-ca-volumeBarNumber';
-                var volumeBarTimeout = null;
-                var visualizing = false;
+                let volumeBarTimeout = null;
+                let visualizing = false;
                 volumeBar.appendChild(volumeBarNumber);
                 volumeBar.appendChild(volumeBarBar);
                 document.body.appendChild(volumeBar);
                 function cleanupData(dataArray) {
-                    for (var i in dataArray) {
+                    for (let i in dataArray) {
                         if (dataArray[i] <= -100 || dataArray[i] === -80 || dataArray[i] === -50) {
                             dataArray[i] = 0;
                             continue;
                         }
                         dataArray[i] = (dataArray[i] + 100) / 100;
                     }
-                    var newArray = [];
+                    const newArray = [];
                     //Compress it into a max of 120 bars
-                    var delta = (dataArray.length / 120);
-                    for (var i = 0; i < dataArray.length; i += delta) {
-                        var average = dataArray.slice(i, i + delta).reduce(function (a, b) {
+                    const delta = (dataArray.length / 120);
+                    for (let i = 0; i < dataArray.length; i += delta) {
+                        let average = dataArray.slice(i, i + delta).reduce((a, b) => {
                             return a + b;
                         }) / delta;
                         newArray.push(average);
@@ -117,8 +116,8 @@ var YoutubeMusic;
                     return newArray;
                 }
                 function renderBars(data) {
-                    data.bars.forEach(function (element, index) {
-                        element.style.transform = "scaleY(" + data.parsedArray[index] * 1.5 + ")";
+                    data.bars.forEach((element, index) => {
+                        element.style.transform = `scaleY(${data.parsedArray[index] * 1.5})`;
                     });
                 }
                 function visualize() {
@@ -130,7 +129,7 @@ var YoutubeMusic;
                     }
                 }
                 function checkForVisualizer(data) {
-                    var shouldVisualize = document.body.classList.contains('showVisualizer');
+                    const shouldVisualize = document.body.classList.contains('showVisualizer');
                     if (visualizing === shouldVisualize) {
                         return;
                     }
@@ -145,7 +144,7 @@ var YoutubeMusic;
                     }
                 }
                 function setupVisualizer() {
-                    var data = {};
+                    const data = {};
                     data.video = document.querySelector('video');
                     data.ctx = new AudioContext();
                     data.analyser = data.ctx.createAnalyser();
@@ -154,18 +153,18 @@ var YoutubeMusic;
                     data.vidSrc.connect(data.ctx.destination);
                     data.dataArray = new Float32Array(data.analyser.frequencyBinCount);
                     data.analyser.getFloatFrequencyData(data.dataArray);
-                    data.bars = Array(100).join('a').split('a').map(function (el) {
-                        var bar = document.createElement('div');
+                    data.bars = Array(100).join('a').split('a').map((el) => {
+                        let bar = document.createElement('div');
                         bar.classList.add('ytma_visualization_bar');
                         visualizer.appendChild(bar);
                         return bar;
                     });
-                    window.setInterval(function () {
+                    window.setInterval(() => {
                         checkForVisualizer(data);
                     }, 50);
                 }
                 function prepareVideo() {
-                    setTimeout(function () {
+                    setTimeout(() => {
                         function reloadIfAd() {
                             if (player.getAdState() === 1) {
                                 window.location.reload();
@@ -190,7 +189,7 @@ var YoutubeMusic;
                     }, 2500);
                 }
                 prepareVideo();
-                document.body.addEventListener('keydown', function (e) {
+                document.body.addEventListener('keydown', (e) => {
                     if (e.key === 'h') {
                         //Hide or show video
                         document.body.classList.toggle('showHiddens');
@@ -216,7 +215,7 @@ var YoutubeMusic;
                 }
                 //Code that has to be executed "inline"
                 function increaseVolume() {
-                    var vol = player.getVolume();
+                    let vol = player.getVolume();
                     if (player.isMuted()) {
                         //Treat volume as 0
                         vol = 0;
@@ -227,7 +226,7 @@ var YoutubeMusic;
                     setPlayerVolume(vol);
                 }
                 function lowerVolume() {
-                    var vol = player.getVolume();
+                    let vol = player.getVolume();
                     if (!player.isMuted()) {
                         vol -= 5;
                         vol = (vol < 0 ? 0 : vol);
@@ -235,15 +234,15 @@ var YoutubeMusic;
                     }
                 }
                 function showVolumeBar() {
-                    var volume = player.getVolume();
+                    const volume = player.getVolume();
                     localStorage.setItem('volume', volume + '');
                     volumeBarNumber.innerHTML = volume + '';
-                    volumeBarBar.style.transform = "scaleX(" + volume / 100 + ")";
+                    volumeBarBar.style.transform = `scaleX(${volume / 100})`;
                     volumeBar.classList.add('visible');
                     if (volumeBarTimeout !== null) {
                         window.clearTimeout(volumeBarTimeout);
                     }
-                    volumeBarTimeout = window.setTimeout(function () {
+                    volumeBarTimeout = window.setTimeout(() => {
                         volumeBar.classList.remove('visible');
                         volumeBarTimeout = null;
                     }, 2000);
@@ -259,26 +258,26 @@ var YoutubeMusic;
                 }
                 function addListeners() {
                     var videoEl = document.querySelector('video');
-                    videoEl.addEventListener('wheel', function (e) {
+                    videoEl.addEventListener('wheel', (e) => {
                         onScroll(e.deltaY > 0);
                     });
                 }
                 addListeners();
                 function executeTask(name, id) {
-                    var result = null;
+                    let result = null;
                     switch (name) {
                         case 'getTime':
                             result = document.querySelector('.html5-video-player').getCurrentTime();
                             break;
                         default:
                             if (name.indexOf('getSongName') > -1) {
-                                var timestampContainers = document
+                                let timestampContainers = document
                                     .querySelector('#eow-description')
                                     .querySelectorAll('a[href="#"]');
-                                var index = ~~name.split('getSongName')[1];
-                                var textNodes = [];
+                                const index = ~~name.split('getSongName')[1];
+                                const textNodes = [];
                                 if (!isNaN(index) && timestampContainers[index]) {
-                                    var currentNode = timestampContainers[index].previousSibling;
+                                    let currentNode = timestampContainers[index].previousSibling;
                                     //Search back until a <br> is found
                                     while (currentNode && currentNode.tagName !== 'BR') {
                                         if (!currentNode.tagName) {
@@ -295,7 +294,7 @@ var YoutubeMusic;
                                         currentNode = currentNode.nextSibling;
                                     }
                                     //Go through list and find something that resembles a song
-                                    for (var i = 0; i < textNodes.length; i++) {
+                                    for (let i = 0; i < textNodes.length; i++) {
                                         if (/.+-.+/.test(textNodes[i])) {
                                             //This is a song
                                             result = textNodes[i];
@@ -313,10 +312,10 @@ var YoutubeMusic;
                             }
                             break;
                     }
-                    localStorage.setItem("taskResult" + id, result);
+                    localStorage.setItem(`taskResult${id}`, result);
                 }
                 function checkForTasks() {
-                    var tasks;
+                    let tasks;
                     if ((tasks = localStorage.getItem('tasks'))) {
                         try {
                             tasks = JSON.parse(tasks);
@@ -325,7 +324,7 @@ var YoutubeMusic;
                             tasks = [];
                         }
                         if (Array.isArray(tasks) && tasks.length > 0) {
-                            tasks.forEach(function (task) {
+                            tasks.forEach((task) => {
                                 executeTask(task.name, task.id);
                             });
                             localStorage.setItem('tasks', '[]');
@@ -339,11 +338,11 @@ var YoutubeMusic;
     })(Content || (Content = {}));
     var Downloading;
     (function (Downloading) {
-        var songFoundTimeout = null;
-        var songFoundName = '';
+        let songFoundTimeout = null;
+        let songFoundName = '';
         function downloadSong() {
             //Search for it on youtube
-            var view = document.createElement('#ytmaWebview');
+            const view = document.createElement('#ytmaWebview');
             view.id = 'youtubeSearchPageView';
             view.addContentScripts([{
                     name: 'youtubeSearchJs',
@@ -360,37 +359,37 @@ var YoutubeMusic;
                     },
                     run_at: "document_start"
                 }]);
-            view.src = "https://www.youtube.com/results?search_query=" + encodeURIComponent(songFoundName.trim().replace(/ /g, '+')).replace(/%2B/g, '+') + "&page=&utm_source=opensearch";
+            view.src = `https://www.youtube.com/results?search_query=${encodeURIComponent(songFoundName.trim().replace(/ /g, '+')).replace(/%2B/g, '+')}&page=&utm_source=opensearch`;
             document.body.appendChild(view);
         }
         Downloading.downloadSong = downloadSong;
         document.getElementById('getSongDownload').addEventListener('click', downloadSong);
         function displayFoundSong(name) {
             document.getElementById('getSongName').innerHTML = name;
-            var dialog = document.getElementById('getSongDialog');
+            const dialog = document.getElementById('getSongDialog');
             dialog.classList.add('visible');
             dialog.classList.add('hoverable');
             if (songFoundTimeout !== null) {
                 window.clearTimeout(songFoundTimeout);
             }
             songFoundName = name;
-            songFoundTimeout = window.setTimeout(function () {
+            songFoundTimeout = window.setTimeout(() => {
                 dialog.classList.remove('visible');
-                window.setTimeout(function () {
+                window.setTimeout(() => {
                     dialog.classList.remove('hoverable');
                 }, 200);
             }, 5000);
         }
         function timestampToSeconds(timestamp) {
-            var split = timestamp.split(':');
-            var seconds = 0;
-            for (var i = split.length - 1; i >= 0; i--) {
+            const split = timestamp.split(':');
+            let seconds = 0;
+            for (let i = split.length - 1; i >= 0; i--) {
                 seconds = Math.pow(60, (split.length - (i + 1))) * ~~split[i];
             }
             return seconds;
         }
         function getSongIndex(timestamps, time) {
-            for (var i = 0; i < timestamps.length; i++) {
+            for (let i = 0; i < timestamps.length; i++) {
                 if (timestamps[i] <= time && timestamps[i + 1] >= time) {
                     return i;
                 }
@@ -398,40 +397,40 @@ var YoutubeMusic;
             return timestamps.length - 1;
         }
         function getCurrentSong() {
-            Helpers.sendTaskToPage('getTimestamps', function (timestamps) {
-                var enableOCR = false;
+            Helpers.sendTaskToPage('getTimestamps', (timestamps) => {
+                const enableOCR = false;
                 if (enableOCR && !timestamps) {
                 }
                 else if (timestamps) {
                     if (!Array.isArray(timestamps)) {
                         //It's a link to the tracklist
-                        window.fetch(timestamps).then(function (response) {
+                        window.fetch(timestamps).then((response) => {
                             return response.text();
-                        }).then(function (html) {
-                            var doc = document.createRange().createContextualFragment(html);
-                            var tracks = Helpers.toArr(doc.querySelectorAll('.tlpTog')).map(function (songContainer) {
+                        }).then((html) => {
+                            const doc = document.createRange().createContextualFragment(html);
+                            const tracks = Helpers.toArr(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
                                 try {
-                                    var nameContainer = songContainer.querySelector('.trackFormat');
-                                    var namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
-                                    var artist = namesContainers[0].innerText;
-                                    var songName = namesContainers[1].innerText;
-                                    var remix = '';
+                                    const nameContainer = songContainer.querySelector('.trackFormat');
+                                    const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
+                                    const artist = namesContainers[0].innerText;
+                                    const songName = namesContainers[1].innerText;
+                                    let remix = '';
                                     if (namesContainers[2]) {
-                                        remix = " (" + namesContainers[2].innerText + " " + namesContainers[3].innerText + ")";
+                                        remix = ` (${namesContainers[2].innerText} ${namesContainers[3].innerText})`;
                                     }
                                     return {
                                         startTime: timestampToSeconds(songContainer.querySelector('.cueValueField').innerText),
-                                        songName: artist + " - " + songName + remix
+                                        songName: `${artist} - ${songName}${remix}`
                                     };
                                 }
                                 catch (e) {
                                     return null;
                                 }
                             });
-                            Helpers.sendTaskToPage('getTime', function (time) {
-                                var index = getSongIndex(tracks.filter(function (track) {
+                            Helpers.sendTaskToPage('getTime', (time) => {
+                                const index = getSongIndex(tracks.filter((track) => {
                                     return !!track;
-                                }).map(function (track) {
+                                }).map((track) => {
                                     return track.startTime;
                                 }), ~~time);
                                 displayFoundSong(tracks[index].songName);
@@ -439,9 +438,9 @@ var YoutubeMusic;
                         });
                     }
                     else {
-                        Helpers.sendTaskToPage('getTime', function (time) {
-                            var index = getSongIndex(timestamps, ~~time);
-                            Helpers.sendTaskToPage('getSongName' + index, function (name) {
+                        Helpers.sendTaskToPage('getTime', (time) => {
+                            const index = getSongIndex(timestamps, ~~time);
+                            Helpers.sendTaskToPage('getSongName' + index, (name) => {
                                 displayFoundSong(name);
                             });
                         });
@@ -449,10 +448,10 @@ var YoutubeMusic;
                 }
                 else {
                     //Show not found toast
-                    var toast_1 = document.getElementById('mainToast');
-                    toast_1.classList.add('visible');
-                    window.setTimeout(function () {
-                        toast_1.classList.remove('visible');
+                    const toast = document.getElementById('mainToast');
+                    toast.classList.add('visible');
+                    window.setTimeout(() => {
+                        toast.classList.remove('visible');
                     }, 5000);
                 }
             });
@@ -465,15 +464,15 @@ var YoutubeMusic;
     YoutubeMusic.getCurrentSong = getCurrentSong;
     function downloadVideo(url) {
         document.getElementById('youtubeSearchPageView').remove();
-        window.open("http://www.youtube-mp3.org/#v" + url.split('?v=')[1], '_blank');
+        window.open(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`, '_blank');
     }
     YoutubeMusic.downloadVideo = downloadVideo;
     var Commands;
     (function (Commands) {
         function lowerVolume() {
-            Helpers.hacksecute(view, function () {
-                var player = document.querySelector('.html5-video-player');
-                var vol = player.getVolume();
+            Helpers.hacksecute(view, () => {
+                const player = document.querySelector('.html5-video-player');
+                let vol = player.getVolume();
                 if (!player.isMuted()) {
                     vol -= 5;
                     vol = (vol < 0 ? 0 : vol);
@@ -483,9 +482,9 @@ var YoutubeMusic;
         }
         Commands.lowerVolume = lowerVolume;
         function raiseVolume() {
-            Helpers.hacksecute(view, function () {
-                var player = document.querySelector('.html5-video-player');
-                var vol = player.getVolume();
+            Helpers.hacksecute(view, () => {
+                const player = document.querySelector('.html5-video-player');
+                let vol = player.getVolume();
                 if (player.isMuted()) {
                     //Treat volume as 0
                     vol = 0;
@@ -498,9 +497,9 @@ var YoutubeMusic;
         }
         Commands.raiseVolume = raiseVolume;
         function togglePlay() {
-            Helpers.hacksecute(view, function () {
-                var player = document.querySelector('.html5-video-player');
-                var state = player.getPlayerState();
+            Helpers.hacksecute(view, () => {
+                const player = document.querySelector('.html5-video-player');
+                const state = player.getPlayerState();
                 if (state === 2) {
                     //Paused
                     player.playVideo();
@@ -515,25 +514,25 @@ var YoutubeMusic;
         }
         Commands.togglePlay = togglePlay;
         function pause() {
-            Helpers.hacksecute(view, function () {
-                var player = document.querySelector('.html5-video-player');
+            Helpers.hacksecute(view, () => {
+                const player = document.querySelector('.html5-video-player');
                 player.pauseVideo();
             });
         }
         Commands.pause = pause;
         function play() {
-            Helpers.hacksecute(view, function () {
-                var player = document.querySelector('.html5-video-player');
+            Helpers.hacksecute(view, () => {
+                const player = document.querySelector('.html5-video-player');
                 player.playVideo();
             });
         }
         Commands.play = play;
     })(Commands = YoutubeMusic.Commands || (YoutubeMusic.Commands = {}));
     function blockViewAds() {
-        var CANCEL = {
+        const CANCEL = {
             cancel: true
         };
-        var AD_URL_REGEX = new RegExp([
+        const AD_URL_REGEX = new RegExp([
             "://[^/]+.doubleclick.net",
             "://[^/]+.googlesyndication.com",
             "/ad_frame?",
@@ -541,7 +540,7 @@ var YoutubeMusic;
             "/annotations_invideo?",
             "ad3-w+.swf"
         ].join('|'), 'i');
-        view.request.onBeforeRequest.addListener(function (request) {
+        view.request.onBeforeRequest.addListener((request) => {
             if (AD_URL_REGEX.exec(request.url)) {
                 return CANCEL;
             }
@@ -559,7 +558,6 @@ var YoutubeMusic;
                 matches: ['*://*/*'],
                 js: {
                     files: [
-                        //'/content/tesseract.js',
                         '/genericJs/comm.js',
                         '/youtube/content/content.js'
                     ]
@@ -573,21 +571,21 @@ var YoutubeMusic;
                 },
                 run_at: 'document_start'
             }]);
-        view.addEventListener('contentload', function (e) {
+        view.addEventListener('contentload', (e) => {
             Content.init();
         });
-        view.addEventListener('loadcommit', function (e) {
+        view.addEventListener('loadcommit', (e) => {
             if (e.isTopLevel) {
                 window.setTimeout(Content.init, 1000);
             }
         });
-        view.addEventListener('newwindow', function (e) {
+        view.addEventListener('newwindow', (e) => {
             window.open(e.targetUrl, '_blank');
         });
-        window.addEventListener('focus', function () {
+        window.addEventListener('focus', () => {
             view.focus();
         });
-        view.addEventListener('keydown', function (e) {
+        view.addEventListener('keydown', (e) => {
             if (e.key === '?') {
                 YoutubeMusic.getCurrentSong();
             }
@@ -601,28 +599,28 @@ var YoutubeMusic;
             launch(response);
         }
         else {
-            chrome.storage.sync.get('url', function (data) {
+            chrome.storage.sync.get('url', (data) => {
                 launch(data['url']);
             });
         }
     }
     YoutubeMusic.respondUrl = respondUrl;
     function addListeners() {
-        AppWindow.listen('onMinimized', function () {
+        AppWindow.listen('onMinimized', () => {
             if (Visualization.isVisualizing()) {
-                Helpers.hacksecute(view, function () {
+                Helpers.hacksecute(view, () => {
                     document.body.classList.remove('showVisualizer');
                 });
             }
         });
-        AppWindow.listen('onRestored', function () {
+        AppWindow.listen('onRestored', () => {
             if (!AppWindow.app.isMinimized() && Visualization.isVisualizing()) {
-                Helpers.hacksecute(view, function () {
+                Helpers.hacksecute(view, () => {
                     document.body.classList.add('showVisualizer');
                 });
             }
         });
-        document.body.addEventListener('keydown', function (e) {
+        document.body.addEventListener('keydown', (e) => {
             if (AppWindow.getActiveView() !== 'youtubeMusic') {
                 return;
             }
@@ -631,13 +629,13 @@ var YoutubeMusic;
             }
             else if (e.key === 'v') {
                 Visualization.toggle();
-                Helpers.hacksecute(view, function () {
+                Helpers.hacksecute(view, () => {
                     document.body.classList.toggle('showVisualizer');
                 });
             }
         });
-        Helpers.toArr(document.querySelectorAll('.toast .dismissToast')).forEach(function (toastButton) {
-            toastButton.addEventListener('click', function () {
+        Helpers.toArr(document.querySelectorAll('.toast .dismissToast')).forEach((toastButton) => {
+            toastButton.addEventListener('click', () => {
                 toastButton.parentNode.classList.remove('visible');
             });
         });
@@ -652,7 +650,7 @@ var YoutubeMusic;
         view = document.createElement('webview');
         view.id = 'ytmaWebview';
         view.setAttribute('partition', 'persist:youtube-music-app');
-        window.setTimeout(function () {
+        window.setTimeout(() => {
             addViewListeners();
             document.querySelector('#youtubePlaylistCont').appendChild(view);
             addListeners();
@@ -662,33 +660,37 @@ var YoutubeMusic;
     function onClose() {
         //Save progress
         view.executeScript({
-            code: "(" + (function () {
-                var vidId = location.href.split('v=')[1].split('&')[0];
-                var vidIndex = location.href.split('index=')[1];
+            code: `(${(() => {
+                const vidId = location.href.split('v=')[1].split('&')[0];
+                let vidIndex = location.href.split('index=')[1];
                 if (vidIndex.indexOf('&') > -1) {
                     vidIndex = vidIndex.split('&')[0];
                 }
-                var _a = document.querySelector('.ytp-time-current').innerHTML.split(':'), mins = _a[0], secs = _a[1];
-                var address = 'https://www.youtube.com/watch';
-                var url = address + "?v=" + vidId + "&list=WL&index=" + vidIndex + "&t=" + mins + "m" + secs + "s";
+                const [mins, secs] = document.querySelector('.ytp-time-current').innerHTML.split(':');
+                const address = 'https://www.youtube.com/watch';
+                const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
                 chrome.runtime.sendMessage({
                     cmd: 'setUrl',
                     url: url
                 });
-            }).toString() + ")()"
+            }).toString()})()`
         });
     }
     YoutubeMusic.onClose = onClose;
+    function onFocus() {
+        view.focus();
+    }
+    YoutubeMusic.onFocus = onFocus;
 })(YoutubeMusic || (YoutubeMusic = {}));
 var Netflix;
 (function (Netflix) {
     function initView() {
-        var view = document.createElement('webview');
+        const view = document.createElement('webview');
         view.setAttribute('partition', 'persist:netflix');
-        view.addEventListener('newwindow', function (e) {
+        view.addEventListener('newwindow', (e) => {
             window.open(e.targetUrl, '_blank');
         });
-        window.addEventListener('focus', function () {
+        window.addEventListener('focus', () => {
             view.focus();
         });
         document.querySelector('#netflixCont').appendChild(view);
@@ -700,131 +702,101 @@ var Netflix;
         function setup() {
             Video.videoView = initView();
             Video.videoView.id = 'netflixWebView';
-            window.setTimeout(function () {
+            window.setTimeout(() => {
                 Video.videoView.addContentScripts([{
                         name: 'js',
                         matches: ['*://*/*'],
                         js: {
                             files: [
+                                '/genericJs/comm.js',
                                 '/netflix/video/video.js'
                             ]
                         },
-                        run_at: 'document_end'
-                    }, {
-                        name: 'css',
-                        matches: ['*://*/*'],
-                        css: {
-                            files: ['/netflix/video/video.css']
-                        },
-                        run_at: 'document_start'
+                        run_at: 'document_idle'
                     }]);
             }, 10);
         }
         Video.setup = setup;
     })(Video || (Video = {}));
-    var Selection;
-    (function (Selection) {
-        Selection.selectionView = null;
-        function setup() {
-            Selection.selectionView = initView();
-            Selection.selectionView.id = 'netflixSelectionWebView';
-            window.setTimeout(function () {
-                Selection.selectionView.addContentScripts([{
-                        name: 'js',
-                        matches: ['*://*/*'],
-                        js: {
-                            files: [
-                                '/netflix/selection/selection.js'
-                            ]
-                        },
-                        run_at: 'document_end'
-                    }, {
-                        name: 'css',
-                        matches: ['*://*/*'],
-                        css: {
-                            files: ['/netflix/selection/selection.css']
-                        },
-                        run_at: 'document_start'
-                    }]);
-            }, 10);
-        }
-        Selection.setup = setup;
-    })(Selection || (Selection = {}));
-    var FullPage;
-    (function (FullPage) {
-        FullPage.fullPageView = null;
-        function setup() {
-            FullPage.fullPageView = initView();
-            FullPage.fullPageView.id = 'netflixFullPageView';
-        }
-        FullPage.setup = setup;
-    })(FullPage || (FullPage = {}));
     var Commands;
     (function (Commands) {
         function lowerVolume() {
+            //Not possible
         }
         Commands.lowerVolume = lowerVolume;
         function raiseVolume() {
+            //Not possible
         }
         Commands.raiseVolume = raiseVolume;
         function togglePlay() {
+            Helpers.hacksecute(Video.videoView, () => {
+                const video = document.querySelector('video');
+                if (!window.playerStatus) {
+                    //The states should be matching now
+                    window.playerStatus = video.paused ?
+                        'paused' : 'playing';
+                }
+                const playerStatus = window.playerStatus;
+                const videoStatus = video.paused ?
+                    'paused' : 'playing';
+                const playButton = document.querySelector('.player-control-button');
+                if (playerStatus === videoStatus) {
+                    //Statusses match up, switch it the normal way
+                    playButton.click();
+                    window.playerStatus = (window.playerStatus === 'playing' ? 'paused' : 'playing');
+                }
+                else {
+                    //Statusses don't match up, hit the button twice
+                    playButton.click();
+                    playButton.click();
+                }
+            });
         }
         Commands.togglePlay = togglePlay;
         function pause() {
+            Helpers.hacksecute(Video.videoView, () => {
+                const video = document.querySelector('video');
+                video.pause();
+            });
         }
         Commands.pause = pause;
         function play() {
+            Helpers.hacksecute(Video.videoView, () => {
+                const video = document.querySelector('video');
+                video.play();
+            });
         }
         Commands.play = play;
     })(Commands = Netflix.Commands || (Netflix.Commands = {}));
-    function changeVideo(url) {
-        Video.videoView.src = url;
-        document.getElementById('netflixCont').classList.remove('showSelection');
-    }
-    Netflix.changeVideo = changeVideo;
-    function addKeyboardListeners() {
-        document.body.addEventListener('keydown', function (e) {
-            if (AppWindow.getActiveView() !== 'netflix') {
-                return;
-            }
-            if (e.key === 'v') {
-                document.getElementById('netflixCont').classList.toggle('showSelection');
-            }
-            else if (e.key === 'h') {
-                document.getElementById('netflixCont').classList.toggle('showFullPage');
-            }
-        });
-    }
     function setup() {
         Video.setup();
-        Selection.setup();
-        FullPage.setup();
     }
     Netflix.setup = setup;
     function init() {
-        window.setTimeout(function () {
+        window.setTimeout(() => {
             Video.videoView.src = 'https://www.netflix.com/browse';
-            addKeyboardListeners();
-            window.setTimeout(function () {
-                Selection.selectionView.src = 'https://www.netflix.com/browse';
-                FullPage.fullPageView.src = 'https://www.netflix.com/browse';
-            }, 3000);
         }, 15);
     }
     Netflix.init = init;
     function onClose() {
+        //Go for a semi-clean exit
+        Video.videoView.src && Video.videoView.back();
     }
     Netflix.onClose = onClose;
+    function onFocus() {
+        Video.videoView.focus();
+    }
+    Netflix.onFocus = onFocus;
 })(Netflix || (Netflix = {}));
 var YoutubeSubscriptions;
 (function (YoutubeSubscriptions) {
     function initView() {
-        var view = document.createElement('webview');
+        const view = document.createElement('webview');
         view.setAttribute('partition', 'persist:youtubeSubscriptions');
-        view.addEventListener('newwindow', function (e) {
+        view.addEventListener('newwindow', (e) => {
             window.open(e.targetUrl, '_blank');
         });
-        window.addEventListener('focus', function () {
+        window.addEventListener('focus', () => {
             view.focus();
         });
         document.querySelector('#youtubeSubsCont').appendChild(view);
@@ -833,9 +805,9 @@ var YoutubeSubscriptions;
     var Commands;
     (function (Commands) {
         function lowerVolume() {
-            Helpers.hacksecute(Video.videoView, function () {
-                var player = document.querySelector('.html5-video-player');
-                var vol = player.getVolume();
+            Helpers.hacksecute(Video.videoView, () => {
+                const player = document.querySelector('.html5-video-player');
+                let vol = player.getVolume();
                 if (!player.isMuted()) {
                     vol -= 5;
                     vol = (vol < 0 ? 0 : vol);
@@ -845,9 +817,9 @@ var YoutubeSubscriptions;
         }
         Commands.lowerVolume = lowerVolume;
         function raiseVolume() {
-            Helpers.hacksecute(Video.videoView, function () {
-                var player = document.querySelector('.html5-video-player');
-                var vol = player.getVolume();
+            Helpers.hacksecute(Video.videoView, () => {
+                const player = document.querySelector('.html5-video-player');
+                let vol = player.getVolume();
                 if (player.isMuted()) {
                     //Treat volume as 0
                     vol = 0;
@@ -860,9 +832,9 @@ var YoutubeSubscriptions;
         }
         Commands.raiseVolume = raiseVolume;
         function togglePlay() {
-            Helpers.hacksecute(Video.videoView, function () {
-                var player = document.querySelector('.html5-video-player');
-                var state = player.getPlayerState();
+            Helpers.hacksecute(Video.videoView, () => {
+                const player = document.querySelector('.html5-video-player');
+                const state = player.getPlayerState();
                 if (state === 2) {
                     //Paused
                     player.playVideo();
@@ -877,15 +849,15 @@ var YoutubeSubscriptions;
         }
         Commands.togglePlay = togglePlay;
         function pause() {
-            Helpers.hacksecute(Video.videoView, function () {
-                var player = document.querySelector('.html5-video-player');
+            Helpers.hacksecute(Video.videoView, () => {
+                const player = document.querySelector('.html5-video-player');
                 player.pauseVideo();
             });
         }
         Commands.pause = pause;
         function play() {
-            Helpers.hacksecute(Video.videoView, function () {
-                var player = document.querySelector('.html5-video-player');
+            Helpers.hacksecute(Video.videoView, () => {
+                const player = document.querySelector('.html5-video-player');
                 player.playVideo();
             });
             if (Video.videoView.src) {
@@ -895,7 +867,7 @@ var YoutubeSubscriptions;
         Commands.play = play;
         function magicButton() {
             SubBox.subBoxView.executeScript({
-                code: Helpers.stringifyFunction(function () {
+                code: Helpers.stringifyFunction(() => {
                     window.videos.selected.goLeft();
                     window.videos.selected.launchCurrent();
                 })
@@ -909,7 +881,7 @@ var YoutubeSubscriptions;
         function setup() {
             Video.videoView = initView();
             Video.videoView.id = 'youtubeSubsVideoView';
-            window.setTimeout(function () {
+            window.setTimeout(() => {
                 Video.videoView.addContentScripts([{
                         name: 'css',
                         matches: ['*://*/*'],
@@ -921,14 +893,14 @@ var YoutubeSubscriptions;
                         },
                         run_at: 'document_start'
                     }]);
-                Video.videoView.addEventListener('contentload', function () {
-                    Helpers.hacksecute(Video.videoView, function () {
-                        var player = document.querySelector('.html5-video-player');
-                        var playerApi = document.getElementById('player-api');
-                        var volumeBar = document.createElement('div');
-                        var volumeBarBar = document.createElement('div');
-                        var volumeBarNumber = document.createElement('div');
-                        var volumeBarTimeout = null;
+                Video.videoView.addEventListener('contentload', () => {
+                    Helpers.hacksecute(Video.videoView, () => {
+                        const player = document.querySelector('.html5-video-player');
+                        const playerApi = document.getElementById('player-api');
+                        const volumeBar = document.createElement('div');
+                        const volumeBarBar = document.createElement('div');
+                        const volumeBarNumber = document.createElement('div');
+                        let volumeBarTimeout = null;
                         volumeBar.id = 'yt-ca-volumeBar';
                         volumeBarBar.id = 'yt-ca-volumeBarBar';
                         volumeBarNumber.id = 'yt-ca-volumeBarNumber';
@@ -936,7 +908,7 @@ var YoutubeSubscriptions;
                         volumeBar.appendChild(volumeBarBar);
                         document.body.appendChild(volumeBar);
                         function prepareVideo() {
-                            setTimeout(function () {
+                            setTimeout(() => {
                                 function reloadIfAd() {
                                     if (player.getAdState() === 1) {
                                         window.location.reload();
@@ -960,7 +932,7 @@ var YoutubeSubscriptions;
                             }, 2500);
                         }
                         prepareVideo();
-                        document.body.addEventListener('keydown', function (e) {
+                        document.body.addEventListener('keydown', (e) => {
                             if (e.key === 'k') {
                                 //Hide or show video
                                 document.body.classList.toggle('showHiddens');
@@ -986,7 +958,7 @@ var YoutubeSubscriptions;
                         }
                         //Code that has to be executed "inline"
                         function increaseVolume() {
-                            var vol = player.getVolume();
+                            let vol = player.getVolume();
                             if (player.isMuted()) {
                                 //Treat volume as 0
                                 vol = 0;
@@ -997,7 +969,7 @@ var YoutubeSubscriptions;
                             setPlayerVolume(vol);
                         }
                         function lowerVolume() {
-                            var vol = player.getVolume();
+                            let vol = player.getVolume();
                             if (!player.isMuted()) {
                                 vol -= 5;
                                 vol = (vol < 0 ? 0 : vol);
@@ -1005,15 +977,15 @@ var YoutubeSubscriptions;
                             }
                         }
                         function showVolumeBar() {
-                            var volume = player.getVolume();
+                            const volume = player.getVolume();
                             localStorage.setItem('volume', volume + '');
                             volumeBarNumber.innerHTML = volume + '';
-                            volumeBarBar.style.transform = "scaleX(" + volume / 100 + ")";
+                            volumeBarBar.style.transform = `scaleX(${volume / 100})`;
                             volumeBar.classList.add('visible');
                             if (volumeBarTimeout !== null) {
                                 window.clearTimeout(volumeBarTimeout);
                             }
-                            volumeBarTimeout = window.setTimeout(function () {
+                            volumeBarTimeout = window.setTimeout(() => {
                                 volumeBar.classList.remove('visible');
                                 volumeBarTimeout = null;
                             }, 2000);
@@ -1029,7 +1001,7 @@ var YoutubeSubscriptions;
                         }
                         function addListeners() {
                             var videoEl = document.querySelector('video');
-                            videoEl.addEventListener('wheel', function (e) {
+                            videoEl.addEventListener('wheel', (e) => {
                                 onScroll(e.deltaY > 0);
                             });
                         }
@@ -1046,12 +1018,13 @@ var YoutubeSubscriptions;
         function setup() {
             SubBox.subBoxView = initView();
             SubBox.subBoxView.id = 'youtubeSubsSubBoxView';
-            window.setTimeout(function () {
+            window.setTimeout(() => {
                 SubBox.subBoxView.addContentScripts([{
                         name: 'js',
                         matches: ['*://*/*'],
                         js: {
                             files: [
+                                '/genericJs/comm.js',
                                 '/youtubeSubs/subBox/subBox.js'
                             ]
                         },
@@ -1086,12 +1059,12 @@ var YoutubeSubscriptions;
     }
     YoutubeSubscriptions.setup = setup;
     function addKeyboardListeners() {
-        document.body.addEventListener('keydown', function (e) {
+        document.body.addEventListener('keydown', (e) => {
             if (AppWindow.getActiveView() !== 'youtubeSubscriptions') {
                 return;
             }
             if (e.key === 'h') {
-                var subsCont = document.getElementById('youtubeSubsCont');
+                const subsCont = document.getElementById('youtubeSubsCont');
                 if (subsCont.classList.contains('showVideo')) {
                     subsCont.classList.remove('showVideo');
                     SubBox.subBoxView.focus();
@@ -1104,22 +1077,32 @@ var YoutubeSubscriptions;
         });
     }
     function init() {
-        window.setTimeout(function () {
+        window.setTimeout(() => {
             SubBox.subBoxView.src = 'http://www.youtube.com/feed/subscriptions';
             addKeyboardListeners();
         }, 15);
     }
     YoutubeSubscriptions.init = init;
     function onClose() {
+        //Nothing really
     }
     YoutubeSubscriptions.onClose = onClose;
+    function onFocus() {
+        if (document.getElementById('youtubeSubsCont').classList.contains('showVideo')) {
+            Video.videoView.focus();
+        }
+        else {
+            SubBox.subBoxView.focus();
+        }
+    }
+    YoutubeSubscriptions.onFocus = onFocus;
 })(YoutubeSubscriptions || (YoutubeSubscriptions = {}));
 var AppWindow;
 (function (AppWindow) {
     AppWindow.app = chrome.app.window.current();
-    var titleBar = document.querySelector('#titleBar');
-    var activeView = null;
-    var listeners = [];
+    const titleBar = document.querySelector('#titleBar');
+    let activeView = null;
+    const listeners = [];
     function listen(event, callback) {
         listeners.push({
             event: event,
@@ -1128,27 +1111,40 @@ var AppWindow;
     }
     AppWindow.listen = listen;
     function fireEvent(event, data) {
-        listeners.filter(function (listener) {
+        listeners.filter((listener) => {
             return listener.event === event;
-        }).forEach(function (listener) {
+        }).forEach((listener) => {
             listener.callback(data);
         });
     }
+    function getViewByName(name) {
+        switch (name) {
+            case 'ytmusic':
+                return YoutubeMusic;
+            case 'netflix':
+                return Netflix;
+            case 'youtubeSubscriptions':
+                return YoutubeSubscriptions;
+        }
+    }
+    AppWindow.getViewByName = getViewByName;
     var Exiting;
     (function (Exiting) {
-        var escapePresses = 0;
+        let escapePresses = 0;
         function handleEscapePress() {
             escapePresses++;
             if (escapePresses >= 3) {
                 //Close app
-                var app_1 = chrome.app.window.current();
+                const app = chrome.app.window.current();
                 YoutubeMusic.onClose();
-                window.setTimeout(function () {
-                    app_1.close();
+                Netflix.onClose();
+                YoutubeSubscriptions.onClose();
+                window.setTimeout(() => {
+                    app.close();
                 }, 0);
                 return;
             }
-            window.setTimeout(function () {
+            window.setTimeout(() => {
                 //Remove it from the array
                 escapePresses--;
             }, 1000);
@@ -1156,10 +1152,10 @@ var AppWindow;
         Exiting.handleEscapePress = handleEscapePress;
     })(Exiting || (Exiting = {}));
     function prepareEventListeners() {
-        var events = ['onBoundsChanged', 'onClosed',
+        const events = ['onBoundsChanged', 'onClosed',
             'onFullscreened', 'onMaximized', 'onMinimized', 'onRestored'];
-        events.forEach(function (eventName) {
-            AppWindow.app[eventName].addListener(function (event) {
+        events.forEach((eventName) => {
+            AppWindow.app[eventName].addListener((event) => {
                 fireEvent(eventName, event);
             });
         });
@@ -1172,32 +1168,32 @@ var AppWindow;
         listen('onMaximized', updateButtonsState);
         listen('onFullscreened', updateButtonsState);
         listen('onRestored', updateButtonsState);
-        window.addEventListener('focus', function () {
+        window.addEventListener('focus', () => {
             titleBar.classList.add('focused');
         });
-        window.addEventListener('blur', function () {
+        window.addEventListener('blur', () => {
             titleBar.classList.remove('focused');
         });
-        document.querySelector('#fullscreen').addEventListener('click', function () {
+        document.querySelector('#fullscreen').addEventListener('click', () => {
             AppWindow.app[AppWindow.app.isFullscreen() ? 'restore' : 'fullscreen']();
         });
-        document.querySelector('#minimize').addEventListener('click', function () {
+        document.querySelector('#minimize').addEventListener('click', () => {
             AppWindow.app.minimize();
         });
-        document.querySelector('#maximize').addEventListener('click', function () {
+        document.querySelector('#maximize').addEventListener('click', () => {
             AppWindow.app[AppWindow.app.isMaximized() ? 'restore' : 'maximize']();
         });
-        document.querySelector('#close').addEventListener('click', function () {
+        document.querySelector('#close').addEventListener('click', () => {
             YoutubeMusic.onClose();
             Netflix.onClose();
             YoutubeSubscriptions.onClose();
-            window.setTimeout(function () {
+            window.setTimeout(() => {
                 AppWindow.app.close();
             }, 0);
         });
-        document.body.addEventListener('keydown', function (e) {
+        document.body.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                var youtubeSearchPageView = document.getElementById('youtubeSearchPageView');
+                const youtubeSearchPageView = document.getElementById('youtubeSearchPageView');
                 if (youtubeSearchPageView) {
                     youtubeSearchPageView.remove();
                     return;
@@ -1222,7 +1218,7 @@ var AppWindow;
     }
     function addRuntimeListeners() {
         chrome.runtime.onMessage.addListener(function (message) {
-            var activeViewView = getActiveViewView().Commands;
+            const activeViewView = getActiveViewView().Commands;
             switch (message.cmd) {
                 case 'lowerVolume':
                     activeViewView.lowerVolume();
@@ -1250,50 +1246,40 @@ var AppWindow;
         document.getElementById('spinnerCont').classList.add('hidden');
         document.getElementById('spinner').classList.remove('active');
     }
-    var loadedViews = [];
+    AppWindow.loadedViews = [];
     function onLoadingComplete(view) {
+        console.log('loading ' + view + 'complete');
+        AppWindow.loadedViews.push(view);
         if (activeView === view) {
-            loadedViews.push(view);
             hideSpinner();
         }
     }
     AppWindow.onLoadingComplete = onLoadingComplete;
     function onMagicButton() {
-        switch (getActiveView()) {
-            case 'ytmusic':
-                return;
-            case 'netflix':
-                return;
-            case 'youtubeSubscriptions':
-                YoutubeSubscriptions.Commands.magicButton();
-                break;
+        if (getActiveView() === 'youtubeSubscriptions') {
+            YoutubeSubscriptions.Commands.magicButton();
         }
     }
     AppWindow.onMagicButton = onMagicButton;
-    function switchToview(view, force) {
-        if (force === void 0) { force = false; }
-        console.log("switching from view " + activeView + " to view " + view);
-        if (view === activeView && !force) {
+    function switchToview(view, first = false) {
+        if (view === activeView && !first) {
             return;
         }
-        if (loadedViews.indexOf(view) === -1) {
+        if (!first) {
+            //Pause current view
+            getActiveViewView().Commands.pause();
+        }
+        if (AppWindow.loadedViews.indexOf(view) === -1) {
             showSpinner();
+            getViewByName(view).init();
+        }
+        else {
             hideSpinner();
-            switch (view) {
-                case 'ytmusic':
-                    YoutubeMusic.init();
-                    break;
-                case 'netflix':
-                    Netflix.init();
-                    break;
-                case 'youtubeSubscriptions':
-                    YoutubeSubscriptions.init();
-                    break;
-            }
         }
         activeView = view;
+        getActiveViewView().onFocus();
         getActiveViewView().Commands.play();
-        var viewsEl = document.getElementById('views');
+        const viewsEl = document.getElementById('views');
         viewsEl.classList.remove('ytmusic', 'netflix', 'youtubeSubscriptions');
         viewsEl.classList.add(view);
     }
@@ -1314,16 +1300,8 @@ var AppWindow;
     }
     AppWindow.getActiveView = getActiveView;
     function getActiveViewView() {
-        switch (activeView) {
-            case 'ytmusic':
-                return YoutubeMusic;
-            case 'netflix':
-                return Netflix;
-            case 'youtubeSubscriptions':
-                return YoutubeSubscriptions;
-        }
+        return getViewByName(getActiveView());
     }
     AppWindow.getActiveViewView = getActiveViewView;
 })(AppWindow || (AppWindow = {}));
-//AppWindow.init(window.baseView || 'ytmusic');
-AppWindow.init('youtubeSubscriptions');
+AppWindow.init(window.baseView || 'ytmusic');

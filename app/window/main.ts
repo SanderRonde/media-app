@@ -1,5 +1,4 @@
 /// <reference path="../../typings/chrome.d.ts" />
-/// <reference path="../../typings/promise.d.ts" />
 
 interface InjectDetails {
 	code?: string;
@@ -65,6 +64,7 @@ interface WebView extends HTMLElement {
 	};
 	addContentScripts: (scripts: Array<ContentScriptDetails>) => void;
 	src: string;
+	back: (callback?: () => void) => void;
 }
 
 interface YoutubeVideoPlayer extends HTMLElement {
@@ -198,7 +198,9 @@ interface Window {
 			goRight: () => void;
 			launchCurrent: () => void;
 		}
-	}
+	};
+	
+	playerStatus: string;
 }
 
 namespace Helpers {
@@ -820,7 +822,6 @@ namespace YoutubeMusic {
 			matches: ['*://*/*'],
 			js: {
 				files: [
-					//'/content/tesseract.js',
 					'/genericJs/comm.js',
 					'/youtube/content/content.js'
 				]
@@ -950,6 +951,10 @@ namespace YoutubeMusic {
 			}).toString()})()`
 		});
 	}
+
+	export function onFocus() {
+		view.focus();
+	}
 }
 
 namespace Netflix {
@@ -982,105 +987,69 @@ namespace Netflix {
 					matches: ['*://*/*'],
 					js: {
 						files: [
+							'/genericJs/comm.js',
 							'/netflix/video/video.js'
 						]
 					},
-					run_at: 'document_end'
-				}, {
-					name: 'css',
-					matches: ['*://*/*'],
-					css: {
-						files: ['/netflix/video/video.css']
-					},
-					run_at: 'document_start'
-				}]);
+					run_at: 'document_idle'
+				}])
 			}, 10);
-		}
-	}
-
-	namespace Selection {
-		export let selectionView: WebView = null;
-		
-		export function setup() {
-			selectionView = initView();
-			selectionView.id = 'netflixSelectionWebView';
-
-			window.setTimeout(() => {
-				selectionView.addContentScripts([{
-					name: 'js',
-					matches: ['*://*/*'],
-					js: {
-						files: [
-							'/netflix/selection/selection.js'
-						]
-					},
-					run_at: 'document_end'
-				}, {
-					name: 'css',
-					matches: ['*://*/*'],
-					css: {
-						files: ['/netflix/selection/selection.css']
-					},
-					run_at: 'document_start'
-				}]);
-			}, 10);
-		}
-	}
-
-	namespace FullPage {
-		export let fullPageView: WebView = null;
-
-		export function setup() {
-			fullPageView = initView();
-			fullPageView.id = 'netflixFullPageView';
 		}
 	}
 
 	export namespace Commands {
 		export function lowerVolume() {
-
+			//Not possible
 		}
 
 		export function raiseVolume() {
-
+			//Not possible
 		}
 
 		export function togglePlay() {
+			Helpers.hacksecute(Video.videoView, () => {
+				const video = (document.querySelector('video') as HTMLVideoElement);
 
+				if (!window.playerStatus) {
+					//The states should be matching now
+					window.playerStatus = video.paused ? 
+						'paused' : 'playing';
+				}
+
+				const playerStatus = window.playerStatus;
+				const videoStatus = video.paused ? 
+						'paused' : 'playing';
+				const playButton = (document.querySelector('.player-control-button') as ClickableElement);
+
+				if (playerStatus === videoStatus) {
+					//Statusses match up, switch it the normal way
+					playButton.click();
+					window.playerStatus = (window.playerStatus === 'playing' ? 'paused' : 'playing');
+				} else {
+					//Statusses don't match up, hit the button twice
+					playButton.click();
+					playButton.click();
+				}
+			});
 		}
 
 		export function pause() {
-
+			Helpers.hacksecute(Video.videoView, () => {
+				const video = (document.querySelector('video') as HTMLVideoElement);
+				video.pause();
+			});
 		}
 
 		export function play() {
-
+			Helpers.hacksecute(Video.videoView, () => {
+				const video = (document.querySelector('video') as HTMLVideoElement);
+				video.play();
+			});
 		}
-	}
-
-	export function changeVideo(url: string) {
-		Video.videoView.src = url;
-		document.getElementById('netflixCont').classList.remove('showSelection');
-	}
-
-	function addKeyboardListeners() {
-		document.body.addEventListener('keydown', (e) => {
-			if (AppWindow.getActiveView() !== 'netflix') {
-				return;
-			}
-
-			if (e.key === 'v') {
-				document.getElementById('netflixCont').classList.toggle('showSelection');
-			} else if (e.key === 'h') {
-				document.getElementById('netflixCont').classList.toggle('showFullPage');
-			}
-		});
 	}
 
 	export function setup() {
 		Video.setup();
-		Selection.setup();
-		FullPage.setup();
 	}
 
 	interface ClickableElement extends Element {
@@ -1095,16 +1064,16 @@ namespace Netflix {
 	export function init() {
 		window.setTimeout(() => {
 			Video.videoView.src = 'https://www.netflix.com/browse';
-			addKeyboardListeners();
-			window.setTimeout(() => {
-				Selection.selectionView.src = 'https://www.netflix.com/browse';
-				FullPage.fullPageView.src = 'https://www.netflix.com/browse';
-			}, 3000);
 		}, 15);
 	}
 
 	export function onClose() {
+		//Go for a semi-clean exit
+		Video.videoView.src && Video.videoView.back();
+	}
 
+	export function onFocus() {
+		Video.videoView.focus();
 	}
 }
 
@@ -1369,6 +1338,7 @@ namespace YoutubeSubscriptions {
 					matches: ['*://*/*'],
 					js: {
 						files: [
+							'/genericJs/comm.js',
 							'/youtubeSubs/subBox/subBox.js'
 						]
 					},
@@ -1431,7 +1401,15 @@ namespace YoutubeSubscriptions {
 	}
 
 	export function onClose() {
+		//Nothing really
+	}
 
+	export function onFocus() {
+		if (document.getElementById('youtubeSubsCont').classList.contains('showVideo')) {
+			Video.videoView.focus();
+		} else {
+			SubBox.subBoxView.focus();
+		}
 	}
 }
 
@@ -1462,6 +1440,22 @@ namespace AppWindow {
 		});
 	}
 
+	type ViewTypes = typeof YoutubeMusic | typeof Netflix | typeof YoutubeSubscriptions;
+	export function getViewByName(name: ViewNames): ViewTypes;
+	export function getViewByName(name: 'ytmusic'): typeof YoutubeMusic;
+	export function getViewByName(name: 'netflix'): typeof Netflix;
+	export function getViewByName(name: 'youtubeSubscriptions'): typeof YoutubeSubscriptions;
+	export function getViewByName(name: ViewNames): ViewTypes {
+		switch (name) {
+			case 'ytmusic':
+				return YoutubeMusic;
+			case 'netflix':
+				return Netflix;
+			case 'youtubeSubscriptions':
+				return YoutubeSubscriptions;
+		}
+	}
+
 	namespace Exiting {
 		let escapePresses = 0;
 		export function handleEscapePress() {
@@ -1470,6 +1464,8 @@ namespace AppWindow {
 				//Close app
 				const app = chrome.app.window.current();
 				YoutubeMusic.onClose();
+				Netflix.onClose();
+				YoutubeSubscriptions.onClose();
 
 				window.setTimeout(() => {
 					app.close();
@@ -1587,49 +1583,40 @@ namespace AppWindow {
 		document.getElementById('spinner').classList.remove('active');
 	}
 
-	const loadedViews = [];
+	export const loadedViews = [];
 	export function onLoadingComplete(view: ViewNames) {
+		console.log('loading ' + view + 'complete');
+		loadedViews.push(view);
 		if (activeView === view) {
-			loadedViews.push(view);
 			hideSpinner();
 		}
 	}
 
 	export function onMagicButton() {
-		switch (getActiveView()) {
-			case 'ytmusic':
-				return;
-			case 'netflix':
-				return;
-			case 'youtubeSubscriptions':
-				YoutubeSubscriptions.Commands.magicButton();
-				break;
+		if (getActiveView() === 'youtubeSubscriptions') {
+			YoutubeSubscriptions.Commands.magicButton();
 		}
 	}
 
-	export function switchToview(view: ViewNames, force: boolean = false) {
-		console.log(`switching from view ${activeView} to view ${view}`);
-		if (view === activeView && !force) {
+	export function switchToview(view: ViewNames, first: boolean = false) {
+		if (view === activeView && !first) {
 			return;
 		} 
+
+		if (!first) {
+			//Pause current view
+			getActiveViewView().Commands.pause();
+		}
+
 		if (loadedViews.indexOf(view) === -1) {
 			showSpinner();
+			getViewByName(view).init();
+		} else {
 			hideSpinner();
-
-			switch (view) {
-				case 'ytmusic':
-					YoutubeMusic.init();
-					break;
-				case 'netflix':
-					Netflix.init();
-					break;
-				case 'youtubeSubscriptions':
-					YoutubeSubscriptions.init();
-					break;
-			}
 		}
 
 		activeView = view;
+		getActiveViewView().onFocus();
 		getActiveViewView().Commands.play();
 		const viewsEl = document.getElementById('views');
 		viewsEl.classList.remove('ytmusic', 'netflix', 'youtubeSubscriptions');
@@ -1653,25 +1640,9 @@ namespace AppWindow {
 		return activeView;
 	}
 
-	export function getActiveViewView(): {
-		Commands: {
-			lowerVolume: () => void;
-			raiseVolume: () => void;
-			togglePlay: () => void;
-			pause: () => void;
-			play: () => void;
-		}
-	} {
-		switch (activeView) {
-			case 'ytmusic':
-				return YoutubeMusic;
-			case 'netflix':
-				return Netflix;
-			case 'youtubeSubscriptions':
-				return YoutubeSubscriptions;
-		}
+	export function getActiveViewView(): ViewTypes {
+		return getViewByName(getActiveView());
 	}
 }
 
-//AppWindow.init(window.baseView || 'ytmusic');
-AppWindow.init('youtubeSubscriptions');
+AppWindow.init(window.baseView || 'ytmusic');
