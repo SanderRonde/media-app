@@ -11,7 +11,7 @@ html {
 }
 
 .ytp-chrome-bottom {
-	min-width: calc(100vh - 44px);
+	min-width: calc(100vw - 44px);
 }
 
 video {
