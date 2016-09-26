@@ -20,7 +20,9 @@ const PODCAST_VIDS = [
 	'Monstercat Podcast',
 	'Future of Euphoric Stylez - ',
 	'Phreshcast',
-	'HARD with STYLE'
+	'HARD with STYLE',
+	'Global Dedication',
+	'Flashover Radio'
 ];
 
 let watchedSelected = 0;
