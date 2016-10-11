@@ -224,9 +224,13 @@ class SelectedVideo {
 		let width = this._getRowWidth();
 		let toSelect = this.current;
 		for (let i = 0; i < width; i++) {
-			do {
-				toSelect = this.videos[this.videos.indexOf(toSelect) - 1];
-			} while (!toSelect || toSelect.isHidden)
+			if (this.videos.indexOf(toSelect) === -1) {
+				toSelect = this.videos[toSelect.context.indexOf(toSelect)];
+			} else {
+				do {
+					toSelect = this.videos[this.videos.indexOf(toSelect) - 1];
+				} while (!toSelect || toSelect.isHidden)
+			}
 		}
 		this._updateSelected(toSelect);
 	}
@@ -235,26 +239,38 @@ class SelectedVideo {
 		let width = this._getRowWidth();
 		let toSelect = this.current;
 		for (let i = 0; i < width; i++) {
-			do {
-				toSelect = this.videos[this.videos.indexOf(toSelect) + 1];
-			} while (!toSelect || toSelect.isHidden)
+			if (this.videos.indexOf(toSelect) === -1) {
+				toSelect = this.videos[toSelect.context.indexOf(toSelect)];
+			} else {
+				do {
+					toSelect = this.videos[this.videos.indexOf(toSelect) + 1];
+				} while (!toSelect || toSelect.isHidden)
+			}
 		}
 		this._updateSelected(toSelect);
 	}
 
 	goLeft() {
 		let toSelect = this.current;
-		do {
-			toSelect = this.videos[this.videos.indexOf(toSelect) - 1];
-		} while (!toSelect || toSelect.isHidden)
+		if (this.videos.indexOf(toSelect) === -1) {
+			toSelect = this.videos[toSelect.context.indexOf(toSelect)];
+		} else {
+			do {
+				toSelect = this.videos[this.videos.indexOf(toSelect) - 1];
+			} while (!toSelect || toSelect.isHidden)
+		}
 		this._updateSelected(toSelect);
 	}
 
 	goRight() {
 		let toSelect = this.current;
-		do {
-			toSelect = this.videos[this.videos.indexOf(toSelect) + 1];
-		} while (!toSelect || toSelect.isHidden)
+		if (this.videos.indexOf(toSelect) === -1) {
+			toSelect = this.videos[toSelect.context.indexOf(toSelect)];
+		} else {
+			do {
+				toSelect = this.videos[this.videos.indexOf(toSelect) + 1];
+			} while (!toSelect || toSelect.isHidden)
+		}
 		this._updateSelected(toSelect);
 	}
 
@@ -349,8 +365,9 @@ class VideoIdentifier {
 		return video;
 	}
 
-	_setVideoMetaData(video) {
+	_setVideoMetaData(video, index, videos) {
 		video.title = video.element.querySelector('.yt-lockup-title').querySelector('a').innerText;
+		video.context = videos;
 		return video;
 	}
 
@@ -394,8 +411,8 @@ class VideoIdentifier {
 						window.navToLink(link, video);
 					});
 					anchor.hasListener = true;
-					video.links.push(link);
 				}
+				video.links.push(link);
 			});
 		});
 	}
