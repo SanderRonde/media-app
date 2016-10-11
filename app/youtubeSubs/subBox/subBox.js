@@ -404,8 +404,8 @@ class VideoIdentifier {
 			const anchors = video.element.querySelectorAll('a');
 			video.links = [];
 			anchors.forEach((anchor) => {
+				const link = anchor.href;
 				if (!anchor.hasListener) {
-					const link = anchor.href;
 					anchor.href = '#';
 					anchor.addEventListener('click', (e) => {
 						window.navToLink(link, video);
