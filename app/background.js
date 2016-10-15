@@ -59,6 +59,7 @@ chrome.commands.onCommand.addListener((cmd) => {
 				launch('ytmusic');
 			} else {
 				chrome.app.window.get('mainwindow').focus();
+				getAppWindow().AppWindow.onFocus();
 			}
 			break;
 		case 'magicButton':

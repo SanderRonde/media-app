@@ -622,7 +622,8 @@ var YoutubeMusic;
             }
         });
         document.body.addEventListener('keydown', (e) => {
-            if (AppWindow.getActiveView() !== 'youtubeMusic') {
+            const x = AppWindow.getActiveView();
+            if (AppWindow.getActiveView() !== 'ytmusic') {
                 return;
             }
             if (e.key === 'd') {
@@ -1312,5 +1313,9 @@ var AppWindow;
         return getViewByName(getActiveView());
     }
     AppWindow.getActiveViewView = getActiveViewView;
+    function onFocus() {
+        getActiveViewView().onFocus();
+    }
+    AppWindow.onFocus = onFocus;
 })(AppWindow || (AppWindow = {}));
 AppWindow.init(window.baseView || 'ytmusic');
