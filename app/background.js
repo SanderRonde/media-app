@@ -1,4 +1,6 @@
-﻿function launch(view) {
+﻿let app = null;
+
+function launch(view) {
 	chrome.app.window.create('window/main.html', {
 		id: 'mainwindow',
 		outerBounds: {
@@ -11,8 +13,19 @@
 		state: 'maximized',
 		resizable: true
 	}, (appWindow) => {
+		app = appWindow; 
 		if (view) {
 			appWindow.contentWindow.baseView = view;
+		}
+
+		try {
+			app.onClosed.addListener(() => {
+				app = null;
+			});
+		} catch(e) {
+			//If an error occured during the adding of this listener,
+			// that means the window was already closed, so set it to null
+			app = null;
 		}
 	});
 }
@@ -46,7 +59,7 @@ chrome.commands.onCommand.addListener((cmd) => {
 			});
 			break;
 		case 'pausePlay':
-			if (chrome.app.window.get('mainwindow') === null) {
+			if (getApp() === null) {
 				launch('ytmusic');
 			} else {
 				chrome.runtime.sendMessage({
@@ -55,10 +68,10 @@ chrome.commands.onCommand.addListener((cmd) => {
 			}
 			break;
 		case 'focusWindow':
-			if (chrome.app.window.get('mainwindow') === null) {
+			if (getApp() === null) {
 				launch('ytmusic');
 			} else {
-				chrome.app.window.get('mainwindow').focus();
+				getApp().focus();
 				getAppWindow().AppWindow.onFocus();
 			}
 			break;
@@ -87,7 +100,7 @@ function sendMessageToPlaylistSaver(message, cb) {
 }
 
 function getApp() {
-	return chrome.app.window.get('mainwindow');
+	return app;
 }
 
 function getAppWindow() {
