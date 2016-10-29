@@ -1,6 +1,6 @@
 {
   "name": "media-app",
-  "version": "2.0.3",
+  "version": "2.0.7",
   "description": "Runs Netflix and Youtube as a desktop app",
   "main": "gruntfile.js",
   "scripts": {
