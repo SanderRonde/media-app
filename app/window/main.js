@@ -342,7 +342,7 @@ var YoutubeMusic;
         let songFoundName = '';
         function downloadSong() {
             //Search for it on youtube
-            const view = document.createElement('#ytmaWebview');
+            const view = document.createElement('webview');
             view.id = 'youtubeSearchPageView';
             view.addContentScripts([{
                     name: 'youtubeSearchJs',

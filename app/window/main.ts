@@ -599,7 +599,7 @@ namespace YoutubeMusic {
 		let songFoundName = '';
 		export function downloadSong() {
 			//Search for it on youtube
-			const view: WebView = document.createElement('#ytmaWebview') as WebView;
+			const view: WebView = document.createElement('webview') as WebView;
 			view.id = 'youtubeSearchPageView';
 
 			view.addContentScripts([{
