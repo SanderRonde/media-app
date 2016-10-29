@@ -84,7 +84,7 @@ body {
 	opacity: 1;
 }
 
-#titleBar.focused .unFadeOnFocus {
+#titleBar .unFadeOnFocus {
 	opacity: 1;
 }
 
@@ -147,7 +147,7 @@ body {
 	opacity: 0.4;
 }
 
-#titleBar.focused .closeCrossLine {
+#titleBar .closeCrossLine {
     stroke: black;
 }
 
@@ -323,7 +323,7 @@ body {
     transform: translateY(0);
 }
 
-#titleBar.focused .closeCrossLine, #close:hover .closeCrossLine {
+#titleBar .closeCrossLine, #close:hover .closeCrossLine {
     opacity: 1;
 }
 
