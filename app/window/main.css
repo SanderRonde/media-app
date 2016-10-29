@@ -176,6 +176,7 @@ body {
 }
 
 #getSongDialogHorizontalCenter {
+	z-index: 99999999;
 	display: flex;
 	justify-content: center;
 	height: 100%;
@@ -216,6 +217,7 @@ body {
 }
 
 #getSongDownload {
+	z-index: 9999;
 	fill: white;
 	display: flex;
 	justify-content: center;
