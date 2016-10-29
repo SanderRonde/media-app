@@ -69,8 +69,8 @@ function doTask(name, id, done) {
 				timestamps = timestampContainers.map((timestamp) => {
 					const split = timestamp.innerHTML.split(':');
 					let seconds = 0;
-					for (let i = split.length - 1; i >= 0; i--) {
-						seconds = Math.pow(60, (split.length - (i + 1))) * ~~split[i];
+					for (let i = split.length - 1; i >= 0; i--) {	
+						seconds += Math.pow(60, (split.length - (i + 1))) * ~~split[i];
 					}
 					return seconds;
 				});
