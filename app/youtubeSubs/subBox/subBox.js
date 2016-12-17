@@ -406,7 +406,7 @@ class VideoIdentifier {
 			const anchors = video.element.querySelectorAll('a');
 			video.links = [];
 			anchors.forEach((anchor) => {
-				const link = anchor.href;
+				const link = `https://www.youtube.com/watch?v=${video.element.getAttribute('data-context-item-id')}`;
 				if (!anchor.hasListener) {
 					anchor.href = '#';
 					anchor.addEventListener('click', (e) => {

@@ -599,7 +599,7 @@ namespace YoutubeMusic {
 		let songFoundName = '';
 		export function downloadSong() {
 			//Search for it on youtube
-			const view: WebView = document.createElement('#ytmaWebview') as WebView;
+			const view: WebView = document.createElement('webview') as WebView;
 			view.id = 'youtubeSearchPageView';
 
 			view.addContentScripts([{
@@ -897,7 +897,8 @@ namespace YoutubeMusic {
 			}
 		});
 		document.body.addEventListener('keydown', (e) => {
-			if (AppWindow.getActiveView() !== 'youtubeMusic') {
+			const x = AppWindow.getActiveView();
+			if (AppWindow.getActiveView() !== 'ytmusic') {
 				return;
 			}
 			if (e.key === 'd') {
@@ -1055,11 +1056,6 @@ namespace Netflix {
 
 	interface ClickableElement extends Element {
 		click: () => void;
-	}
-
-	interface QuerySelectable extends Element {
-		querySelector(selectors: string): Element;
-    	querySelectorAll(selectors: string): NodeListOf<Element>;
 	}
 
 	export function init() {
@@ -1651,6 +1647,10 @@ namespace AppWindow {
 
 	export function getActiveViewView(): ViewTypes {
 		return getViewByName(getActiveView());
+	}
+
+	export function onFocus() {
+		getActiveViewView().onFocus();
 	}
 }
 

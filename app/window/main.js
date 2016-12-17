@@ -342,7 +342,7 @@ var YoutubeMusic;
         let songFoundName = '';
         function downloadSong() {
             //Search for it on youtube
-            const view = document.createElement('#ytmaWebview');
+            const view = document.createElement('webview');
             view.id = 'youtubeSearchPageView';
             view.addContentScripts([{
                     name: 'youtubeSearchJs',
@@ -622,7 +622,8 @@ var YoutubeMusic;
             }
         });
         document.body.addEventListener('keydown', (e) => {
-            if (AppWindow.getActiveView() !== 'youtubeMusic') {
+            const x = AppWindow.getActiveView();
+            if (AppWindow.getActiveView() !== 'ytmusic') {
                 return;
             }
             if (e.key === 'd') {
@@ -1312,5 +1313,9 @@ var AppWindow;
         return getViewByName(getActiveView());
     }
     AppWindow.getActiveViewView = getActiveViewView;
+    function onFocus() {
+        getActiveViewView().onFocus();
+    }
+    AppWindow.onFocus = onFocus;
 })(AppWindow || (AppWindow = {}));
 AppWindow.init(window.baseView || 'ytmusic');

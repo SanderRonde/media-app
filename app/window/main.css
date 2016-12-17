@@ -84,7 +84,7 @@ body {
 	opacity: 1;
 }
 
-#titleBar.focused .unFadeOnFocus {
+#titleBar .unFadeOnFocus {
 	opacity: 1;
 }
 
@@ -147,7 +147,7 @@ body {
 	opacity: 0.4;
 }
 
-#titleBar.focused .closeCrossLine {
+#titleBar .closeCrossLine {
     stroke: black;
 }
 
@@ -176,6 +176,7 @@ body {
 }
 
 #getSongDialogHorizontalCenter {
+	z-index: 99999999;
 	display: flex;
 	justify-content: center;
 	height: 100%;
@@ -216,6 +217,7 @@ body {
 }
 
 #getSongDownload {
+	z-index: 9999;
 	fill: white;
 	display: flex;
 	justify-content: center;
@@ -321,7 +323,7 @@ body {
     transform: translateY(0);
 }
 
-#titleBar.focused .closeCrossLine, #close:hover .closeCrossLine {
+#titleBar .closeCrossLine, #close:hover .closeCrossLine {
     opacity: 1;
 }
 
