@@ -12,7 +12,7 @@ const PODCAST_VIDS = [
 	'Hardwell On Air',
 	'Heldeep Radio',
 	'Heartfeldt Radio',
-	'Clublife by Tiësto',
+	'ClubLife by Tiësto',
 	'Spinnin\' Sessions',
 	'Aoki\'s House',
 	'Hysteria Radio',
@@ -22,8 +22,9 @@ const PODCAST_VIDS = [
 	'Phreshcast',
 	'HARD with STYLE',
 	'Global Dedication',
-	'Flashover Radio'
-];
+	'Flashover Radio',
+	'Dannic presents Fonk Radio'
+].map(e => e.toLowerCase());
 
 let watchedSelected = 0;
 
@@ -378,8 +379,9 @@ class VideoIdentifier {
 	}
 
 	_addPocastToWatchLater(video) {
+		const lowerCase = video.title.toLowerCase();
 		for (let i = 0; i < PODCAST_VIDS.length; i++) {
-			if (video.title.indexOf(PODCAST_VIDS[i]) > -1) {
+			if (lowerCase.indexOf(PODCAST_VIDS[i]) > -1) {
 				video.isPodcast = true;
 				this._hideVideo(video);
 				video.isHidden = true;
