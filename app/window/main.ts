@@ -1504,6 +1504,7 @@ namespace AppWindow {
 		listen('onRestored', updateButtonsState);
 		window.addEventListener('focus', () => {
 			titleBar.classList.add('focused');
+			onFocus();
 		});
 		window.addEventListener('blur', () => {
 			titleBar.classList.remove('focused');
