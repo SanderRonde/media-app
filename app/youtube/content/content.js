@@ -4,7 +4,7 @@ window.saveProgress = () => {
 	if (vidIndex.indexOf('&') > -1) {
 		vidIndex = vidIndex.split('&')[0];
 	}
-	const [mins, secs] = document.querySelector('.ytp-time-current').innerHTML.split(':');
+	const [secs, mins, hours] = document.querySelector('.ytp-time-current').innerHTML.split(':');
 	const address = 'https://www.youtube.com/watch';
 	const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
 	

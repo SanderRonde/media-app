@@ -128,7 +128,9 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 					cmd: 'setUrl',
 					url: message.url
 				});
-			} catch (e) {}
+			} catch (e) {
+				console.log('something went wrong saving the url', e);
+			}
 			break;
 		case 'downloadvideo':
 			getAppWindow().YoutubeMusic.downloadVideo(message.url);
