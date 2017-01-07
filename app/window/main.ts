@@ -68,19 +68,20 @@ interface WebView extends HTMLElement {
 }
 
 interface YoutubeVideoPlayer extends HTMLElement {
-	getVolume: () => number;
-	isMuted: () => boolean;
-	setVolume: (volume: number) => void;
-	unMute: () => void;
-	getPlayerState: () => number;
-	playVideo: () => void;
-	pauseVideo: () => void;
-	getAdState: () => number;
-	setPlaybackQuality: (quality: string) => void;
-	getPlaybackQuality: () => string;
-	setSizeStyle: (expanded: boolean, expandedAgain: boolean) => void;
-	setSize: () => void;
-	getCurrentTime: () => number;
+	getVolume(): number;
+	isMuted(): boolean;
+	setVolume(volume: number): void;
+	unMute(): void;
+	getPlayerState(): number;
+	playVideo(): void;
+	pauseVideo(): void;
+	getAdState(): number;
+	setPlaybackQuality(quality: string): void;
+	getPlaybackQuality(): string;
+	setSizeStyle(expanded: boolean, expandedAgain: boolean): void;
+	setSize(): void;
+	getCurrentTime(): number;
+	seekTo(seconds: number): void;
 }
 
 type RequestInfo = Request | string;
@@ -396,8 +397,20 @@ namespace YoutubeMusic {
 					}, 50);
 				}
 
+				function skipIfSOT() {
+					const title = (
+						document.getElementsByClassName('watch-title')[0] as HTMLElement)
+							.innerText;
+					if (title.toLowerCase().indexOf('a state of trance') > -1 &&
+						 player.getCurrentTime() <= 120) {
+							player.seekTo(2 * 60);
+					}
+				}
+
 				function prepareVideo() {
+					let timePassed: number = 0;
 					setTimeout(() => {
+						timePassed += 500;
 						function reloadIfAd() {
 							if (player.getAdState() === 1) {
 								window.location.reload();
@@ -405,23 +418,27 @@ namespace YoutubeMusic {
 
 							if (player.getPlayerState() === 3) {
 								window.setTimeout(reloadIfAd, 250);
+								timePassed += 250;
 							} else {
-								player.setPlaybackQuality('hd1080');
-								if (player.getPlaybackQuality() !== 'hd1080') {
-									player.setPlaybackQuality('hd720');
-								}
-								
-								if (document.querySelector('.ytp-size-button')
-										.getAttribute('title') === 'Theatermodus') {
-									player.setSizeStyle(true, true);
-								}
-								setupVisualizer();
+								window.setTimeout(() => {
+									player.setPlaybackQuality('hd1080');
+									if (player.getPlaybackQuality() !== 'hd1080') {
+										player.setPlaybackQuality('hd720');
+									}
+									
+									if (document.querySelector('.ytp-size-button')
+											.getAttribute('title') === 'Theatermodus') {
+										player.setSizeStyle(true, true);
+									}
+									setupVisualizer();
+									skipIfSOT();
 
-								localStorage.setItem('loaded', 'ytmusic');
+									localStorage.setItem('loaded', 'ytmusic');
+								}, Math.max(2500 - timePassed, 0));
 							}
 						}
 						reloadIfAd();
-					}, 2500);
+					}, 500);
 				}
 
 				prepareVideo();
