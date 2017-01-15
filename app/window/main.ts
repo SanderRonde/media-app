@@ -397,16 +397,6 @@ namespace YoutubeMusic {
 					}, 50);
 				}
 
-				function skipIfSOT() {
-					const title = (
-						document.getElementsByClassName('watch-title')[0] as HTMLElement)
-							.innerText;
-					if (title.toLowerCase().indexOf('a state of trance') > -1 &&
-						 player.getCurrentTime() <= 120) {
-							player.seekTo(2 * 60);
-					}
-				}
-
 				function prepareVideo() {
 					let timePassed: number = 0;
 					setTimeout(() => {
@@ -431,7 +421,6 @@ namespace YoutubeMusic {
 										player.setSizeStyle(true, true);
 									}
 									setupVisualizer();
-									skipIfSOT();
 
 									localStorage.setItem('loaded', 'ytmusic');
 								}, Math.max(2500 - timePassed, 0));
@@ -482,7 +471,11 @@ namespace YoutubeMusic {
 						player.unMute();
 					}
 
-					vol += 5;
+					if (vol <= 10) {
+						vol += 1;
+					} else {
+						vol += 5;
+					}
 					vol = (vol > 100 ? 100 : vol);
 					setPlayerVolume(vol);
 				}
@@ -490,7 +483,11 @@ namespace YoutubeMusic {
 				function lowerVolume() {
 					let vol = player.getVolume();
 					if (!player.isMuted()) {
-						vol -= 5;
+						if (vol <= 10) {
+							vol -= 1;
+						} else {
+							vol -= 5;
+						}
 						
 						vol = (vol < 0 ? 0 : vol);
 						setPlayerVolume(vol);
