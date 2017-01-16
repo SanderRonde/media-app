@@ -226,14 +226,24 @@ var YoutubeMusic;
                         vol = 0;
                         player.unMute();
                     }
-                    vol += 5;
+                    if (vol <= 10) {
+                        vol += 1;
+                    }
+                    else {
+                        vol += 5;
+                    }
                     vol = (vol > 100 ? 100 : vol);
                     setPlayerVolume(vol);
                 }
                 function lowerVolume() {
                     var vol = player.getVolume();
                     if (!player.isMuted()) {
-                        vol -= 5;
+                        if (vol <= 10) {
+                            vol -= 1;
+                        }
+                        else {
+                            vol -= 5;
+                        }
                         vol = (vol < 0 ? 0 : vol);
                         setPlayerVolume(vol);
                     }
