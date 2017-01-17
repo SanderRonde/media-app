@@ -751,7 +751,9 @@ namespace YoutubeMusic {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				let vol = player.getVolume();
 				if (!player.isMuted()) {
-					vol -= 5;
+					if (vol <= 10) {
+						vol -= 1;
+					}
 					
 					vol = (vol < 0 ? 0 : vol);
 					player.setVolume(vol);
@@ -769,7 +771,9 @@ namespace YoutubeMusic {
 					player.unMute();
 				}
 
-				vol += 5;
+				if (vol <= 10) {
+					vol += 1;
+				}
 				vol = (vol > 100 ? 100 : vol);
 				player.setVolume(vol);
 			});

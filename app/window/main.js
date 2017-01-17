@@ -490,7 +490,9 @@ var YoutubeMusic;
                 var player = document.querySelector('.html5-video-player');
                 var vol = player.getVolume();
                 if (!player.isMuted()) {
-                    vol -= 5;
+                    if (vol <= 10) {
+                        vol -= 1;
+                    }
                     vol = (vol < 0 ? 0 : vol);
                     player.setVolume(vol);
                 }
@@ -506,7 +508,9 @@ var YoutubeMusic;
                     vol = 0;
                     player.unMute();
                 }
-                vol += 5;
+                if (vol <= 10) {
+                    vol += 1;
+                }
                 vol = (vol > 100 ? 100 : vol);
                 player.setVolume(vol);
             });
