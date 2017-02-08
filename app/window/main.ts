@@ -1,5 +1,7 @@
 /// <reference path="../../typings/chrome.d.ts" />
 
+import { BlockAd, AdBlockReady } from '../adblocking/adblock'
+
 interface InjectDetails {
 	code?: string;
 	file?: string; 
@@ -186,7 +188,7 @@ interface Response extends AbstractResponse {
 type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions';
 
 interface Window {
-	fetch: (url:Request|string) => Promise<Response>;
+	fetch(url:Request|string): Promise<Response>;
 	baseView: ViewNames;
 
 	returnTaskValue: (result: any, id: number) => void;
@@ -823,7 +825,7 @@ namespace YoutubeMusic {
 			"ad3-w+.swf"
 		].join('|'), 'i');
 		view.request.onBeforeRequest.addListener((request) => {
-			if (AD_URL_REGEX.exec(request.url)) {
+			if (BlockAd(request.url)) {
 				return CANCEL;
 			}
 			return {
