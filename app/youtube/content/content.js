@@ -4,9 +4,11 @@ window.saveProgress = () => {
 	if (vidIndex.indexOf('&') > -1) {
 		vidIndex = vidIndex.split('&')[0];
 	}
-	const [secs, mins, hours] = document.querySelector('.ytp-time-current').innerHTML.split(':');
+	const [secs, mins, hours] = document.querySelector('.ytp-time-current').innerHTML.split(':').reverse();
 	const address = 'https://www.youtube.com/watch';
-	const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
+	const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${
+		~~secs + ((~~mins + (~~hours * 60)) * 60)
+	}`;
 	
 	chrome.runtime.sendMessage({
 		cmd: 'setUrl',
@@ -104,4 +106,4 @@ function doTask(name, id, done) {
 
 window.setInterval(updateColors, 1e4);
 updateColors();
-window.setInterval(window.saveProgress, 5e4);
+window.setInterval(window.saveProgress, 5e3);
