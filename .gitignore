@@ -192,3 +192,5 @@ ModelManifest.xml
 /.vs/config/applicationhost.config
 
 build/
+
+typings/
