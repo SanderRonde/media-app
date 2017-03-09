@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var ready = false;
 var rules = null;
 function getList() {
@@ -67,9 +68,6 @@ function splitURL(url) {
         host: hostAndPathSplit[0]
     };
 }
-function getHost(url) {
-    return url.split('://')[1].split('/')[0];
-}
 function isBlocked(url) {
     var _a = splitURL(url), path = _a.path, host = _a.host;
     for (var i = 0; i < rules.fullMatch.length; i++) {
@@ -87,6 +85,7 @@ function isBlocked(url) {
             return true;
         }
     }
+    return false;
 }
 function BlockAd(url) {
     if (!ready) {

@@ -1,6 +1,6 @@
 /// <reference path="../../typings/chrome.d.ts" />
 
-import { BlockAd, AdBlockReady } from '../adblocking/adblock'
+import { BlockAd } from '../adblocking/adblock'
 
 interface InjectDetails {
 	code?: string;
@@ -86,125 +86,7 @@ interface YoutubeVideoPlayer extends HTMLElement {
 	seekTo(seconds: number): void;
 }
 
-type RequestInfo = Request | string;
-
-type BodyInit = Blob | FormData | string;
-
-interface Headers {
-	(obj: { [key: string]: string }): void;
-	append: (name: string, value: string) => void;
-	set: (name: string, value: string) => void;
-	delete: (name: string) => void;
-	get: (name: string) => string;
-	has: (name: string) => boolean;
-}
-
-interface RequestInit {
-  method: string;
-  headers: Headers | { [key: string]: string };
-  body: BodyInit;
-  referrer: string;
-  referrerPolicy: "" | "no-referrer" | "no-referrer-when-downgrade" | "origin" | "origin-when-cross-origin" | "unsafe-url";
-  mode: "navigate" | "same-origin" | "no-cors" | "cors";
-  credentials: "omit" | "same-origin" | "include";
-  cache: "default" | "no-store" | "reload" | "no-cache" | "force-cache" | "only-if-cached";
-  redirect: "follow" | "error" | "manual";
-  integrity: string;
-  window: any;
-}
-
-
-interface Request {
-  (input?: RequestInfo, init?: RequestInit): void;
-
-  method: string;
-	url: string;
-	headers: Headers;
-	type: string;
-	destination: string;
-	referrer: string;
-	referrerPolicy: string;
-	mode: string;
-	credentials: string;
-	cache: string;
-	redirect: string;
-	integrity: string;
-}
-
-interface AbstractResponse {
-  constructor();
-}
-
-interface OpaqueResponse extends AbstractResponse {
-  // This class represents the result of cross-origin fetched resources that are
-  // tainted, e.g. <img src="http://cross-origin.example/test.png">
-
- url(): string; // Read-only for x-origin
-}
-
-interface ResponseInit {
-	status: number;
-	statusText: string;
-	headers: Headers;
-}
-
-interface ReadableStreamDefaultReader {
-  closed: boolean;
-  cancel: () => void;
-  read: () => Promise<{value: any, done: boolean}>;
-  releaseLock: () => void;
-}
-
-interface ReadableStream {
-  (underlyingSource: {}, { size, highWaterMark }: {size: number, highWaterMark: any});
-
-  locked: boolean;
-
-  cancel: (reason: string) => void;
-  getReader: () => ReadableStreamDefaultReader;
-  pipeThrough({ writable, readable }, options);
-  pipeTo(dest, { preventClose, preventAbort, preventCancel });
-  tee();
-}
-
-interface Response extends AbstractResponse {
-  (body?: BodyInit, init?: ResponseInit): void;
-  text: () => Promise<string>;
-  error: () => Response;
-	redirect: (url: string, status: number) => Response;
-
-	type: "basic" | "cors" | "default" | "error" | "opaque" | "opaqueredirect";
-	url: string;
-	redirected: boolean;
-	status: number;
-	ok: boolean;
-	statusText: string;
-	headers: Headers;
-	body?: ReadableStream;
-
-	clone: () => Response;
-}
-
 type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions';
-
-interface Window {
-	fetch(url:Request|string): Promise<Response>;
-	baseView: ViewNames;
-
-	returnTaskValue: (result: any, id: number) => void;
-
-	executedYTCA?: string;
-
-	videos: {
-		selected: {
-			goLeft: () => void;
-			goRight: () => void;
-			launchCurrent: () => void;
-		}
-	};
-	
-	playerStatus: string;
-}
 
 namespace Helpers {
 	export function stringifyFunction(fn: Function): string {
@@ -221,7 +103,7 @@ namespace Helpers {
 		}).toString().replace('str', str);
 	}
 
-	export function hacksecute(view: WebView, fn) {
+	export function hacksecute(view: WebView, fn: Function) {
 		if (!view.src) {
 			return;
 		}
@@ -233,7 +115,9 @@ namespace Helpers {
 	}
 
 	let taskIds = 0;
-	const taskListeners = {};
+	const taskListeners: {
+		[id: number]: (result: any) => void;
+	} = {};
 	export function returnTaskValue(result: any, id: number) {
 		if (taskListeners[id]) {
 			taskListeners[id](result);
@@ -284,10 +168,10 @@ namespace YoutubeMusic {
 	namespace Content {
 		export function init() {
 			Helpers.hacksecute(view, () => {
-				if (window.executedYTCA) {
+				if ((window as any).executedYTCA) {
 					return;
 				}
-				window.executedYTCA = location.href;
+				(window as any).executedYTCA = location.href;
 
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				const playerApi = document.getElementById('player-api');
@@ -302,14 +186,14 @@ namespace YoutubeMusic {
 				volumeBarBar.id = 'yt-ca-volumeBarBar';
 				volumeBarNumber.id = 'yt-ca-volumeBarNumber';
 
-				let volumeBarTimeout = null;
+				let volumeBarTimeout: number = null;
 				let visualizing = false;
 
 				volumeBar.appendChild(volumeBarNumber);
 				volumeBar.appendChild(volumeBarBar);
 				document.body.appendChild(volumeBar);
 
-				function cleanupData(dataArray: Array<number>): Array<number> {
+				function cleanupData(dataArray: Float32Array): Array<number> {
 					for (let i in dataArray) {
 						if (dataArray[i] <= -100 || dataArray[i] === -80 || dataArray[i] === -50) {
 							dataArray[i] = 0;
@@ -338,7 +222,7 @@ namespace YoutubeMusic {
 					});
 				}
 
-				function visualize() { 
+				function visualize(this: AudioVisualizerSettings) { 
 					this.analyser.getFloatFrequencyData(this.dataArray);
 					this.parsedArray = cleanupData(this.dataArray);
 
@@ -354,7 +238,7 @@ namespace YoutubeMusic {
 					ctx: AudioContext;
 					analyser: AnalyserNode;
 					vidSrc: MediaElementAudioSourceNode;
-					dataArray; Float32Array;
+					dataArray: Float32Array;
 					bars: Array<HTMLElement>;
 					parsedArray?: Array<number>;
 				}
@@ -585,7 +469,7 @@ namespace YoutubeMusic {
 							break;
 					}
 
-					localStorage.setItem(`taskResult${id}`, result);
+					localStorage.setItem(`taskResult${id}`, result + '');
 				}
 
 				function checkForTasks() {
@@ -611,7 +495,7 @@ namespace YoutubeMusic {
 	}
 
 	namespace Downloading {
-		let songFoundTimeout = null;
+		let songFoundTimeout: number = null;
 		let songFoundName = '';
 		export function downloadSong() {
 			//Search for it on youtube
@@ -641,7 +525,7 @@ namespace YoutubeMusic {
 		}
 		document.getElementById('getSongDownload').addEventListener('click', downloadSong);
 
-		function displayFoundSong(name) {
+		function displayFoundSong(name: string) {
 			document.getElementById('getSongName').innerHTML = name;
 			const dialog = document.getElementById('getSongDialog');
 			dialog.classList.add('visible');
@@ -658,7 +542,7 @@ namespace YoutubeMusic {
 			}, 5000);
 		}
 
-		function timestampToSeconds(timestamp) {
+		function timestampToSeconds(timestamp: string): number {
 			const split = timestamp.split(':');
 			let seconds = 0;
 			for (let i = split.length - 1; i >= 0; i--) {
@@ -667,7 +551,7 @@ namespace YoutubeMusic {
 			return seconds;
 		}
 
-		function getSongIndex(timestamps, time) {
+		function getSongIndex(timestamps: Array<number>, time: number): number {
 			for (let i = 0; i < timestamps.length; i++) {
 				if (timestamps[i] <= time && timestamps[i + 1] >= time) {
 					return i;
@@ -816,14 +700,6 @@ namespace YoutubeMusic {
 		const CANCEL = {
 			cancel: true
 		};
-		const AD_URL_REGEX = new RegExp([
-			"://[^/]+.doubleclick.net",
-			"://[^/]+.googlesyndication.com",
-			"/ad_frame?", 
-			"/api/stats/ads?", 
-			"/annotations_invideo?", 
-			"ad3-w+.swf"
-		].join('|'), 'i');
 		view.request.onBeforeRequest.addListener((request) => {
 			if (BlockAd(request.url)) {
 				return CANCEL;
@@ -917,7 +793,6 @@ namespace YoutubeMusic {
 			}
 		});
 		document.body.addEventListener('keydown', (e) => {
-			const x = AppWindow.getActiveView();
 			if (AppWindow.getActiveView() !== 'ytmusic') {
 				return;
 			}
@@ -1032,13 +907,13 @@ namespace Netflix {
 			Helpers.hacksecute(Video.videoView, () => {
 				const video = (document.querySelector('video') as HTMLVideoElement);
 
-				if (!window.playerStatus) {
+				if (!(window as any).playerStatus) {
 					//The states should be matching now
-					window.playerStatus = video.paused ? 
+					(window as any).playerStatus = video.paused ? 
 						'paused' : 'playing';
 				}
 
-				const playerStatus = window.playerStatus;
+				const playerStatus = (window as any).playerStatus;
 				const videoStatus = video.paused ? 
 						'paused' : 'playing';
 				const playButton = (document.querySelector('.player-control-button') as ClickableElement);
@@ -1046,7 +921,7 @@ namespace Netflix {
 				if (playerStatus === videoStatus) {
 					//Statusses match up, switch it the normal way
 					playButton.click();
-					window.playerStatus = (window.playerStatus === 'playing' ? 'paused' : 'playing');
+					(window as any).playerStatus = ((window as any).playerStatus === 'playing' ? 'paused' : 'playing');
 				} else {
 					//Statusses don't match up, hit the button twice
 					playButton.click();
@@ -1177,8 +1052,8 @@ namespace YoutubeSubscriptions {
 		export function magicButton() {
 			SubBox.subBoxView.executeScript({
 				code: Helpers.stringifyFunction(() => {
-					window.videos.selected.goLeft();
-					window.videos.selected.launchCurrent();
+					(window as any).videos.selected.goLeft();
+					(window as any).videos.selected.launchCurrent();
 				})
 			})
 		}
@@ -1211,7 +1086,7 @@ namespace YoutubeSubscriptions {
 						const volumeBar = document.createElement('div');
 						const volumeBarBar = document.createElement('div');
 						const volumeBarNumber = document.createElement('div');
-						let volumeBarTimeout = null;
+						let volumeBarTimeout: number = null;
 
 						volumeBar.id = 'yt-ca-volumeBar';
 						volumeBarBar.id = 'yt-ca-volumeBarBar';
@@ -1381,10 +1256,6 @@ namespace YoutubeSubscriptions {
 	function showVideo() {
 		document.getElementById('youtubeSubsCont').classList.add('showVideo');
 		Video.videoView.focus();
-	}
-
-	function hideVideo() {
-		document.getElementById('youtubeSubsCont').classList.remove('showVideo');
 	}
 
 	export function changeVideo(url: string) {
@@ -1607,7 +1478,7 @@ namespace AppWindow {
 		document.getElementById('spinner').classList.remove('active');
 	}
 
-	export const loadedViews = [];
+	export const loadedViews: Array<ViewNames> = [];
 	export function onLoadingComplete(view: ViewNames) {
 		console.log('loading ' + view + 'complete');
 		loadedViews.push(view);
@@ -1675,4 +1546,4 @@ namespace AppWindow {
 	}
 }
 
-AppWindow.init(window.baseView || 'ytmusic');
+AppWindow.init((window as any).baseView || 'ytmusic');

@@ -102,10 +102,6 @@ function splitURL(url: string): {
 	}
 }
 
-function getHost(url: string): string {
-	return url.split('://')[1].split('/')[0];
-}
-
 function isBlocked(url: string): boolean {
 	const { path, host } = splitURL(url);
 
@@ -124,6 +120,7 @@ function isBlocked(url: string): boolean {
 			return true;
 		}
 	}
+	return false;
 }
 
 export function BlockAd(url: string): boolean {

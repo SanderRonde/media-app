@@ -1,4 +1,6 @@
-/// <reference path="../../typings/chrome.d.ts" />
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var adblock_1 = require("../adblocking/adblock");
 var Helpers;
 (function (Helpers) {
     function stringifyFunction(fn) {
@@ -105,7 +107,6 @@ var YoutubeMusic;
                         dataArray[i] = (dataArray[i] + 100) / 100;
                     }
                     var newArray = [];
-                    //Compress it into a max of 120 bars
                     var delta = (dataArray.length / 120);
                     for (var i = 0; i < dataArray.length; i += delta) {
                         var average = dataArray.slice(i, i + delta).reduce(function (a, b) {
@@ -196,7 +197,6 @@ var YoutubeMusic;
                 prepareVideo();
                 document.body.addEventListener('keydown', function (e) {
                     if (e.key === 'h') {
-                        //Hide or show video
                         document.body.classList.toggle('showHiddens');
                     }
                 });
@@ -215,14 +215,12 @@ var YoutubeMusic;
                             muted: (volume === 0)
                         }),
                         creation: Date.now(),
-                        expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
+                        expiration: Date.now() + (30 * 24 * 60 * 60 * 1000)
                     }));
                 }
-                //Code that has to be executed "inline"
                 function increaseVolume() {
                     var vol = player.getVolume();
                     if (player.isMuted()) {
-                        //Treat volume as 0
                         vol = 0;
                         player.unMute();
                     }
@@ -293,7 +291,6 @@ var YoutubeMusic;
                                 var textNodes = [];
                                 if (!isNaN(index) && timestampContainers[index]) {
                                     var currentNode = timestampContainers[index].previousSibling;
-                                    //Search back until a <br> is found
                                     while (currentNode && currentNode.tagName !== 'BR') {
                                         if (!currentNode.tagName) {
                                             textNodes.push(currentNode.nodeValue);
@@ -301,23 +298,19 @@ var YoutubeMusic;
                                         currentNode = currentNode.previousSibling;
                                     }
                                     currentNode = timestampContainers[index].nextSibling;
-                                    //Search forward until a <br> is found
                                     while (currentNode && currentNode.tagName !== 'BR') {
                                         if (!currentNode.tagName) {
                                             textNodes.push(currentNode.nodeValue);
                                         }
                                         currentNode = currentNode.nextSibling;
                                     }
-                                    //Go through list and find something that resembles a song
                                     for (var i = 0; i < textNodes.length; i++) {
                                         if (/.+-.+/.test(textNodes[i])) {
-                                            //This is a song
                                             result = textNodes[i];
                                             break;
                                         }
                                     }
                                     if (!result) {
-                                        //Just try this instead
                                         result = textNodes[0];
                                     }
                                 }
@@ -327,7 +320,7 @@ var YoutubeMusic;
                             }
                             break;
                     }
-                    localStorage.setItem("taskResult" + id, result);
+                    localStorage.setItem("taskResult" + id, result + '');
                 }
                 function checkForTasks() {
                     var tasks;
@@ -356,7 +349,6 @@ var YoutubeMusic;
         var songFoundTimeout = null;
         var songFoundName = '';
         function downloadSong() {
-            //Search for it on youtube
             var view = document.createElement('webview');
             view.id = 'youtubeSearchPageView';
             view.addContentScripts([{
@@ -418,7 +410,6 @@ var YoutubeMusic;
                 }
                 else if (timestamps) {
                     if (!Array.isArray(timestamps)) {
-                        //It's a link to the tracklist
                         window.fetch(timestamps).then(function (response) {
                             return response.text();
                         }).then(function (html) {
@@ -462,7 +453,6 @@ var YoutubeMusic;
                     }
                 }
                 else {
-                    //Show not found toast
                     var toast_1 = document.getElementById('mainToast');
                     toast_1.classList.add('visible');
                     window.setTimeout(function () {
@@ -504,7 +494,6 @@ var YoutubeMusic;
                 var player = document.querySelector('.html5-video-player');
                 var vol = player.getVolume();
                 if (player.isMuted()) {
-                    //Treat volume as 0
                     vol = 0;
                     player.unMute();
                 }
@@ -521,11 +510,9 @@ var YoutubeMusic;
                 var player = document.querySelector('.html5-video-player');
                 var state = player.getPlayerState();
                 if (state === 2) {
-                    //Paused
                     player.playVideo();
                 }
                 else if (state === 1) {
-                    //Playing
                     player.pauseVideo();
                 }
                 else {
@@ -552,16 +539,8 @@ var YoutubeMusic;
         var CANCEL = {
             cancel: true
         };
-        var AD_URL_REGEX = new RegExp([
-            "://[^/]+.doubleclick.net",
-            "://[^/]+.googlesyndication.com",
-            "/ad_frame?",
-            "/api/stats/ads?",
-            "/annotations_invideo?",
-            "ad3-w+.swf"
-        ].join('|'), 'i');
         view.request.onBeforeRequest.addListener(function (request) {
-            if (AD_URL_REGEX.exec(request.url)) {
+            if (adblock_1.BlockAd(request.url)) {
                 return CANCEL;
             }
             return {
@@ -641,7 +620,6 @@ var YoutubeMusic;
             }
         });
         document.body.addEventListener('keydown', function (e) {
-            var x = AppWindow.getActiveView();
             if (AppWindow.getActiveView() !== 'ytmusic') {
                 return;
             }
@@ -679,7 +657,6 @@ var YoutubeMusic;
     }
     YoutubeMusic.setup = setup;
     function onClose() {
-        //Save progress
         view.executeScript({
             code: "(" + (function () {
                 var vidId = location.href.split('v=')[1].split('&')[0];
@@ -742,18 +719,15 @@ var Netflix;
     var Commands;
     (function (Commands) {
         function lowerVolume() {
-            //Not possible
         }
         Commands.lowerVolume = lowerVolume;
         function raiseVolume() {
-            //Not possible
         }
         Commands.raiseVolume = raiseVolume;
         function togglePlay() {
             Helpers.hacksecute(Video.videoView, function () {
                 var video = document.querySelector('video');
                 if (!window.playerStatus) {
-                    //The states should be matching now
                     window.playerStatus = video.paused ?
                         'paused' : 'playing';
                 }
@@ -762,12 +736,10 @@ var Netflix;
                     'paused' : 'playing';
                 var playButton = document.querySelector('.player-control-button');
                 if (playerStatus === videoStatus) {
-                    //Statusses match up, switch it the normal way
                     playButton.click();
                     window.playerStatus = (window.playerStatus === 'playing' ? 'paused' : 'playing');
                 }
                 else {
-                    //Statusses don't match up, hit the button twice
                     playButton.click();
                     playButton.click();
                 }
@@ -800,7 +772,6 @@ var Netflix;
     }
     Netflix.init = init;
     function onClose() {
-        //Go for a semi-clean exit
         Video.videoView.src && Video.videoView.back();
     }
     Netflix.onClose = onClose;
@@ -842,7 +813,6 @@ var YoutubeSubscriptions;
                 var player = document.querySelector('.html5-video-player');
                 var vol = player.getVolume();
                 if (player.isMuted()) {
-                    //Treat volume as 0
                     vol = 0;
                     player.unMute();
                 }
@@ -857,11 +827,9 @@ var YoutubeSubscriptions;
                 var player = document.querySelector('.html5-video-player');
                 var state = player.getPlayerState();
                 if (state === 2) {
-                    //Paused
                     player.playVideo();
                 }
                 else if (state === 1) {
-                    //Playing
                     player.pauseVideo();
                 }
                 else {
@@ -955,7 +923,6 @@ var YoutubeSubscriptions;
                         prepareVideo();
                         document.body.addEventListener('keydown', function (e) {
                             if (e.key === 'k') {
-                                //Hide or show video
                                 document.body.classList.toggle('showHiddens');
                             }
                         });
@@ -974,14 +941,12 @@ var YoutubeSubscriptions;
                                     muted: (volume === 0)
                                 }),
                                 creation: Date.now(),
-                                expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
+                                expiration: Date.now() + (30 * 24 * 60 * 60 * 1000)
                             }));
                         }
-                        //Code that has to be executed "inline"
                         function increaseVolume() {
                             var vol = player.getVolume();
                             if (player.isMuted()) {
-                                //Treat volume as 0
                                 vol = 0;
                                 player.unMute();
                             }
@@ -1071,9 +1036,6 @@ var YoutubeSubscriptions;
         document.getElementById('youtubeSubsCont').classList.add('showVideo');
         Video.videoView.focus();
     }
-    function hideVideo() {
-        document.getElementById('youtubeSubsCont').classList.remove('showVideo');
-    }
     function changeVideo(url) {
         Video.videoView.src = url;
         showVideo();
@@ -1110,7 +1072,6 @@ var YoutubeSubscriptions;
     }
     YoutubeSubscriptions.init = init;
     function onClose() {
-        //Nothing really
     }
     YoutubeSubscriptions.onClose = onClose;
     function onFocus() {
@@ -1160,7 +1121,6 @@ var AppWindow;
         function handleEscapePress() {
             escapePresses++;
             if (escapePresses >= 3) {
-                //Close app
                 var app_1 = chrome.app.window.current();
                 YoutubeMusic.onClose();
                 Netflix.onClose();
@@ -1171,7 +1131,6 @@ var AppWindow;
                 return;
             }
             window.setTimeout(function () {
-                //Remove it from the array
                 escapePresses--;
             }, 1000);
         }
@@ -1297,7 +1256,6 @@ var AppWindow;
             return;
         }
         if (!first) {
-            //Pause current view
             getActiveViewView().Commands.pause();
         }
         if (AppWindow.loadedViews.indexOf(view) === -1) {
