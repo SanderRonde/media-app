@@ -1,6 +1,143 @@
 /// <reference path="../../typings/chrome.d.ts" />
 
-import { BlockAd } from '../adblocking/adblock'
+namespace AdBlocking {
+	let ready: boolean = false;
+	let rules: {
+		fullMatch: Array<RegExp>;
+		endsWith: Array<RegExp>;
+		path: Array<RegExp>;
+	} = null;
+
+	interface RuleBase {
+		type: 'fullMatch'|'endsWith'|'path';
+		rule: RegExp;
+	}
+
+	interface FullMatchType extends RuleBase {
+		type: 'fullMatch';
+	}
+
+	interface EndsWithType extends RuleBase {
+		type: 'endsWith';
+	}
+
+	interface PathType extends RuleBase {
+		type: 'path';
+	}
+
+	type Rule = FullMatchType|EndsWithType|PathType;
+
+	function getList(): Promise<string> { 
+		return window.fetch(chrome.runtime.getURL('/adblocking/easylist.txt')).then((response) => {
+			return response.text();
+		});
+	}
+
+	const alphabetChar = /[a-z|A-Z]/;
+	function stringToRegex(url: string): RegExp {
+		return new RegExp(url.split('').map((char) => {
+			if (char === '*') {
+				return '([a-z|A-Z]|[0-9])+';
+			}
+			return (alphabetChar.exec(char) ? char : '\\' + char);
+		}).join(''));
+	}
+
+	function processLine(line: string): Rule {
+		if (line.indexOf('##') > -1) {
+			return null;
+		}
+
+		if (line.startsWith('/')) {
+			return {
+				type: 'path',
+				rule: stringToRegex(line)
+			};
+		} else if (line.startsWith('||') && line.endsWith('^')) {
+			return {
+				type: 'endsWith',
+				rule: stringToRegex(line)
+			}
+		} else if (line.startsWith('|') && line.endsWith('|')) {
+			return {
+				type: 'fullMatch',
+				rule: stringToRegex(line)
+			};
+		}
+		return null;
+	}
+
+	function preProcessList(list: Array<string>): {
+		fullMatch: Array<RegExp>;
+		endsWith: Array<RegExp>;
+		path: Array<RegExp>;
+	} {
+		const res = list.map((line) => {
+			return processLine(line);
+		}).filter((el) => {
+			return el !== null;
+		});
+		return {
+			fullMatch: res.filter(item => item.type === 'fullMatch').map(item => item.rule),
+			endsWith: res.filter(item => item.type === 'endsWith').map(item => item.rule),
+			path: res.filter(item => item.type === 'path').map(item => item.rule)
+		}
+	}
+
+	new Promise((resolve) => {
+		getList().then((fetchedList) => {
+			rules = preProcessList(fetchedList.split('\n'));
+			resolve();
+		});
+	}).then(() => {
+		ready = true;
+	});
+
+	function splitURL(url: string): {
+		path: string;
+		host: string;
+	} {
+		const noProtocol = url.split('://')[1];
+		const hostAndPathSplit = noProtocol.split('/');
+		return {
+			path: hostAndPathSplit[1],
+			host: hostAndPathSplit[0]
+		}
+	}
+
+	function isBlocked(url: string): boolean {
+		const { path, host } = splitURL(url);
+
+		for (let i = 0; i < rules.fullMatch.length; i++) {
+			if (rules.fullMatch[i].exec(url)) {
+				return true;
+			}
+		}
+		for (let i = 0; i < rules.endsWith.length; i++) {
+			if (rules.endsWith[i].exec(url) && host.endsWith(rules.endsWith[i].exec(url)[0])) {
+				return true;
+			}
+		}
+		for (let i = 0; i < rules.path.length; i++) {
+			if (rules.path[i].exec(url) && path.endsWith(rules.path[i].exec(url)[0])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	export function BlockAd(url: string): boolean {
+		if (!ready) {
+			return false;
+		}
+
+		if (isBlocked(url)) {
+			console.log(`Blocked ad from loading ${url}`);
+			return true;
+		}
+		return false;
+	}
+}
 
 interface InjectDetails {
 	code?: string;
@@ -93,6 +230,16 @@ namespace Helpers {
 		return `(${fn.toString()})();`;
 	}
 
+	export function toQueryString(obj: {
+		[key: string]: any;
+	}): string {
+		const parts: Array<string> = [];
+		for (let key in obj) {
+			parts.push(`${key}=${obj[key]}`);
+		}
+		return `?${parts.join('&')}`;
+	}
+
 	function createTag(fn: Function): string {
 		const str = fn.toString();
 		return (() => {
@@ -125,11 +272,12 @@ namespace Helpers {
 		delete taskListeners[id];
 	};
 
-	export function sendTaskToPage(name: string, callback: (result: any) => void) {
+	export function sendTaskToPage(name: string, page: string, callback: (result: any) => void) {
 		chrome.storage.local.get('tasks', (data) => {
 			data['tasks'] = data['tasks'] || [];
 			data['tasks'].push({
 				name: name,
+				page: page,
 				id: ++taskIds
 			});
 
@@ -551,7 +699,7 @@ namespace YoutubeMusic {
 			return seconds;
 		}
 
-		function getSongIndex(timestamps: Array<number>, time: number): number {
+		function getSongIndex(timestamps: Array<number|null>, time: number): number {
 			for (let i = 0; i < timestamps.length; i++) {
 				if (timestamps[i] <= time && timestamps[i + 1] >= time) {
 					return i;
@@ -560,62 +708,150 @@ namespace YoutubeMusic {
 			return timestamps.length - 1;
 		}
 
+		function findOn1001Tracklists(name: string, url: string): Promise<boolean> {
+			return new Promise((resolve) => {
+				const websiteWebview = document.createElement('webview') as WebView;
+				let currentPage: 'main'|'results'|'none' = 'none';
+				websiteWebview.addContentScripts([{
+					name: 'comm',
+					matches: ['*://*/*'],
+					js: {
+						files: [
+							'/genericJs/comm.js',
+							'/youtube/1001tracklists/content.js'
+						]
+					}
+				}]);
+				websiteWebview.addEventListener('contentload', () => {
+					if (currentPage === 'none') {
+						currentPage = 'main';
+					} else if (currentPage === 'main') {
+						currentPage = 'results';
+					}
+
+					if (currentPage === 'main') {
+						Helpers.sendTaskToPage(JSON.stringify([
+							'searchFor', name
+						]), '1001tracklists', () => {
+
+						});
+					} else if (currentPage === 'results') {
+						Helpers.sendTaskToPage(JSON.stringify([
+							'findItem', url
+						]), '1001tracklists', (result: false|string) => {
+							if (result !== 'null' && result !== 'false' && result) {
+								getTrackFrom1001TracklistsUrl(result);
+							} else {
+								resolve(false);
+							}
+							websiteWebview.remove();
+						});
+					}
+				});
+				websiteWebview.src = 'https://www.1001tracklists.com';
+				document.body.appendChild(websiteWebview);
+			});
+		}
+
+		function getUrlHTML(url: string, data: RequestInit = {
+			method: 'GET'
+		}): Promise<DocumentFragment> {
+			return new Promise((resolve) => {
+				window.fetch(url, data).then((response) => {
+					return response.text();
+				}).then((html) => {
+					const doc = document.createRange().createContextualFragment(html);
+					resolve(doc);
+				});
+			});
+		}
+
+		function getTrackFrom1001TracklistsUrl(url: string) {
+			getUrlHTML(url).then((doc) => {
+				const tracks = Helpers.toArr(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
+					try {
+						const nameContainer = songContainer.querySelector('.trackFormat');
+						const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
+						const artist = namesContainers[0].innerText; 
+						const songName = namesContainers[1].innerText;
+						let remix = '';
+						if (namesContainers[2]) {
+							remix = ` (${namesContainers[2].innerText} ${namesContainers[3].innerText})`;
+						}
+
+						if (songContainer.querySelector('.cueValueField').innerText === '') {
+							return null;
+						}
+
+						const timeField = songContainer.querySelector('.cueValueField').innerText;
+						return {
+							startTime: timeField === '' ? timestampToSeconds(timeField) : null,
+							songName: `${artist} - ${songName}${remix}`
+						};
+					} catch(e) {
+						return null;
+					}
+				});
+
+				Helpers.sendTaskToPage('getTime', 'youtube', (time) => {
+					const index = getSongIndex(tracks.filter((track) => {
+						return !!track;
+					}).map((track) => {
+						return track.startTime;
+					}), ~~time);
+
+					let unsure = false;
+					if (tracks[index - 1] && tracks[index - 1].startTime === null) {
+						unsure = true;
+					} else if (tracks[index + 1] && tracks[index + 1].startTime === null) {
+						unsure = true;
+					}
+					const trackName = tracks[index].songName;
+					displayFoundSong(unsure ? `???${trackName}???` : trackName);
+				});
+			});
+		}
+
 		export function getCurrentSong() {
-			Helpers.sendTaskToPage('getTimestamps', (timestamps) => {
+			Helpers.sendTaskToPage('getTimestamps', 'youtube', (timestamps: {
+				found: true;
+				data: Array<number>|string
+			}|{
+				found: false;
+				data: {
+					name: string;
+					url: string;
+				}
+			}) => {
 				const enableOCR = false;
 				if (enableOCR && !timestamps) {
 					//Do some OCR magic
 					//getSongFromOCR(displayFoundSong);
-				} else if (timestamps) {
-					if (!Array.isArray(timestamps)) {
+				} else if (timestamps.found === true) {
+					const data = timestamps.data;
+					if (!Array.isArray(data)) {
 						//It's a link to the tracklist
-						window.fetch(timestamps).then((response) => {
-							return response.text();
-						}).then((html) => {
-							const doc = document.createRange().createContextualFragment(html);
-							const tracks = Helpers.toArr(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
-								try {
-									const nameContainer = songContainer.querySelector('.trackFormat');
-									const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
-									const artist = namesContainers[0].innerText; 
-									const songName = namesContainers[1].innerText;
-									let remix = '';
-									if (namesContainers[2]) {
-										remix = ` (${namesContainers[2].innerText} ${namesContainers[3].innerText})`;
-									}
-									return {
-										startTime: timestampToSeconds(songContainer.querySelector('.cueValueField').innerText),
-										songName: `${artist} - ${songName}${remix}`
-									};
-								} catch(e) {
-									return null;
-								}
-							});
-
-							Helpers.sendTaskToPage('getTime', (time) => {
-								const index = getSongIndex(tracks.filter((track) => {
-									return !!track;
-								}).map((track) => {
-									return track.startTime;
-								}), ~~time);
-								displayFoundSong(tracks[index].songName);
-							});
-						});
+						getTrackFrom1001TracklistsUrl(data);
 					} else {
-						Helpers.sendTaskToPage('getTime', (time) => {
-							const index = getSongIndex(timestamps, ~~time);
-							Helpers.sendTaskToPage('getSongName' + index, (name) => {
+						Helpers.sendTaskToPage('getTime', 'youtube', (time) => {
+							const index = getSongIndex(data, ~~time);
+							Helpers.sendTaskToPage('getSongName' + index, 'youtube', (name) => {
 								displayFoundSong(name);
 							});
 						});
 					}
 				} else {
-					//Show not found toast
-					const toast = document.getElementById('mainToast');
-					toast.classList.add('visible');
-					window.setTimeout(() => {
-						toast.classList.remove('visible');
-					}, 5000);
+					//Look if the podcast exists on 1001tracklists
+					findOn1001Tracklists(timestamps.data.name, timestamps.data.url).then((found) => {
+						if (!found) {
+							//Show not found toast
+							const toast = document.getElementById('mainToast');
+							toast.classList.add('visible');
+							window.setTimeout(() => {
+								toast.classList.remove('visible');
+							}, 5000);
+						}
+					});
 				}
 			});
 		}
@@ -701,7 +937,7 @@ namespace YoutubeMusic {
 			cancel: true
 		};
 		view.request.onBeforeRequest.addListener((request) => {
-			if (BlockAd(request.url)) {
+			if (AdBlocking.BlockAd(request.url)) {
 				return CANCEL;
 			}
 			return {

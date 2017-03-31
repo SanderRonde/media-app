@@ -1,12 +1,119 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var adblock_1 = require("../adblocking/adblock");
+var AdBlocking;
+(function (AdBlocking) {
+    var ready = false;
+    var rules = null;
+    function getList() {
+        return window.fetch(chrome.runtime.getURL('/adblocking/easylist.txt')).then(function (response) {
+            return response.text();
+        });
+    }
+    var alphabetChar = /[a-z|A-Z]/;
+    function stringToRegex(url) {
+        return new RegExp(url.split('').map(function (char) {
+            if (char === '*') {
+                return '([a-z|A-Z]|[0-9])+';
+            }
+            return (alphabetChar.exec(char) ? char : '\\' + char);
+        }).join(''));
+    }
+    function processLine(line) {
+        if (line.indexOf('##') > -1) {
+            return null;
+        }
+        if (line.startsWith('/')) {
+            return {
+                type: 'path',
+                rule: stringToRegex(line)
+            };
+        }
+        else if (line.startsWith('||') && line.endsWith('^')) {
+            return {
+                type: 'endsWith',
+                rule: stringToRegex(line)
+            };
+        }
+        else if (line.startsWith('|') && line.endsWith('|')) {
+            return {
+                type: 'fullMatch',
+                rule: stringToRegex(line)
+            };
+        }
+        return null;
+    }
+    function preProcessList(list) {
+        var res = list.map(function (line) {
+            return processLine(line);
+        }).filter(function (el) {
+            return el !== null;
+        });
+        return {
+            fullMatch: res.filter(function (item) { return item.type === 'fullMatch'; }).map(function (item) { return item.rule; }),
+            endsWith: res.filter(function (item) { return item.type === 'endsWith'; }).map(function (item) { return item.rule; }),
+            path: res.filter(function (item) { return item.type === 'path'; }).map(function (item) { return item.rule; })
+        };
+    }
+    new Promise(function (resolve) {
+        getList().then(function (fetchedList) {
+            rules = preProcessList(fetchedList.split('\n'));
+            resolve();
+        });
+    }).then(function () {
+        ready = true;
+    });
+    function splitURL(url) {
+        var noProtocol = url.split('://')[1];
+        var hostAndPathSplit = noProtocol.split('/');
+        return {
+            path: hostAndPathSplit[1],
+            host: hostAndPathSplit[0]
+        };
+    }
+    function isBlocked(url) {
+        var _a = splitURL(url), path = _a.path, host = _a.host;
+        for (var i = 0; i < rules.fullMatch.length; i++) {
+            if (rules.fullMatch[i].exec(url)) {
+                return true;
+            }
+        }
+        for (var i = 0; i < rules.endsWith.length; i++) {
+            if (rules.endsWith[i].exec(url) && host.endsWith(rules.endsWith[i].exec(url)[0])) {
+                return true;
+            }
+        }
+        for (var i = 0; i < rules.path.length; i++) {
+            if (rules.path[i].exec(url) && path.endsWith(rules.path[i].exec(url)[0])) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function BlockAd(url) {
+        if (!ready) {
+            return false;
+        }
+        if (isBlocked(url)) {
+            console.log("Blocked ad from loading " + url);
+            return true;
+        }
+        return false;
+    }
+    AdBlocking.BlockAd = BlockAd;
+})(AdBlocking || (AdBlocking = {}));
 var Helpers;
 (function (Helpers) {
     function stringifyFunction(fn) {
         return "(" + fn.toString() + ")();";
     }
     Helpers.stringifyFunction = stringifyFunction;
+    function toQueryString(obj) {
+        var parts = [];
+        for (var key in obj) {
+            parts.push(key + "=" + obj[key]);
+        }
+        return "?" + parts.join('&');
+    }
+    Helpers.toQueryString = toQueryString;
     function createTag(fn) {
         var str = fn.toString();
         return (function () {
@@ -36,11 +143,12 @@ var Helpers;
     }
     Helpers.returnTaskValue = returnTaskValue;
     ;
-    function sendTaskToPage(name, callback) {
+    function sendTaskToPage(name, page, callback) {
         chrome.storage.local.get('tasks', function (data) {
             data['tasks'] = data['tasks'] || [];
             data['tasks'].push({
                 name: name,
+                page: page,
                 id: ++taskIds
             });
             taskListeners[taskIds] = callback;
@@ -403,61 +511,136 @@ var YoutubeMusic;
             }
             return timestamps.length - 1;
         }
+        function findOn1001Tracklists(name, url) {
+            return new Promise(function (resolve) {
+                var websiteWebview = document.createElement('webview');
+                var currentPage = 'none';
+                websiteWebview.addContentScripts([{
+                        name: 'comm',
+                        matches: ['*://*/*'],
+                        js: {
+                            files: [
+                                '/genericJs/comm.js',
+                                '/youtube/1001tracklists/content.js'
+                            ]
+                        }
+                    }]);
+                websiteWebview.addEventListener('contentload', function () {
+                    if (currentPage === 'none') {
+                        currentPage = 'main';
+                    }
+                    else if (currentPage === 'main') {
+                        currentPage = 'results';
+                    }
+                    if (currentPage === 'main') {
+                        Helpers.sendTaskToPage(JSON.stringify([
+                            'searchFor', name
+                        ]), '1001tracklists', function () {
+                        });
+                    }
+                    else if (currentPage === 'results') {
+                        Helpers.sendTaskToPage(JSON.stringify([
+                            'findItem', url
+                        ]), '1001tracklists', function (result) {
+                            if (result !== 'null' && result !== 'false' && result) {
+                                getTrackFrom1001TracklistsUrl(result);
+                            }
+                            else {
+                                resolve(false);
+                            }
+                            websiteWebview.remove();
+                        });
+                    }
+                });
+                websiteWebview.src = 'https://www.1001tracklists.com';
+                document.body.appendChild(websiteWebview);
+            });
+        }
+        function getUrlHTML(url, data) {
+            if (data === void 0) { data = {
+                method: 'GET'
+            }; }
+            return new Promise(function (resolve) {
+                window.fetch(url, data).then(function (response) {
+                    return response.text();
+                }).then(function (html) {
+                    var doc = document.createRange().createContextualFragment(html);
+                    resolve(doc);
+                });
+            });
+        }
+        function getTrackFrom1001TracklistsUrl(url) {
+            getUrlHTML(url).then(function (doc) {
+                var tracks = Helpers.toArr(doc.querySelectorAll('.tlpTog')).map(function (songContainer) {
+                    try {
+                        var nameContainer = songContainer.querySelector('.trackFormat');
+                        var namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
+                        var artist = namesContainers[0].innerText;
+                        var songName = namesContainers[1].innerText;
+                        var remix = '';
+                        if (namesContainers[2]) {
+                            remix = " (" + namesContainers[2].innerText + " " + namesContainers[3].innerText + ")";
+                        }
+                        if (songContainer.querySelector('.cueValueField').innerText === '') {
+                            return null;
+                        }
+                        var timeField = songContainer.querySelector('.cueValueField').innerText;
+                        return {
+                            startTime: timeField === '' ? timestampToSeconds(timeField) : null,
+                            songName: artist + " - " + songName + remix
+                        };
+                    }
+                    catch (e) {
+                        return null;
+                    }
+                });
+                Helpers.sendTaskToPage('getTime', 'youtube', function (time) {
+                    var index = getSongIndex(tracks.filter(function (track) {
+                        return !!track;
+                    }).map(function (track) {
+                        return track.startTime;
+                    }), ~~time);
+                    var unsure = false;
+                    if (tracks[index - 1] && tracks[index - 1].startTime === null) {
+                        unsure = true;
+                    }
+                    else if (tracks[index + 1] && tracks[index + 1].startTime === null) {
+                        unsure = true;
+                    }
+                    var trackName = tracks[index].songName;
+                    displayFoundSong(unsure ? "???" + trackName + "???" : trackName);
+                });
+            });
+        }
         function getCurrentSong() {
-            Helpers.sendTaskToPage('getTimestamps', function (timestamps) {
+            Helpers.sendTaskToPage('getTimestamps', 'youtube', function (timestamps) {
                 var enableOCR = false;
                 if (enableOCR && !timestamps) {
                 }
-                else if (timestamps) {
-                    if (!Array.isArray(timestamps)) {
-                        window.fetch(timestamps).then(function (response) {
-                            return response.text();
-                        }).then(function (html) {
-                            var doc = document.createRange().createContextualFragment(html);
-                            var tracks = Helpers.toArr(doc.querySelectorAll('.tlpTog')).map(function (songContainer) {
-                                try {
-                                    var nameContainer = songContainer.querySelector('.trackFormat');
-                                    var namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
-                                    var artist = namesContainers[0].innerText;
-                                    var songName = namesContainers[1].innerText;
-                                    var remix = '';
-                                    if (namesContainers[2]) {
-                                        remix = " (" + namesContainers[2].innerText + " " + namesContainers[3].innerText + ")";
-                                    }
-                                    return {
-                                        startTime: timestampToSeconds(songContainer.querySelector('.cueValueField').innerText),
-                                        songName: artist + " - " + songName + remix
-                                    };
-                                }
-                                catch (e) {
-                                    return null;
-                                }
-                            });
-                            Helpers.sendTaskToPage('getTime', function (time) {
-                                var index = getSongIndex(tracks.filter(function (track) {
-                                    return !!track;
-                                }).map(function (track) {
-                                    return track.startTime;
-                                }), ~~time);
-                                displayFoundSong(tracks[index].songName);
-                            });
-                        });
+                else if (timestamps.found === true) {
+                    var data_1 = timestamps.data;
+                    if (!Array.isArray(data_1)) {
+                        getTrackFrom1001TracklistsUrl(data_1);
                     }
                     else {
-                        Helpers.sendTaskToPage('getTime', function (time) {
-                            var index = getSongIndex(timestamps, ~~time);
-                            Helpers.sendTaskToPage('getSongName' + index, function (name) {
+                        Helpers.sendTaskToPage('getTime', 'youtube', function (time) {
+                            var index = getSongIndex(data_1, ~~time);
+                            Helpers.sendTaskToPage('getSongName' + index, 'youtube', function (name) {
                                 displayFoundSong(name);
                             });
                         });
                     }
                 }
                 else {
-                    var toast_1 = document.getElementById('mainToast');
-                    toast_1.classList.add('visible');
-                    window.setTimeout(function () {
-                        toast_1.classList.remove('visible');
-                    }, 5000);
+                    findOn1001Tracklists(timestamps.data.name, timestamps.data.url).then(function (found) {
+                        if (!found) {
+                            var toast_1 = document.getElementById('mainToast');
+                            toast_1.classList.add('visible');
+                            window.setTimeout(function () {
+                                toast_1.classList.remove('visible');
+                            }, 5000);
+                        }
+                    });
                 }
             });
         }
@@ -540,7 +723,7 @@ var YoutubeMusic;
             cancel: true
         };
         view.request.onBeforeRequest.addListener(function (request) {
-            if (adblock_1.BlockAd(request.url)) {
+            if (AdBlocking.BlockAd(request.url)) {
                 return CANCEL;
             }
             return {

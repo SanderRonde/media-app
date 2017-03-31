@@ -57,6 +57,16 @@ function updateColors() {
 	document.querySelector('video').style.backgroundColor = `rgb(${mostUsedColor})`;
 }
 
+
+function uncirculizeWord(word) {
+	return {
+		bbox: word.bbox,
+		text: word.text,
+		confidence: word.confidence,
+		choices: word.choices
+	}
+}
+
 function doTask(name, id, done) {
 	switch (name) {
 		case 'getTimestamps':
@@ -76,7 +86,10 @@ function doTask(name, id, done) {
 					}
 					return seconds;
 				});
-				done(timestamps);
+				done({
+					found: true,
+					data: timestamps
+				});
 			} else {
 				//Try to find any links to 1001tracklists in the description
 				const tracklistLinks = Array.from(descr.querySelectorAll('a')).map((anchor) => {
@@ -89,12 +102,42 @@ function doTask(name, id, done) {
 				});
 
 				if (tracklistLinks.length > 0) {
-					done(tracklistLinks[0]);
+					done({
+						found: true,
+						data: tracklistLinks[0]
+					});
 				} else {
-					done(false);
+					done({
+						found: false,
+						data: {
+							url: location.href,
+							name: document.title
+						}
+					});
 				}
 			}
 			break;
+		case 'getImageOCR':
+			ctx.drawImage(document.querySelector('video'), 0, 0, canv.width, canv.height);
+			const img = new Image();
+			img.src = canv.toDataURL('image/png');
+
+			Tesseract.recognize(img, {
+				lang: 'eng'
+			}).then((result) => {
+				done(JSON.stringify({
+					lines: result.lines.map((line) => {
+						return {
+							bbox: line.bbox,
+							text: line.text,
+							confidence: line.confidence,
+							words: line.words.map(uncirculizeWord)
+						}
+					}),
+					text: result.text,
+					words: result.words.map(uncirculizeWord)
+				}));
+			});
 		case 'getTime':
 			window.commToPage('getTime', done);
 			break;

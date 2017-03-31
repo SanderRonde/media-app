@@ -34,13 +34,16 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 				Array.isArray(changes.tasks.newValue) &&
 				changes.tasks.newValue.length > 0) {
 			changes.tasks.newValue.forEach((task) => {
-				window.doTask && window.doTask(task.name, task.id, (result) => {
-					chrome.runtime.sendMessage({
-						cmd: 'taskResult',
-						result: result,
-						id: task.id
+				if (location.href.indexOf(task.page) > -1) {
+					window.doTask && window.doTask(task.name, task.id, (result) => {
+						chrome.runtime.sendMessage({
+							cmd: 'taskResult',
+							result: result,
+							name: task.name,
+							id: task.id
+						});
 					});
-				});
+				}
 			});
 			chrome.storage.local.set({
 				tasks: []
