@@ -35,6 +35,11 @@ body {
 	height: calc(100vh + 15px);
 }
 
+#netflixWebView {
+	width: 100vw;
+	height: 100vh;
+}
+
 #titleBar {
 	height: 26px;
 	display: flex;
