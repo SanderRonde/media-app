@@ -435,3 +435,7 @@ body {
 #youtubeSubsCont.showVideo > #youtubeSubsVideoView {
 	transform: translateY(-100vh);
 }
+
+#youtubeSubsVideoView {
+	margin-top: -3px;
+}
