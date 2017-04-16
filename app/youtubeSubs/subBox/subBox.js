@@ -23,8 +23,23 @@ const PODCAST_VIDS = [
 	'HARD with STYLE',
 	'Global Dedication',
 	'Flashover Radio',
-	'Dannic presents Fonk Radio'
+	'Dannic presents Fonk Radio',
+	'Corstens Countdown',
+	'Fonk Radio',
+	'ISAAC\'S HARDSTYLE',
+	'ultra music festival'
 ].map(e => e.toLowerCase());
+
+const PODCAST_CHANNELS = {
+	always: [
+		'Mainstage'
+	].map(e => e.toLowerCase()),
+	onLongerThanHour: [
+		'GalaxyMusic'
+	].map(e => e.toLowerCase())
+}
+
+const HOUR = 60 * 60;
 
 let watchedSelected = 0;
 
@@ -326,7 +341,7 @@ class SelectedVideo {
 const toWatchLater = [];
 let isHandlingWatchLater = false;
 function clickWatchLater(deadline) {
-	while (deadline.timeRemaining() > 0 && toWatchLater.length > 0 && toWatchLater[0]) {
+	while (deadline.timeRemaining() > 0 && toWatchLater.length > 0 && toWatchLater[toWatchLater.length - 1]) {
 		toWatchLater.pop().click();
 	}
 
@@ -340,7 +355,9 @@ function clickWatchLater(deadline) {
 }
 
 function addVideoToWatchLater(button) {
-	toWatchLater.push(button);
+	if (button) {
+		toWatchLater.push(button);
+	}
 	if (!isHandlingWatchLater) {
 		isHandlingWatchLater = true;
 		window.requestIdleCallback(clickWatchLater, {
@@ -366,8 +383,15 @@ class VideoIdentifier {
 		return video;
 	}
 
+	_parseTime(timeStr) {
+		var [ secs, mins, hours ] = timeStr.split(':').reverse();
+		return ~~secs + (60 * (~~mins + (60 * (~~hours))));
+	}
+
 	_setVideoMetaData(video, index, videos) {
 		video.title = video.element.querySelector('.yt-lockup-title').querySelector('a').innerText;
+		video.channel = video.element.querySelector('.yt-lockup-byline').querySelector('a').innerText
+		video.length = this._parseTime(video.element.querySelector('.video-time'));
 		video.context = videos;
 		return video;
 	}
@@ -378,17 +402,28 @@ class VideoIdentifier {
 		return video;
 	}
 
-	_addPocastToWatchLater(video) {
-		const lowerCase = video.title.toLowerCase();
-		for (let i = 0; i < PODCAST_VIDS.length; i++) {
-			if (lowerCase.indexOf(PODCAST_VIDS[i]) > -1) {
-				video.isPodcast = true;
-				this._hideVideo(video);
-				video.isHidden = true;
-				addVideoToWatchLater(video.element.querySelector('.addto-watch-later-button'));
-				return video;
+	_containsPart(arr, str) {
+		for (let i = 0; i < arr.length; i++) {
+			if (str.indexOf(arr[i]) > -1) {
+				return true;
 			}
 		}
+		return false;
+	}
+
+	_addPocastToWatchLater(video) {
+		const title = video.title.toLowerCase();
+		const channel = video.channel.toLowerCase();
+		if (this._containsPart(PODCAST_VIDS, title) || 
+			this._containsPart(PODCAST_CHANNELS.always, channel) ||
+			(this._containsPart(PODCAST_CHANNELS.onLongerThanHour, channel) &&
+				video.length > HOUR)) {
+					video.isPodcast = true;
+					this._hideVideo(video);
+					video.isHidden = true;
+					addVideoToWatchLater(video.element.querySelector('.addto-watch-later-button'));
+					return video;
+				}
 		video.isPodcast = false;
 
 		return video;
