@@ -384,6 +384,9 @@ class VideoIdentifier {
 	}
 
 	_parseTime(timeStr) {
+		if (!timeStr) {
+			return 0;
+		}
 		var [ secs, mins, hours ] = timeStr.split(':').reverse();
 		return ~~secs + (60 * (~~mins + (60 * (~~hours))));
 	}
