@@ -146,3 +146,7 @@ body.showVisualizer .ytma_visualization_cont {
 	will-change: transform;
 	transform-origin: center bottom;
 }
+
+#yt-dialog-bg {
+	display: none;
+}
