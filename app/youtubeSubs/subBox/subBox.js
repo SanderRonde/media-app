@@ -16,7 +16,7 @@ const PODCAST_VIDS = [
 	'Spinnin\' Sessions',
 	'Aoki\'s House',
 	'Hysteria Radio',
-	'A State of Trance',
+	'#ASOT',
 	'Monstercat Podcast',
 	'Future of Euphoric Stylez - ',
 	'Phreshcast',
@@ -27,7 +27,17 @@ const PODCAST_VIDS = [
 	'Corstens Countdown',
 	'Fonk Radio',
 	'ISAAC\'S HARDSTYLE',
-	'ultra music festival'
+	'ultra music festival',
+	'ultra miami',
+	'Live at Tomorrowland',
+	'Tomorrowland Belgium',
+	'Tomorrowland Brasil',
+	'Axtone Presents:',
+	'WOLV Radio'
+].map(e => e.toLowerCase());
+
+const EXCLUDE = [
+	'LIVESTREAM'
 ].map(e => e.toLowerCase());
 
 const PODCAST_CHANNELS = {
@@ -417,10 +427,11 @@ class VideoIdentifier {
 	_addPocastToWatchLater(video) {
 		const title = video.title.toLowerCase();
 		const channel = video.channel.toLowerCase();
-		if (this._containsPart(PODCAST_VIDS, title) || 
+		if (!this._containsPart(EXCLUDE, title) && (
+			this._containsPart(PODCAST_VIDS, title) || 
 			this._containsPart(PODCAST_CHANNELS.always, channel) ||
 			(this._containsPart(PODCAST_CHANNELS.onLongerThanHour, channel) &&
-				video.length > HOUR)) {
+				video.length > HOUR))) {
 					video.isPodcast = true;
 					this._hideVideo(video);
 					video.isHidden = true;
