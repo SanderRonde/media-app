@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
         "alwaysStrict": true,
-        "baseUrl": "./typings/",
         "forceConsistentCasingInFileNames": true,
         "module": "commonjs",
         "noImplicitAny": true,
@@ -14,11 +13,12 @@
         "noImplicitReturns": true,
         "noUnusedLocals": true,
         "target": "es5",
+        "lib": ["dom", "es2015"],
         "watch": true
 	}, 
     "allowJs": true,
     "compileOnSave": true,
     "include": [
-        "./"
+        "./app"
     ]
 }
