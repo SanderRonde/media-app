@@ -387,19 +387,29 @@ body {
 	pointer-events: all;
 }
 
+#setupCenterer {
+	display: none;
+	z-index: 100000;
+	position: absolute;
+	width: 100vw;
+	height: 100vh;
+	left: 0;
+	top: 0;
+}
+
 #spinnerCont.hidden {
 	opacity: 0;
 	pointer-events: none;
 }
 
-#spinnerVerticalCenterer {
+#spinnerVerticalCenterer, #setupVerticalCenterer {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	height: 100%;
 }
 
-#spinnerHorizontalCenterer {
+#spinnerHorizontalCenterer, #setupHorizontalCenterer {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
@@ -438,4 +448,17 @@ body {
 
 #youtubeSubsVideoView {
 	margin-top: -3px;
+}
+
+#setupCont {
+	background-color: rgba(0, 0, 0, 0.7);
+	color: white;
+	font-size: 200%;
+	padding: 10px;
+	border-radius: 5px;
+	text-align: center;
+}
+
+#setupButton {
+	color: white;
 }

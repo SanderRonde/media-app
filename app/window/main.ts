@@ -969,7 +969,7 @@ namespace YoutubeMusic {
 			run_at: 'document_start'
 		}]);
 
-		view.addEventListener('contentload', (e) => {
+		view.addEventListener('contentload', () => {
 			Content.init();
 		});
 
@@ -1003,13 +1003,12 @@ namespace YoutubeMusic {
 		view.src = url;
 	}
 
-	export function respondUrl(response: string) {
+	export function respondUrl(response: string|null) {
 		if (response && typeof response === 'string') {
 			launch(response);
 		} else {
-			chrome.storage.sync.get('url', (data) => {
-				launch(data['url']);
-			});
+			//Do setup
+			document.getElementById('setupCenterer').style.display = 'block';
 		}
 	}
 
@@ -1057,7 +1056,7 @@ namespace YoutubeMusic {
 	export function setup() {
 		view = document.createElement('webview') as WebView;
 		view.id = 'ytmaWebview';
-		view.setAttribute('partition', 'persist:youtube-music-app');
+		view.setAttribute('partition', 'persist:youtube-music-app-' + Math.random());
 		window.setTimeout(() => {
 			addViewListeners();
 			document.querySelector('#youtubePlaylistCont').appendChild(view);

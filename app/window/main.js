@@ -753,7 +753,7 @@ var YoutubeMusic;
                 },
                 run_at: 'document_start'
             }]);
-        view.addEventListener('contentload', function (e) {
+        view.addEventListener('contentload', function () {
             Content.init();
         });
         view.addEventListener('loadcommit', function (e) {
@@ -781,9 +781,7 @@ var YoutubeMusic;
             launch(response);
         }
         else {
-            chrome.storage.sync.get('url', function (data) {
-                launch(data['url']);
-            });
+            document.getElementById('setupCenterer').style.display = 'block';
         }
     }
     YoutubeMusic.respondUrl = respondUrl;
@@ -831,7 +829,7 @@ var YoutubeMusic;
     function setup() {
         view = document.createElement('webview');
         view.id = 'ytmaWebview';
-        view.setAttribute('partition', 'persist:youtube-music-app');
+        view.setAttribute('partition', 'persist:youtube-music-app-' + Math.random());
         window.setTimeout(function () {
             addViewListeners();
             document.querySelector('#youtubePlaylistCont').appendChild(view);
