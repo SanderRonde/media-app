@@ -117,9 +117,7 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 					getAppWindow().YoutubeMusic.respondUrl(response.url);
 				});
 			} catch(e) {
-				chrome.storage.sync.get((data) => {
-					getAppWindow().YoutubeMusic.respondUrl(data.url);
-				});
+				getAppWindow().YoutubeMusic.respondUrl(null);
 			}
 			break;
 		case 'setUrl':
