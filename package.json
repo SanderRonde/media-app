@@ -27,6 +27,6 @@
   "devDependencies": {
     "grunt": "^1.0.1",
     "grunt-zip": "^0.17.1",
-    "typescript": "^2.3.2"
+    "typescript": "^2.3.4"
   }
 }
