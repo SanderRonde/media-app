@@ -555,6 +555,7 @@ namespace YoutubeMusic {
 				function addListeners() {
 					var videoEl = document.querySelector('video');
 					videoEl.addEventListener('wheel', (e) => {
+						console.log(e);
 						onScroll(e.deltaY > 0);
 					});
 				}
@@ -1441,6 +1442,7 @@ namespace YoutubeSubscriptions {
 						function addListeners() {
 							var videoEl = document.querySelector('video');
 							videoEl.addEventListener('wheel', (e) => {
+								console.log(e);
 								onScroll(e.deltaY > 0);
 							});
 						}

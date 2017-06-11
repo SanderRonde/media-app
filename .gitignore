@@ -194,3 +194,5 @@ ModelManifest.xml
 build/
 
 typings/
+
+app/window/**.js
