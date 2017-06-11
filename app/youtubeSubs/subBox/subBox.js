@@ -7,7 +7,6 @@ const PODCAST_VIDS = [
 	'Star Track Radio',
 	'Corsten\'s Countdown',
 	'Protocol Radio',
-	'Monstercat Podcast',
 	'Revealed Radio',
 	'Hardwell On Air',
 	'Heldeep Radio',
@@ -17,7 +16,7 @@ const PODCAST_VIDS = [
 	'Aoki\'s House',
 	'Hysteria Radio',
 	'#ASOT',
-	'Monstercat Podcast',
+	'Monstercat: Call of the Wild',
 	'Future of Euphoric Stylez - ',
 	'Phreshcast',
 	'HARD with STYLE',
@@ -26,7 +25,7 @@ const PODCAST_VIDS = [
 	'Dannic presents Fonk Radio',
 	'Corstens Countdown',
 	'Fonk Radio',
-	'ISAAC\'S HARDSTYLE',
+	'ISAAC\'S HARDSTYLE SESSIONS #',
 	'ultra music festival',
 	'ultra miami',
 	'Live at Tomorrowland',
@@ -37,7 +36,8 @@ const PODCAST_VIDS = [
 ].map(e => e.toLowerCase());
 
 const EXCLUDE = [
-	'LIVESTREAM'
+	'LIVESTREAM',
+	'24/7'
 ].map(e => e.toLowerCase());
 
 const PODCAST_CHANNELS = {
@@ -46,7 +46,10 @@ const PODCAST_CHANNELS = {
 	].map(e => e.toLowerCase()),
 	onLongerThanHour: [
 		'GalaxyMusic'
-	].map(e => e.toLowerCase())
+	].map(e => e.toLowerCase()),
+	onLongerThan: [
+		['Future Bass Mix', 30 * 60]
+	].map(e => [e[0].toLowerCase(), e[1]])
 }
 
 const HOUR = 60 * 60;
@@ -424,20 +427,41 @@ class VideoIdentifier {
 		return false;
 	}
 
+	_isPartOfLongerThan(channel, video) {
+		for (let i = 0; i < PODCAST_CHANNELS.onLongerThan.length; i++) {
+			const [ matchedChannel, minLength ] = PODCAST_CHANNELS.onLongerThan[i];
+			if (matchedChannel.toLowerCase() === channel && video.length > minLength) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	_isPodcast(video, title, channel) {
+		if (this._containsPart(EXCLUDE, title)) {
+			return false;
+		}
+
+		if (this._containsPart(PODCAST_VIDS, title) || 
+			this._containsPart(PODCAST_CHANNELS.always, channel) ||
+			this._isPartOfLongerThan(channel, video)) {
+				return true;
+			}
+			
+		return this._containsPart(PODCAST_CHANNELS.onLongerThanHour, channel) &&
+				video.length > HOUR;
+	}
+
 	_addPocastToWatchLater(video) {
 		const title = video.title.toLowerCase();
 		const channel = video.channel.toLowerCase();
-		if (!this._containsPart(EXCLUDE, title) && (
-			this._containsPart(PODCAST_VIDS, title) || 
-			this._containsPart(PODCAST_CHANNELS.always, channel) ||
-			(this._containsPart(PODCAST_CHANNELS.onLongerThanHour, channel) &&
-				video.length > HOUR))) {
-					video.isPodcast = true;
-					this._hideVideo(video);
-					video.isHidden = true;
-					addVideoToWatchLater(video.element.querySelector('.addto-watch-later-button'));
-					return video;
-				}
+		if (this._isPodcast(video, title, channel)) {
+			video.isPodcast = true;
+			this._hideVideo(video);
+			video.isHidden = true;
+			addVideoToWatchLater(video.element.querySelector('.addto-watch-later-button'));
+			return video;
+		}
 		video.isPodcast = false;
 
 		return video;
