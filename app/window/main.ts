@@ -243,21 +243,40 @@ namespace Helpers {
 	function createTag(fn: Function): string {
 		const str = fn.toString();
 		return (() => {
-			var tag = document.createElement('script');
+			const tag = document.createElement('script');
 			tag.innerHTML = `(${str})();`;
 			document.documentElement.appendChild(tag);
 			document.documentElement.removeChild(tag);
 		}).toString().replace('str', str);
 	}
 
-	export function hacksecute(view: WebView, fn: Function) {
+	function replaceParameters(code: string, parameters: {
+		[key: string]: number|string|boolean;
+	}): string {
+		Object.getOwnPropertyNames(parameters).forEach((key) => {
+			const arg = parameters[key];
+			if (typeof arg === 'string' && arg.split('\n').length > 1) {
+				code = code.replace(new RegExp(`REPLACE\.${key}`, 'g'), 
+					`' + ${JSON.stringify(arg.split('\n'))}.join('\\n') + '`);
+			} else {
+				code = code.replace(new RegExp(`REPLACE\.${key}`, 'g'), 
+					arg !== undefined && arg !== null && typeof arg === 'string' ?
+						arg.replace(/\\\"/g, `\\\\\"`) : arg.toString());
+			}
+		});
+		return code;
+	}
+
+	export function hacksecute<T extends {
+		[key: string]: number|string|boolean;
+	}>(view: WebView, fn: (REPLACE: T) => void, parameters?: T) {
 		if (!view.src) {
 			return;
 		}
 		view.executeScript({
-			code: `(${createTag(fn).toString()})();`
+			code: replaceParameters(`(${createTag(fn).toString()})();`
 				.replace(/\$\{EXTENSIONIDSTRING\}/,
-					chrome.runtime.getURL('').split('://')[1].split('/')[0])
+					chrome.runtime.id), parameters || {})
 		});
 	}
 
@@ -553,11 +572,9 @@ namespace YoutubeMusic {
 				}
 
 				function addListeners() {
-					var videoEl = document.querySelector('video');
-					videoEl.addEventListener('wheel', (e) => {
-						console.log(e);
+					window.onwheel = (e) => {
 						onScroll(e.deltaY > 0);
-					});
+					};
 				}
 
 				addListeners();
@@ -1029,7 +1046,7 @@ namespace YoutubeMusic {
 			}
 		});
 		document.body.addEventListener('keydown', (e) => {
-			if (AppWindow.getActiveView() !== 'ytmusic') {
+			if (AppWindow.getActiveViewName() !== 'ytmusic') {
 				return;
 			}
 			if (e.key === 'd') {
@@ -1087,6 +1104,10 @@ namespace YoutubeMusic {
 
 	export function onFocus() {
 		view.focus();
+	}
+
+	export function getView(): WebView {
+		return view;
 	}
 }
 
@@ -1202,6 +1223,10 @@ namespace Netflix {
 
 	export function onFocus() {
 		Video.videoView.focus();
+	}
+
+	export function getView(): WebView {
+		return Video.videoView;
 	}
 }
 
@@ -1440,11 +1465,9 @@ namespace YoutubeSubscriptions {
 						}
 
 						function addListeners() {
-							var videoEl = document.querySelector('video');
-							videoEl.addEventListener('wheel', (e) => {
-								console.log(e);
+							window.onwheel = (e) => {
 								onScroll(e.deltaY > 0);
-							});
+							};
 						}
 
 						addListeners();
@@ -1507,7 +1530,7 @@ namespace YoutubeSubscriptions {
 
 	function addKeyboardListeners() {
 		document.body.addEventListener('keydown', (e) => {
-			if (AppWindow.getActiveView() !== 'youtubeSubscriptions') {
+			if (AppWindow.getActiveViewName() !== 'youtubeSubscriptions') {
 				return;
 			}
 
@@ -1540,6 +1563,14 @@ namespace YoutubeSubscriptions {
 			Video.videoView.focus();
 		} else {
 			SubBox.subBoxView.focus();
+		}
+	}
+
+	export function getView(): WebView {
+		if (document.getElementById('youtubeSubsCont').classList.contains('showVideo')) {
+			return Video.videoView;
+		} else {
+			return SubBox.subBoxView;
 		}
 	}
 }
@@ -1630,6 +1661,24 @@ namespace AppWindow {
 		listen('onMaximized', updateButtonsState);
 		listen('onFullscreened', updateButtonsState);
 		listen('onRestored', updateButtonsState);
+		window.addEventListener('wheel', (e) => {
+			Helpers.hacksecute(AppWindow.getActiveViewView(), (REPLACE) => {
+				//Get scroll total position
+				const wheelDeltaX = REPLACE.deltaX;
+				const wheelDeltaY = REPLACE.deltaY;
+
+				window.scrollTo(window.scrollX + wheelDeltaX, window.scrollY + wheelDeltaY);
+
+				//Trigger wheel events
+				window.onwheel({
+					deltaX: wheelDeltaX,
+					deltaY: wheelDeltaY
+				} as any);
+			}, {
+				deltaX: e.deltaX,
+				deltaY: e.deltaY
+			});
+		});
 		window.addEventListener('focus', () => {
 			titleBar.classList.add('focused');
 			onFocus();
@@ -1684,7 +1733,7 @@ namespace AppWindow {
 		chrome.runtime.onMessage.addListener(function (message: {
 			cmd: string
 		}) {
-			const activeViewView = getActiveViewView().Commands;
+			const activeViewView = getActiveViewClass().Commands;
 			switch (message.cmd) {
 				case 'lowerVolume':
 					activeViewView.lowerVolume();
@@ -1727,7 +1776,7 @@ namespace AppWindow {
 	}
 
 	export function onMagicButton() {
-		if (getActiveView() === 'youtubeSubscriptions') {
+		if (getActiveViewName() === 'youtubeSubscriptions') {
 			YoutubeSubscriptions.Commands.magicButton();
 		}
 	}
@@ -1739,7 +1788,7 @@ namespace AppWindow {
 
 		if (!first) {
 			//Pause current view
-			getActiveViewView().Commands.pause();
+			getActiveViewClass().Commands.pause();
 		}
 
 		if (loadedViews.indexOf(view) === -1) {
@@ -1750,8 +1799,8 @@ namespace AppWindow {
 		}
 
 		activeView = view;
-		getActiveViewView().onFocus();
-		getActiveViewView().Commands.play();
+		getActiveViewClass().onFocus();
+		getActiveViewClass().Commands.play();
 		const viewsEl = document.getElementById('views');
 		viewsEl.classList.remove('ytmusic', 'netflix', 'youtubeSubscriptions');
 		viewsEl.classList.add(view);
@@ -1770,16 +1819,20 @@ namespace AppWindow {
 		switchToview(startView, true);
 	}
 
-	export function getActiveView(): ViewNames {
+	export function getActiveViewName(): ViewNames {
 		return activeView;
 	}
 
-	export function getActiveViewView(): ViewTypes {
-		return getViewByName(getActiveView());
+	export function getActiveViewClass(): ViewTypes {
+		return getViewByName(getActiveViewName());
+	}
+
+	export function getActiveViewView(): WebView {
+		return AppWindow.getActiveViewClass().getView();
 	}
 
 	export function onFocus() {
-		getActiveViewView().onFocus();
+		getActiveViewClass().onFocus();
 	}
 }
 
