@@ -1,5 +1,14 @@
 /// <reference path="../../typings/chrome.d.ts" />
 
+interface Window {
+	baseView: ViewNames;
+	Helpers: typeof Helpers;
+	Netflix: typeof Netflix;
+	AppWindow: typeof AppWindow;
+	YoutubeMusic: typeof YoutubeMusic;
+	YoutubeSubscriptions: typeof YoutubeSubscriptions;
+}
+
 namespace AdBlocking {
 	let ready: boolean = false;
 	let rules: {
@@ -1836,4 +1845,9 @@ namespace AppWindow {
 	}
 }
 
-AppWindow.init((window as any).baseView || 'ytmusic');
+AppWindow.init(window.baseView || 'ytmusic');
+window.Helpers = Helpers;
+window.Netflix = Netflix;
+window.AppWindow = AppWindow;
+window.YoutubeMusic = YoutubeMusic;
+window.YoutubeSubscriptions = YoutubeSubscriptions;
