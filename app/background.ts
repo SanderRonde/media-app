@@ -1,6 +1,16 @@
-﻿let app = null;
+/// <reference path="window/main.ts" />
 
-function launch(view) {
+let app: chrome.app.ChromeAppWindow = null;
+
+namespace chrome.app {
+	export var runtime: {
+		onLaunched: {
+			addListener(listener: () => void): void;
+		}
+	}
+}
+
+function launch(view: ViewNames) {
 	chrome.app.window.create('window/main.html', {
 		id: 'mainwindow',
 		outerBounds: {
@@ -83,18 +93,17 @@ chrome.commands.onCommand.addListener((cmd) => {
 
 const port = chrome.runtime.connect('oahihanjdfabhkcjhoppkifbinfplkad');
 
-function generateSingleCb(cb, remove) {
-	return (message) => {
+function generateSingleCb(cb: (result: any) => void, remove: () => void): (message: any) => void {
+	return (message: any) => {
 		remove();
 		cb(message);
 	}
 }
 
-function sendMessageToPlaylistSaver(message, cb) {
-	var listener;
-	listener = generateSingleCb(cb, () => {
+function sendMessageToPlaylistSaver(message: any, cb: (result: any) => void) {
+	const listener = generateSingleCb(cb, () => {
 		port.onMessage.removeListener(listener);
-	})
+	});
 	port.onMessage.addListener(listener);
 	port.postMessage(message);
 }
@@ -148,10 +157,6 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 			break;
 		case 'loadingCompleted':
 			getAppWindow().AppWindow.onLoadingComplete(message.view);
-			break;
-		case 'changeNetflixUrl':
-			debugger;
-			getAppWindow().Netflix.changeVideo(message.url);
 			break;
 		case 'changeYoutubeSubsLink':
 			getAppWindow().YoutubeSubscriptions.changeVideo(message.link);
