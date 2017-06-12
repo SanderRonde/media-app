@@ -15,7 +15,7 @@ const PODCAST_VIDS = [
 	'Spinnin\' Sessions',
 	'Aoki\'s House',
 	'Hysteria Radio',
-	'#ASOT',
+	['#ASOT', 'A State Of Trance'],
 	'Monstercat: Call of the Wild',
 	'Future of Euphoric Stylez - ',
 	'Phreshcast',
@@ -32,8 +32,9 @@ const PODCAST_VIDS = [
 	'Tomorrowland Belgium',
 	'Tomorrowland Brasil',
 	'Axtone Presents:',
-	'WOLV Radio'
-].map(e => e.toLowerCase());
+	'WOLV Radio',
+	'The Prophet - Louder',
+].map(e => (Array.isArray(e) ? e : [e]).map(f => f.toLowerCase()));
 
 const EXCLUDE = [
 	'LIVESTREAM',
@@ -427,6 +428,17 @@ class VideoIdentifier {
 		return false;
 	}
 
+	_containsAllParts(arrOfArr, str) {
+		for (let i = 0; i < arrOfArr.length; i++) {
+			if (arrOfArr[i].reduce((prev, current) => {
+				return prev && this._containsPart(current, str)
+			})) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	_isPartOfLongerThan(channel, video) {
 		for (let i = 0; i < PODCAST_CHANNELS.onLongerThan.length; i++) {
 			const [ matchedChannel, minLength ] = PODCAST_CHANNELS.onLongerThan[i];
@@ -442,7 +454,7 @@ class VideoIdentifier {
 			return false;
 		}
 
-		if (this._containsPart(PODCAST_VIDS, title) || 
+		if (this._containsAllParts(PODCAST_VIDS, title) || 
 			this._containsPart(PODCAST_CHANNELS.always, channel) ||
 			this._isPartOfLongerThan(channel, video)) {
 				return true;
