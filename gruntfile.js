@@ -4,7 +4,7 @@ module.exports = function(grunt) {
 		zip: {
 			'using-cwd': {
 				cwd: './app',
-				src: ['app/**'],
+				src: ['app/**', 'app/**/*.ts'],
 				dest: 'build/MediaApp.zip'
 			}
 		}
