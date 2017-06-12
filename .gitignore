@@ -195,7 +195,7 @@ build/
 
 typings/
 
-app/window/**.js
+app/window/**/*.js
 **/**/main.js
 **/**/subBox.js
-**/**.js
+**/*.js
