@@ -1,4 +1,6 @@
-function toQueryString(obj) {
+function toQueryString(obj: {
+	[key: string]: string|number|boolean;
+}) {
 	const parts = [];
 	for (let key in obj) {
 		parts.push(`${key}=${obj[key]}`);
@@ -6,13 +8,12 @@ function toQueryString(obj) {
 	return `?${parts.join('&')}`;
 }
 
-function doTask(name, id, done) {
-	debugger;
+function doTask(name: string, id: number, done: (result: string|boolean|number) => void) {
 	const nameData = JSON.parse(name);
 	switch (nameData[0]) {
 		case 'searchFor':
-			(document.getElementById('main_search')).value = nameData[1];
-			(document.getElementById('search_selection')).value = '9';
+			(document.getElementById('main_search') as HTMLInputElement).value = nameData[1];
+			(document.getElementById('search_selection') as HTMLInputElement).value = '9';
 			document.getElementById('searchBtn').click();
 			done(true);
 			break;
@@ -21,7 +22,7 @@ function doTask(name, id, done) {
 			let timeout = 0;
 			Promise.all(Array.from(document.querySelectorAll('.tlBrowse tbody .action')).slice(0, 5).map((element) => {
 				timeout += 750;
-				return new Promise((resolveResult, rejectResult) => {
+				return new Promise<string|false>((resolveResult, rejectResult) => {
 					window.setTimeout(() => {
 						const resultTab = `https://www.1001tracklists.com${element.querySelector('a').getAttribute('href')}`;
 
@@ -32,7 +33,7 @@ function doTask(name, id, done) {
 						window.fetch(resultTab).then((e) => {return e.text();}).then((html) => {
 							const doc = document.createRange().createContextualFragment(html);
 							const ytButton = Array.from(doc.querySelectorAll('#mediaItems .tab-bar > .tab-btn.action')).filter((tab) => {
-								return tab.innerText.indexOf('YouTube') > -1;
+								return (tab as HTMLElement).innerText.indexOf('YouTube') > -1;
 							});
 							if (!ytButton[0]) {
 								resolveResult(false);
