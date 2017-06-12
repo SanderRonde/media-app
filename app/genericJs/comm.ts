@@ -1,11 +1,11 @@
 interface Window {
 	commToPage(task: string, callback: (result: string) => void): void;
-	doTask(name: string, id: number, callback: (result: string) => void): void;
+	doTask(name: string, id: number, callback: (result: string|boolean|number) => void): void;
 }
 
 let commId = 0;
 
-function listenForCommPageResponse(id: number, callback: (result: string) => void) {
+function listenForCommPageResponse(id: number, callback: (result: string|boolean|number) => void) {
 	let removalId = window.setInterval(() => {
 		let result;
 		if ((result = localStorage.getItem(`taskResult${id}`))) {
