@@ -2,6 +2,7 @@ declare const Tesseract: any;
 
 interface Window {
 	saveProgress(): void;
+	doTask2(name: string, id: number, done: (result: any) => void): void;
 }
 
 window.saveProgress = () => {
@@ -75,7 +76,7 @@ function uncirculizeWord(word: any) {
 	}
 }
 
-function doTask(name: string, id: number, done: (result: any) => void) {
+window.doTask2 = (name: string, id: number, done: (result: any) => void) => {
 	switch (name) {
 		case 'getTimestamps':
 			const descr = document.querySelector('#eow-description');

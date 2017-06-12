@@ -1,3 +1,7 @@
+interface Window {
+	doTask1(name: string, id: number, done: (result: string|boolean|number) => void): void
+}
+
 function toQueryString(obj: {
 	[key: string]: string|number|boolean;
 }) {
@@ -8,7 +12,7 @@ function toQueryString(obj: {
 	return `?${parts.join('&')}`;
 }
 
-function doTask(name: string, id: number, done: (result: string|boolean|number) => void) {
+window.doTask1 = (name: string, id: number, done: (result: string|boolean|number) => void) => {
 	const nameData = JSON.parse(name);
 	switch (nameData[0]) {
 		case 'searchFor':
