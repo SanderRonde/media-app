@@ -1,3 +1,9 @@
+declare const Tesseract: any;
+
+interface Window {
+	saveProgress(): void;
+}
+
 window.saveProgress = () => {
 	const vidId = location.href.split('v=')[1].split('&')[0];
 	let vidIndex = location.href.split('index=')[1];
@@ -27,7 +33,9 @@ function updateColors() {
 	const img = document.createElement('img');
 	img.src = uri;	
 	
-	const usedColors = {};
+	const usedColors: {
+		[key: string]: number;
+	} = {};
 	[
 		ctx.getImageData(0, 0, canv.width, 2).data,
 		ctx.getImageData(0, canv.height - 2, canv.width, 2).data,
@@ -58,7 +66,7 @@ function updateColors() {
 }
 
 
-function uncirculizeWord(word) {
+function uncirculizeWord(word: any) {
 	return {
 		bbox: word.bbox,
 		text: word.text,
@@ -67,12 +75,11 @@ function uncirculizeWord(word) {
 	}
 }
 
-function doTask(name, id, done) {
+function doTask(name: string, id: number, done: (result: any) => void) {
 	switch (name) {
 		case 'getTimestamps':
 			const descr = document.querySelector('#eow-description');
-			let timestampContainers = descr.querySelectorAll('a[href="#"]');
-			timestampContainers = Array.from(timestampContainers).filter((timestamp) => {
+			const timestampContainers = Array.from(descr.querySelectorAll('a[href="#"]')).filter((timestamp) => {
 				return /(\d)\:(\d)(:(\d))*/.test(timestamp.innerHTML);
 			});
 			let timestamps = null;
@@ -124,9 +131,9 @@ function doTask(name, id, done) {
 
 			Tesseract.recognize(img, {
 				lang: 'eng'
-			}).then((result) => {
+			}).then((result: any) => {
 				done(JSON.stringify({
-					lines: result.lines.map((line) => {
+					lines: result.lines.map((line: any) => {
 						return {
 							bbox: line.bbox,
 							text: line.text,
@@ -138,6 +145,7 @@ function doTask(name, id, done) {
 					words: result.words.map(uncirculizeWord)
 				}));
 			});
+			break;
 		case 'getTime':
 			window.commToPage('getTime', done);
 			break;
