@@ -1,3 +1,18 @@
+interface Window {
+	videos: VideoIdentifier;
+	navToLink(link: string, video?: TransformedVideo): void;
+	requestIdleCallback(callback: (deadline: {
+		timeRemaining(): number;
+	}) => void, options: {
+		timeout?: number;
+	}): void;
+	signalledCompletion?: boolean;
+}
+
+interface HTMLAnchorElement {
+	hasListener?: boolean;
+}
+
 window.videos = null;
 const PODCAST_VIDS = [
 	'No Xcuses',
@@ -41,16 +56,20 @@ const EXCLUDE = [
 	'24/7'
 ].map(e => e.toLowerCase());
 
-const PODCAST_CHANNELS = {
+const PODCAST_CHANNELS: {
+	always: string[];
+	onLongerThanHour: string[];
+	onLongerThan: [string, number][]
+} = {
 	always: [
 		'Mainstage'
 	].map(e => e.toLowerCase()),
 	onLongerThanHour: [
 		'GalaxyMusic'
 	].map(e => e.toLowerCase()),
-	onLongerThan: [ 
+	onLongerThan: ([ 
 		['Future Bass Mix', 30 * 60]
-	].map(e => [e[0].toLowerCase(), e[1]])
+	] as [string, number][]).map(e => [e[0].toLowerCase(), e[1]]) as [string, number][]
 }
 
 const HOUR = 60 * 60;
@@ -75,17 +94,21 @@ const bezFn = (() => {
 
 	var float32ArraySupported = true;
 
-	function _A(aA1, aA2) { return 1.0 - 3.0 * aA2 + 3.0 * aA1; }
-	function _B(aA1, aA2) { return 3.0 * aA2 - 6.0 * aA1; }
-	function _C(aA1) { return 3.0 * aA1; }
+	function _A(aA1: number, aA2: number): number { return 1.0 - 3.0 * aA2 + 3.0 * aA1; }
+	function _B(aA1: number, aA2: number): number { return 3.0 * aA2 - 6.0 * aA1; }
+	function _C(aA1: number): number { return 3.0 * aA1; }
 
 	// Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
-	function _calcBezier(aT, aA1, aA2) { return ((_A(aA1, aA2) * aT + _B(aA1, aA2)) * aT + _C(aA1)) * aT; }
+	function _calcBezier(aT: number, aA1: number, aA2: number): number {
+		return ((_A(aA1, aA2) * aT + _B(aA1, aA2)) * aT + _C(aA1)) * aT;
+	}
 
 	// Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.
-	function _getSlope(aT, aA1, aA2) { return 3.0 * _A(aA1, aA2) * aT * aT + 2.0 * _B(aA1, aA2) * aT + _C(aA1); }
+	function _getSlope(aT: number, aA1: number, aA2: number): number { 
+		return 3.0 * _A(aA1, aA2) * aT * aT + 2.0 * _B(aA1, aA2) * aT + _C(aA1);
+	}
 
-	function _binarySubdivide(aX, aA, aB, mX1, mX2) {
+	function _binarySubdivide(aX: number, aA: number, aB: number, mX1: number, mX2: number): number {
 		var currentX, currentT, i = 0;
 		do {
 			currentT = aA + (aB - aA) / 2.0;
@@ -99,7 +122,7 @@ const bezFn = (() => {
 		return currentT;
 	}
 
-	function _newtonRaphsonIterate(aX, aGuessT, mX1, mX2) {
+	function _newtonRaphsonIterate(aX: number, aGuessT: number, mX1: number, mX2: number): number {
 		for (var i = 0; i < NEWTON_ITERATIONS; ++i) {
 			var currentSlope = _getSlope(aGuessT, mX1, mX2);
 			if (currentSlope === 0.0) {
@@ -112,7 +135,7 @@ const bezFn = (() => {
 	}
 
 	return {
-		bezier: function(mX1, mY1, mX2, mY2) {
+		bezier: function(mX1: number, mY1: number, mX2: number, mY2: number): (x: number) => number {
 			if (!(0 <= mX1 && mX1 <= 1 && 0 <= mX2 && mX2 <= 1)) {
 				throw new Error('bezier x values must be in [0, 1] range');
 			}
@@ -125,7 +148,7 @@ const bezFn = (() => {
 				}
 			}
 
-			function getTForX(aX) {
+			function getTForX(aX: number): number {
 				var intervalStart = 0.0;
 				var currentSample = 1;
 				var lastSample = kSplineTableSize - 1;
@@ -149,7 +172,7 @@ const bezFn = (() => {
 				}
 			}
 
-			return function BezierEasing(x) {
+			return function BezierEasing(x: number): number {
 				if (mX1 === mY1 && mX2 === mY2) {
 					return x; // linear
 				}
@@ -167,11 +190,19 @@ const bezFn = (() => {
 })();
 
 const bezierCurve = bezFn.bezier(0.25, 0.1, 0.25, 1);
-function getCurrentTarget(time, target) {
+function getCurrentTarget(time: number, target: number) {
 	return bezierCurve(time) * target;
 }
 
-function scroll(timestamp) {
+function doSmoothScroll(this: {
+	from: number;
+	to: number;
+	target: number;
+	progress: number;
+	maxTime: number;
+	startTime: number;
+	lastAnimationFrame: number;
+}, timestamp: number) {
 	const data = this;
 
 	if (data.startTime === null) {
@@ -187,15 +218,23 @@ function scroll(timestamp) {
 			data.target);
 		window.scrollTo(0, currentTarget + data.from);
 
-		window.requestAnimationFrame(scroll.bind(data));
+		window.requestAnimationFrame(doSmoothScroll.bind(data));
 	}
 }
 
-function smoothScroll(to) {
+function smoothScroll(to: number) {
 	const currentScroll = document.body.scrollTop;
 
 	const time = Date.now();
-	const data = {
+	const data: {
+		from: number;
+		to: number;
+		target: number;
+		progress: number;
+		maxTime: number;
+		startTime: number;
+		lastAnimationFrame: number;
+	} = {
 		from: currentScroll,
 		to: to,
 		target: to - currentScroll,
@@ -206,10 +245,16 @@ function smoothScroll(to) {
 	};
 
 	//Do it in ~250ms
-	window.requestAnimationFrame(scroll.bind(data));
+	window.requestAnimationFrame(doSmoothScroll.bind(data));
 }
 
 class SelectedVideo {
+	current: TransformedVideo;
+	rowWidth: {
+		width: number;
+		amount: number;
+	};
+
 	_focusCurrent() {
 		this.current.element.classList.add('selectedVideo');
 		smoothScroll(this.current.element.getBoundingClientRect().top +
@@ -220,13 +265,13 @@ class SelectedVideo {
 		this.current && this.current.element.classList.remove('selectedVideo');
 	}
 
-	_updateSelected(video) {
+	_updateSelected(video: TransformedVideo) {
 		this._deselectCurrent();
 		this.current = video;
 		this._focusCurrent();
 	}
 
-	setCurrent(video) {
+	setCurrent(video: TransformedVideo) {
 		this._updateSelected(video);
 	}
 
@@ -328,9 +373,7 @@ class SelectedVideo {
 		this._updateSelected(this.videos[this.videos.length - 1]);
 	}
 
-	constructor(videos, previousTitle) {
-		this.videos = videos;
-
+	constructor(public videos: TransformedVideo[], previousTitle: string) {
 		if (previousTitle) {
 			for (let i = 0; i < videos.length; i++) {
 				if (videos[i].title === previousTitle) {
@@ -352,9 +395,11 @@ class SelectedVideo {
 	}
 }
 
-const toWatchLater = [];
+const toWatchLater: Array<HTMLElement> = [];
 let isHandlingWatchLater = false;
-function clickWatchLater(deadline) {
+function clickWatchLater(deadline: {
+	timeRemaining(): number;
+}) {
 	while (deadline.timeRemaining() > 0 && toWatchLater.length > 0 && toWatchLater[toWatchLater.length - 1]) {
 		toWatchLater.pop().click();
 	}
@@ -368,7 +413,7 @@ function clickWatchLater(deadline) {
 	}
 }
 
-function addVideoToWatchLater(button) {
+function addVideoToWatchLater(button: HTMLElement) {
 	if (button) {
 		toWatchLater.push(button);
 	}
@@ -380,24 +425,46 @@ function addVideoToWatchLater(button) {
 	}
 }
 
+interface TransformedVideo {
+    element: HTMLElement;
+    watched: boolean;
+    title: string;
+    channel: string;
+    length: number;
+    context: {
+        element: HTMLElement;
+        watched: boolean;
+    }[];
+	isPodcast: boolean;
+	isHidden: boolean;
+	links: string[];
+};
+
 class VideoIdentifier {
+	videos: TransformedVideo[];
+	selected: SelectedVideo;
+
 	getAmount() {
 		return this.videos.length;
 	}
 
-	_objectify(video) {
+	_objectify(video: HTMLElement): {
+		element: HTMLElement;
+	} {
 		return {
 			element: video
 		};
 	}
 
-	_markWatched(video) {
-		video.watched = !!video.element.querySelector('.watched-badge')
-
-		return video;
+	_markWatched(video: {
+		element: HTMLElement;
+	}) {
+		return Object.assign(video, {
+			watched: !!video.element.querySelector('.watched-badge')
+		});
 	}
 
-	_parseTime(timeStr) {
+	_parseTime(timeStr: HTMLElement): number {
 		if (!timeStr) {
 			return 0;
 		}
@@ -405,21 +472,28 @@ class VideoIdentifier {
 		return ~~secs + (60 * (~~mins + (60 * (~~hours))));
 	}
 
-	_setVideoMetaData(video, index, videos) {
-		video.title = video.element.querySelector('.yt-lockup-title').querySelector('a').innerText;
-		video.channel = video.element.querySelector('.yt-lockup-byline').querySelector('a').innerText
-		video.length = this._parseTime(video.element.querySelector('.video-time'));
-		video.context = videos;
+	_setVideoMetaData(video: {
+		element: HTMLElement;
+		watched: boolean;	
+	}, index: number, videos: {
+		element: HTMLElement;
+		watched: boolean;	
+	}[]) {
+		return Object.assign(video, {
+			title: video.element.querySelector('.yt-lockup-title').querySelector('a').innerText,
+			channel: video.element.querySelector('.yt-lockup-byline').querySelector('a').innerText,
+			length: this._parseTime(video.element.querySelector('.video-time') as HTMLElement),
+			context: videos
+		});
+	}
+
+	_hideVideo(video: TransformedVideo) {
+		video.element.parentElement.style.display = 'none';
+
 		return video;
 	}
 
-	_hideVideo(video) {
-		video.element.parentNode.style.display = 'none';
-
-		return video;
-	}
-
-	_containsPart(arr, str) {
+	_containsPart(arr: string[], str: string) {
 		for (let i = 0; i < arr.length; i++) {
 			if (str.indexOf(arr[i]) > -1) {
 				return true;
@@ -428,18 +502,18 @@ class VideoIdentifier {
 		return false;
 	}
 
-	_containsAllParts(arrOfArr, str) {
+	_containsAllParts(arrOfArr: string[][], str: string) {
 		for (let i = 0; i < arrOfArr.length; i++) {
-			if (arrOfArr[i].reduce((prev, current) => {
-				return prev && this._containsPart(current, str)
-			})) {
+			if (arrOfArr[i].filter((e) => {
+				return str.indexOf(e) === -1;
+			}).length === 0) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	_isPartOfLongerThan(channel, video) {
+	_isPartOfLongerThan(channel: string, video: TransformedVideo) {
 		for (let i = 0; i < PODCAST_CHANNELS.onLongerThan.length; i++) {
 			const [ matchedChannel, minLength ] = PODCAST_CHANNELS.onLongerThan[i];
 			if (matchedChannel.toLowerCase() === channel && video.length > minLength) {
@@ -449,7 +523,7 @@ class VideoIdentifier {
 		return false;
 	}
 
-	_isPodcast(video, title, channel) {
+	_isPodcast(video: TransformedVideo, title: string, channel: string) {
 		if (this._containsPart(EXCLUDE, title)) {
 			return false;
 		}
@@ -464,14 +538,14 @@ class VideoIdentifier {
 				video.length > HOUR;
 	}
 
-	_addPocastToWatchLater(video) {
+	_addPocastToWatchLater(video: TransformedVideo): TransformedVideo {
 		const title = video.title.toLowerCase();
 		const channel = video.channel.toLowerCase();
 		if (this._isPodcast(video, title, channel)) {
 			video.isPodcast = true;
 			this._hideVideo(video);
 			video.isHidden = true;
-			addVideoToWatchLater(video.element.querySelector('.addto-watch-later-button'));
+			addVideoToWatchLater(video.element.querySelector('.addto-watch-later-button') as HTMLElement);
 			return video;
 		}
 		video.isPodcast = false;
@@ -479,18 +553,18 @@ class VideoIdentifier {
 		return video;
 	}
 
-	_applyArrayTransformation(arr, fns) {
+	_applyArrayTransformation(arr: Array<HTMLElement>, fns: Array<(video: any) => any>): TransformedVideo[] {
 		for (let i = 0; i < fns.length; i++) {
 			arr = arr.map(fns[i]);
 		}
-		return arr;
+		return arr as any;
 	}
 
-	_replaceLinks(videos) {
+	_replaceLinks(videos: TransformedVideo[]) {
 		videos.forEach((video) => {
 			const anchors = video.element.querySelectorAll('a');
 			video.links = [];
-			anchors.forEach((anchor) => {
+			Array.from(anchors).forEach((anchor) => {
 				const link = `https://www.youtube.com/watch?v=${video.element.getAttribute('data-context-item-id')}`;
 				if (!anchor.hasListener) {
 					anchor.href = '#';
@@ -504,7 +578,7 @@ class VideoIdentifier {
 		});
 	}
 
-	constructor(videos) {
+	constructor(videos: NodeListOf<HTMLElement>) {
 		this.videos = this._applyArrayTransformation(Array.from(videos),
 			[
 				this._objectify.bind(this),
@@ -513,7 +587,8 @@ class VideoIdentifier {
 				this._addPocastToWatchLater.bind(this),
 			]);
 		this.selected = new SelectedVideo(this.videos, (
-			videos && videos.selected && videos.selected.current && videos.selected.current.title
+			window.videos && window.videos.selected && 
+			window.videos.selected.current && window.videos.selected.current.title
 		) || null);
 
 		this._replaceLinks(this.videos);
@@ -523,7 +598,7 @@ class VideoIdentifier {
 function identifyVideos() {
 	const vids = document.querySelectorAll('.yt-lockup-video');
 	if (!window.videos || window.videos.getAmount() !== vids.length) {
-		window.videos = new VideoIdentifier(vids);
+		window.videos = new VideoIdentifier(vids as NodeListOf<HTMLElement>);
 	}
 }
 
@@ -533,7 +608,7 @@ window.navToLink = (link, video) => {
 		link: link
 	});
 	if (video) {
-		videos.selected.setCurrent(video);
+		window.videos.selected.setCurrent(video);
 	}
 }
 
