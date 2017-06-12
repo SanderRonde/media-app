@@ -1,6 +1,11 @@
+interface Window {
+	commToPage(task: string, callback: (result: string) => void): void;
+	doTask(name: string, id: number, callback: (result: string) => void): void;
+}
+
 let commId = 0;
 
-function listenForCommPageResponse(id, callback) {
+function listenForCommPageResponse(id: number, callback: (result: string) => void) {
 	let removalId = window.setInterval(() => {
 		let result;
 		if ((result = localStorage.getItem(`taskResult${id}`))) {
@@ -11,9 +16,12 @@ function listenForCommPageResponse(id, callback) {
 }
 
 window.commToPage = function(task, callback) {
-	let tasks = localStorage.getItem('tasks');
+	let tasks: {
+		name: string;
+		id: number;
+	}[];
 	try {
-		tasks = JSON.parse(tasks);
+		tasks = JSON.parse(localStorage.getItem('tasks'));
 	} catch(e) {
 		tasks =  [];
 	}
