@@ -1670,24 +1670,6 @@ namespace AppWindow {
 		listen('onMaximized', updateButtonsState);
 		listen('onFullscreened', updateButtonsState);
 		listen('onRestored', updateButtonsState);
-		window.addEventListener('wheel', (e) => {
-			Helpers.hacksecute(AppWindow.getActiveViewView(), (REPLACE) => {
-				//Get scroll total position
-				const wheelDeltaX = REPLACE.deltaX;
-				const wheelDeltaY = REPLACE.deltaY;
-
-				window.scrollTo(window.scrollX + wheelDeltaX, window.scrollY + wheelDeltaY);
-
-				//Trigger wheel events
-				window.onwheel({
-					deltaX: wheelDeltaX,
-					deltaY: wheelDeltaY
-				} as any);
-			}, {
-				deltaX: e.deltaX,
-				deltaY: e.deltaY
-			});
-		});
 		window.addEventListener('focus', () => {
 			titleBar.classList.add('focused');
 			onFocus();
