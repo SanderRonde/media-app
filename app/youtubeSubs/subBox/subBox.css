@@ -1,8 +1,13 @@
 #guide,
-#masthead-positioner,
+#ticker-content, #masthead-appbar-container,
 #masthead-positioner-height-offset,
-#footer-container {
+#footer-container, .yt-masthead-logo-container,
+#yt-masthead-user {
 	display: none;
+}
+
+#yt-masthead::before, #yt-masthead::after {
+	display:none!important;
 }
 
 #page {

@@ -232,7 +232,7 @@ interface YoutubeVideoPlayer extends HTMLElement {
 	seekTo(seconds: number): void;
 }
 
-type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions';
+type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions'|'youtubesearch';
 
 namespace Helpers {
 	export function stringifyFunction(fn: Function): string {
@@ -363,7 +363,7 @@ namespace YoutubeMusic {
 				volumeBarNumber.id = 'yt-ca-volumeBarNumber';
 
 				let volumeBarTimeout: number = null;
-				let visualizing = false;
+				let visualizing = JSON.parse(localStorage.getItem('visualize'));
 
 				volumeBar.appendChild(volumeBarNumber);
 				volumeBar.appendChild(volumeBarBar);
@@ -426,10 +426,12 @@ namespace YoutubeMusic {
 					}
 					if (shouldVisualize) {
 						visualizing = true;
+						localStorage.setItem('visualizing', JSON.stringify(true));
 						document.body.classList.add('showVisualizer');
 						window.requestAnimationFrame(visualize.bind(data));
 					} else {
 						document.body.classList.remove('showVisualizer');
+						localStorage.setItem('visualizing', JSON.stringify(false));
 						visualizing = false;
 					}
 				}
@@ -494,7 +496,7 @@ namespace YoutubeMusic {
 
 				prepareVideo();
 
-				document.body.addEventListener('keydown', (e) => {
+				document.body.addEventListener('keypress', (e) => {
 					if (e.key === 'h') {
 						//Hide or show video
 						document.body.classList.toggle('showHiddens');
@@ -1482,12 +1484,6 @@ namespace YoutubeSubscriptions {
 						addListeners();
 					});
 				});
-
-				videoView.addEventListener('keydown', (e) => {
-					if (e.key === 'd') {
-						YoutubeMusic.downloadVideo(videoView.src);
-					}
-				});
 			}, 10);
 		}
 	}
@@ -1523,7 +1519,7 @@ namespace YoutubeSubscriptions {
 	}
 
 	function showVideo() {
-		document.getElementById('youtubeSubsCont').classList.add('showVideo');
+		document.getElementById('youtubeSearchCont').classList.add('showVideo');
 		Video.videoView.focus();
 	}
 
@@ -1538,13 +1534,13 @@ namespace YoutubeSubscriptions {
 	}
 
 	function addKeyboardListeners() {
-		document.body.addEventListener('keydown', (e) => {
+		document.body.addEventListener('keypress', (e) => {
 			if (AppWindow.getActiveViewName() !== 'youtubeSubscriptions') {
 				return;
 			}
 
 			if (e.key === 'h') {
-				const subsCont = document.getElementById('youtubeSubsCont');
+				const subsCont = document.getElementById('youtubeSearchCont');
 				if (subsCont.classList.contains('showVideo')) {
 					subsCont.classList.remove('showVideo');
 					SubBox.subBoxView.focus();
@@ -1568,7 +1564,7 @@ namespace YoutubeSubscriptions {
 	}
 
 	export function onFocus() {
-		if (document.getElementById('youtubeSubsCont').classList.contains('showVideo')) {
+		if (document.getElementById('youtubeSearchCont').classList.contains('showVideo')) {
 			Video.videoView.focus();
 		} else {
 			SubBox.subBoxView.focus();
@@ -1576,10 +1572,359 @@ namespace YoutubeSubscriptions {
 	}
 
 	export function getView(): WebView {
-		if (document.getElementById('youtubeSubsCont').classList.contains('showVideo')) {
+		if (document.getElementById('youtubeSearchCont').classList.contains('showVideo')) {
 			return Video.videoView;
 		} else {
 			return SubBox.subBoxView;
+		}
+	}
+}
+
+namespace YoutubeSearch {
+	function initView(): WebView {
+		const view = document.createElement('webview') as WebView;
+		view.setAttribute('partition', 'persist:youtubeSubscriptions');
+
+		view.addEventListener('newwindow', (e: NewWindowEvent) => {
+			window.open(e.targetUrl, '_blank');
+		});
+		window.addEventListener('focus', () => {
+			view.focus();
+		});
+		
+		document.querySelector('#youtubeSearchCont').appendChild(view);
+
+		return view;
+	}
+
+	export namespace Commands {
+		export function lowerVolume() {
+			Helpers.hacksecute(Video.videoView, () => {
+				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
+				let vol = player.getVolume();
+				if (!player.isMuted()) {
+					vol -= 5;
+					
+					vol = (vol < 0 ? 0 : vol);
+					player.setVolume(vol);
+				}
+			});
+		}
+
+		export function raiseVolume() {
+			Helpers.hacksecute(Video.videoView, () => {
+				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
+				let vol = player.getVolume();
+				if (player.isMuted()) {
+					//Treat volume as 0
+					vol = 0;
+					player.unMute();
+				}
+
+				vol += 5;
+				vol = (vol > 100 ? 100 : vol);
+				player.setVolume(vol);
+			});
+		}
+
+		export function togglePlay() {
+			Helpers.hacksecute(Video.videoView, () => {
+				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
+				const state = player.getPlayerState();
+				if (state === 2) {
+					//Paused
+					player.playVideo();
+				} else if (state === 1) {
+					//Playing
+					player.pauseVideo();
+				} else {
+					//???
+				}
+			});
+		}
+
+		export function pause() {
+			Helpers.hacksecute(Video.videoView, () => {
+				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
+				player.pauseVideo();
+			});
+		}
+
+		export function play() {
+			Helpers.hacksecute(Video.videoView, () => {
+				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
+				player.playVideo();
+			});
+			if (Video.videoView.src) {
+				showVideo();
+			}
+		}
+
+		export function magicButton() {
+			SearchPage.searchPageView.executeScript({
+				code: Helpers.stringifyFunction(() => {
+					(window as any).videos.selected.goLeft();
+					(window as any).videos.selected.launchCurrent();
+				})
+			})
+		}
+	}
+
+	namespace Video {
+		export let videoView: WebView = null;
+
+		export function setup() {
+			videoView = initView();
+			videoView.id = 'youtubeSearchView';
+
+			window.setTimeout(() => {
+				videoView.addContentScripts([{
+					name: 'css',
+					matches: ['*://*/*'],
+					css: {
+						files: [
+							'/youtube/content/content.css',
+							'/youtubeSubs/video/youtubeVideo.css'
+						]
+					},
+					run_at: 'document_start'
+				}]);
+
+				videoView.addEventListener('contentload', () => {
+					Helpers.hacksecute(videoView, () => {
+						const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
+						const playerApi = document.getElementById('player-api');
+						const volumeBar = document.createElement('div');
+						const volumeBarBar = document.createElement('div');
+						const volumeBarNumber = document.createElement('div');
+						let volumeBarTimeout: number = null;
+
+						volumeBar.id = 'yt-ca-volumeBar';
+						volumeBarBar.id = 'yt-ca-volumeBarBar';
+						volumeBarNumber.id = 'yt-ca-volumeBarNumber';
+
+						volumeBar.appendChild(volumeBarNumber);
+						volumeBar.appendChild(volumeBarBar);
+						document.body.appendChild(volumeBar);
+
+						function prepareVideo() {
+							setTimeout(() => {							
+								function reloadIfAd() {
+									if (player.getAdState() === 1) {
+										window.location.reload();
+									}
+
+									if (player.getPlayerState() === 3) {
+										window.setTimeout(reloadIfAd, 250);
+									} else {
+										player.setPlaybackQuality('hd1080');
+										if (player.getPlaybackQuality() !== 'hd1080') {
+											player.setPlaybackQuality('hd720');
+										}
+										
+										if (document.querySelector('.ytp-size-button')
+												.getAttribute('title') === 'Theatermodus') {
+											player.setSizeStyle(true, true);
+										}
+
+										localStorage.setItem('loaded', 'ytmusic');
+									}
+								}
+								reloadIfAd();
+							}, 2500);
+						}
+
+						prepareVideo();
+
+						document.body.addEventListener('keydown', (e) => {
+							if (e.key === 'k') {
+								//Hide or show video
+								document.body.classList.toggle('showHiddens');
+							}
+						});
+
+						function updateSizes() {
+							playerApi.style.width = window.innerWidth + 'px';
+							playerApi.style.height = (window.innerHeight - 15) + 'px';
+
+							player.setSize();
+						}
+
+						updateSizes();
+						window.addEventListener('resize', updateSizes);
+
+						function setPlayerVolume(volume: number) {
+							player.setVolume(volume);
+
+							localStorage.setItem('yt-player-volume', JSON.stringify({
+								data: JSON.stringify({
+									volume: volume,
+									muted: (volume === 0)
+								}),
+								creation: Date.now(),
+								expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
+							}));
+						}
+
+						//Code that has to be executed "inline"
+						function increaseVolume() {
+							let vol = player.getVolume();
+							if (player.isMuted()) {
+								//Treat volume as 0
+								vol = 0;
+								player.unMute();
+							}
+
+							vol += 5;
+							vol = (vol > 100 ? 100 : vol);
+							setPlayerVolume(vol);
+						}
+
+						function lowerVolume() {
+							let vol = player.getVolume();
+							if (!player.isMuted()) {
+								vol -= 5;
+								
+								vol = (vol < 0 ? 0 : vol);
+								setPlayerVolume(vol);
+							}
+						}
+
+						function showVolumeBar() {
+							const volume = player.getVolume();
+							localStorage.setItem('volume', volume + '');
+							volumeBarNumber.innerHTML = volume + '';
+							volumeBarBar.style.transform = `scaleX(${volume / 100})`;
+							volumeBar.classList.add('visible');
+							if (volumeBarTimeout !== null) {
+								window.clearTimeout(volumeBarTimeout);
+							}
+							volumeBarTimeout = window.setTimeout(() => {
+								volumeBar.classList.remove('visible');
+								volumeBarTimeout = null;
+							}, 2000);
+						}
+
+						function onScroll(isDown: boolean) {
+							if (isDown) {
+								lowerVolume();
+							} else {
+								increaseVolume();
+							}
+							showVolumeBar();
+						}
+
+						function addListeners() {
+							window.onwheel = (e) => {
+								onScroll(e.deltaY > 0);
+							};
+						}
+
+						addListeners();
+					});
+				});
+			}, 10);
+		}
+	}
+
+	namespace SearchPage {
+		export let searchPageView: WebView = null;
+
+		export function setup() {
+			searchPageView = initView();
+			searchPageView.id = 'youtubeSearchView';
+
+			//TODO:
+			window.setTimeout(() => {
+				searchPageView.addContentScripts([{
+					name: 'js',
+					matches: ['*://*/*'],
+					js: {
+						files: [
+							'/genericJs/comm.js',
+							'/youtubeSubs/subBox/subBox.js'
+						]
+					},
+					run_at: 'document_end'
+				}, {
+					name: 'css',
+					matches: ['*://*/*'],
+					css: {
+						files: ['/youtubeSubs/subBox/subBox.css']
+					},
+					run_at: 'document_start'
+				}]);
+			}, 10);
+		}
+	}
+
+	namespace SearchBar {
+		export let searchBarView: WebView = null;
+
+		export function setup() {
+			searchBarView = initView();
+			searchBarView.id = 'youtubeSearchView';
+		}
+	}
+
+	function showVideo() {
+		document.getElementById('youtubeSubsCont').classList.add('showVideo');
+		Video.videoView.focus();
+	}
+
+	export function changeVideo(url: string) {
+		Video.videoView.src = url;
+		showVideo();
+	}
+
+	export function setup() {
+		SearchPage.setup();
+		Video.setup();
+	}
+
+	function addKeyboardListeners() {
+		document.body.addEventListener('keypress', (e) => {
+			if (AppWindow.getActiveViewName() !== 'youtubeSubscriptions') {
+				return;
+			}
+
+			if (e.key === 'h') {
+				const subsCont = document.getElementById('youtubeSubsCont');
+				if (subsCont.classList.contains('showVideo')) {
+					subsCont.classList.remove('showVideo');
+					SearchPage.searchPageView.focus();
+				} else {
+					subsCont.classList.add('showVideo');
+					Video.videoView.focus();
+				}
+			}
+		});
+	}
+
+	export function init() {
+		window.setTimeout(() => {
+			SearchPage.searchPageView.src = 'about:blank';
+			addKeyboardListeners();
+		}, 15);
+	}
+
+	export function onClose() {
+		//Nothing really
+	}
+
+	export function onFocus() {
+		if (document.getElementById('youtubeSubsCont').classList.contains('showVideo')) {
+			Video.videoView.focus();
+		} else {
+			SearchPage.searchPageView.focus();
+		}
+	}
+
+	export function getView(): WebView {
+		if (document.getElementById('youtubeSubsCont').classList.contains('showVideo')) {
+			return Video.videoView;
+		} else {
+			return SearchPage.searchPageView;
 		}
 	}
 }
@@ -1611,11 +1956,12 @@ namespace AppWindow {
 		});
 	}
 
-	type ViewTypes = typeof YoutubeMusic | typeof Netflix | typeof YoutubeSubscriptions;
+	type ViewTypes = typeof YoutubeMusic | typeof Netflix | typeof YoutubeSubscriptions | typeof YoutubeSearch;
 	export function getViewByName(name: ViewNames): ViewTypes;
 	export function getViewByName(name: 'ytmusic'): typeof YoutubeMusic;
 	export function getViewByName(name: 'netflix'): typeof Netflix;
 	export function getViewByName(name: 'youtubeSubscriptions'): typeof YoutubeSubscriptions;
+	export function getViewByName(name: 'youtubesearch'): typeof YoutubeSearch;
 	export function getViewByName(name: ViewNames): ViewTypes {
 		switch (name) {
 			case 'ytmusic':
@@ -1624,6 +1970,8 @@ namespace AppWindow {
 				return Netflix;
 			case 'youtubeSubscriptions':
 				return YoutubeSubscriptions;
+			case 'youtubesearch':
+				return YoutubeSearch;
 		}
 	}
 
@@ -1698,6 +2046,7 @@ namespace AppWindow {
 		});
 
 		document.body.addEventListener('keydown', (e) => {
+			debugger;
 			if (e.key === 'Escape') {
 				const youtubeSearchPageView = document.getElementById('youtubeSearchPageView');
 				if (youtubeSearchPageView) {
@@ -1715,6 +2064,8 @@ namespace AppWindow {
 			} else if (e.key === 'F2') {
 				switchToview('ytmusic');
 			} else if (e.key === 'F3') {
+				switchToview('youtubesearch');
+			} else if (e.key === 'F4') {
 				switchToview('netflix');
 			}
 		});

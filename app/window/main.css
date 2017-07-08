@@ -462,3 +462,7 @@ body {
 #setupButton {
 	color: white;
 }
+
+#searchDialog {
+	display: none;
+}

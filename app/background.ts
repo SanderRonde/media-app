@@ -55,6 +55,9 @@ chrome.commands.onCommand.addListener((cmd) => {
 		case 'launchYoutubeSubscriptions':
 			launch('youtubeSubscriptions');
 			break;
+		case 'launchYoutubeSearch':
+			launch('youtubesearch');
+			break;
 		case 'launch':
 			launch('ytmusic');
 			break;
