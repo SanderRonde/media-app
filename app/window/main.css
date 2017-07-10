@@ -19,8 +19,12 @@ body {
 	transform: translateX(-100vw);
 }
 
-#views.netflix {
+#views.youtubesearch {
 	transform: translateX(-200vw);
+}
+
+#views.netflix {
+	transform: translateX(-300vw);
 }
 
 #views > * {
@@ -41,6 +45,11 @@ body {
 }
 
 #titleBar {
+	display: flex;
+	justify-content: space-between;
+}
+
+#titleBarLeft, #titleBarRight {
 	height: 26px;
 	display: flex;
 	justify-content: flex-end;
@@ -48,9 +57,10 @@ body {
 	background-color: transparent;
 	position: relative;
 	z-index: 10000000;
+	width: 50vw;
 }
 
-#titleBar > div {
+#titleBarRight > div {
 	width: 45px;
 	height: 100%;
 	background-color: inherit;
@@ -93,11 +103,11 @@ body {
 	opacity: 1;
 }
 
-#titleBar > #close {
+#titleBar #close {
 	margin-right: 0;
 }
 
-#titleBar > #maximize {
+#titleBar #maximize {
     width: 45px;
 }
 
@@ -320,11 +330,11 @@ body {
     margin-top: 8px;
 }
 
-#titleBar.fullscreen > div {
+#titleBarRight.fullscreen > div {
     transform: translateY(-26px);
 }
 
-#titleBar:hover > div {
+#titleBar:hover div {
     transform: translateY(0);
 }
 
@@ -433,7 +443,8 @@ body {
 
 #netflixWebview,
 #youtubeSubsSubBoxView,
-#youtubeSubsVideoView {
+#youtubeSubsVideoView,
+#youtubeSearchResultsView {
 	width: 100vw;
 	height: 100vh;
 }
@@ -442,7 +453,8 @@ body {
 	transition: transform 250ms ease-in;
 }
 
-#youtubeSubsCont.showVideo > #youtubeSubsVideoView {
+#youtubeSubsCont.showVideo > #youtubeSubsVideoView,
+#youtubeSearchCont.showVideo > #youtubeSearchVideoView {
 	transform: translateY(-100vh);
 }
 
@@ -465,4 +477,39 @@ body {
 
 #searchDialog {
 	display: none;
+}
+
+#youtubeSearchBarView {
+	width: 100vw;
+	height: 300px;
+	z-index: 5;
+	position: relative;
+}
+
+#youtubeSearchResultsView {
+	margin-top: -253px;
+	z-index: 2;
+	position: relative;
+}
+
+#youtubeSearchVideoView {
+	width: 100vw;
+	height: calc(100vh - 53px);
+	transition: transform 250ms ease-in,
+		height 500ms ease-in;
+	z-index: 100;
+	position: relative;
+}
+
+#youtubeSearchCont.showVideo.searchHidden #youtubeSearchVideoView {
+	height: 100vh;
+	transform: translateY(calc(-100vh - 53px));
+}
+
+#youtubeSearchCont.shortenSearchBarArea #youtubeSearchBarView {
+	height: 50px;
+}
+
+#youtubeSearchCont.shortenSearchBarArea #youtubeSearchResultsView {
+	margin-top: -3px;
 }

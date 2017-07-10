@@ -1,0 +1,13 @@
+#page-container, #footer-container, #masthead-appbar-container,
+.yt-masthead-logo-container, #yt-masthead-user {
+	display: none;
+}
+
+#masthead-search {
+	margin-left: auto!important;
+	margin-right: auto!important;
+}
+
+body {
+	background: transparent!important;
+}

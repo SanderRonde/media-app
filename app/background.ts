@@ -159,10 +159,19 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 			}
 			break;
 		case 'loadingCompleted':
+			console.log('Sending loading complete message');
 			getAppWindow().AppWindow.onLoadingComplete(message.view);
 			break;
 		case 'changeYoutubeSubsLink':
 			getAppWindow().YoutubeSubscriptions.changeVideo(message.link);
 			break;
+		case 'keypress':
+			getAppWindow().AppWindow.onKeyPress(message.event);
+			break;
+		case 'navToVideo':
+			getAppWindow().YoutubeSearch.Video.navTo(message.url);
+			break;
+		case 'paste':
+			getAppWindow().YoutubeSearch.onPaste(message.data);
 	}
 });
