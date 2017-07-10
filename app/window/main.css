@@ -453,9 +453,12 @@ body {
 	transition: transform 250ms ease-in;
 }
 
-#youtubeSubsCont.showVideo > #youtubeSubsVideoView,
-#youtubeSearchCont.showVideo > #youtubeSearchVideoView {
+#youtubeSubsCont.showVideo > #youtubeSubsVideoView {
 	transform: translateY(-100vh);
+}
+
+#youtubeSearchCont.showVideo > #youtubeSearchVideoView {
+	transform: translateY(calc(-100vh - 3px));
 }
 
 #youtubeSubsVideoView {
@@ -494,16 +497,19 @@ body {
 
 #youtubeSearchVideoView {
 	width: 100vw;
-	height: calc(100vh - 53px);
+	height: calc(100vh - 51px);
 	transition: transform 250ms ease-in,
-		height 500ms ease-in;
+		height 250ms ease-in;
 	z-index: 100;
 	position: relative;
 }
 
-#youtubeSearchCont.showVideo.searchHidden #youtubeSearchVideoView {
+#youtubeSearchCont.searchHidden #youtubeSearchVideoView {
 	height: 100vh;
-	transform: translateY(calc(-100vh - 53px));
+}
+
+#youtubeSearchCont.showVideo.searchHidden #youtubeSearchVideoView {
+	transform: translateY(calc(-100vh - 51px));
 }
 
 #youtubeSearchCont.shortenSearchBarArea #youtubeSearchBarView {
