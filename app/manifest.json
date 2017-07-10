@@ -25,6 +25,10 @@
 			"description": "Launches the app in the youtube music view",
 			"global": true
 		},
+		"launchYoutubeSearch": {
+			"description": "Launches the app in the youtubesearch music view",
+			"global": true
+		},
 		"pausePlay": {
 			"suggested_key": {
 				"default": "Shift+Alt+P"
