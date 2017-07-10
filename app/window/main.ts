@@ -1752,7 +1752,6 @@ namespace YoutubeSearch {
 				}]);
 
 				videoView.addEventListener('contentload', () => {
-					console.log('Content loading');
 					Helpers.hacksecute(videoView, () => {
 						const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 						const playerApi = document.getElementById('player-api');
