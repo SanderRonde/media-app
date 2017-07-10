@@ -159,7 +159,6 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 			}
 			break;
 		case 'loadingCompleted':
-			console.log('Sending loading complete message');
 			getAppWindow().AppWindow.onLoadingComplete(message.view);
 			break;
 		case 'changeYoutubeSubsLink':
