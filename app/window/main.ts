@@ -1759,6 +1759,7 @@ namespace YoutubeSearch {
 				}]);
 
 				videoView.addEventListener('contentload', () => {
+					console.log('Content loading');
 					Helpers.hacksecute(videoView, () => {
 						const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 						const playerApi = document.getElementById('player-api');
@@ -2101,23 +2102,20 @@ namespace YoutubeSearch {
 			}
 			return true;
 		}
-		if (event.key === 's') {
-			//Toggle searchBar
-			if (SearchBar.toggle()) {
-				return true;
-			}
+		if (event.key === 's' && SearchBar.toggle()) {
+			return true;
 		}
 		if (event.key === 'd' && activePage === 'video') {
 			Downloading.downloadSong();	
 			return true;
 		}
-		if (event.ctrlKey && event.key === 'v') {
-			//Attempting to paste a link
-			return true;
-		}
-		if (VALID_INPUT.indexOf(event.key) > -1) {
-			SearchBar.focus(event.key);
-			return true;
+		if (VALID_INPUT.indexOf(event.key) > -1 && 
+			!event.altKey && !event.ctrlKey) {
+				SearchBar.focus(event.key);
+				return true;
+			}
+		if (event.key === 'Tab') {
+			SearchBar.focus();
 		}
 		return false;
 	}
@@ -2353,12 +2351,23 @@ namespace YoutubeSearch {
 	}
 
 	export function onPaste(data: string) {
-		if (AppWindow.getActiveViewName() === 'youtubesearch' && Video.videoView) {
-			const reg = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})/;
-			if (reg.exec(data)) {
+		const reg = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})/;
+		if (reg.exec(data)) {
+			if (AppWindow.getActiveViewName() === 'youtubesearch' && Video.videoView) {
 				Video.navTo(data);
+			} else {
+				//Go to that view and focus the video
+				AppWindow.switchToview('youtubesearch');
+				const interval = window.setInterval(() => {
+					if (AppWindow.loadedViews.indexOf('youtubesearch') > -1 && Video.videoView) {
+						//It's loaded
+						window.clearInterval(interval);
+
+						Video.navTo(data);
+					}
+				}, 50);
 			}
-		}
+		}			
 	}
 }
 
@@ -2419,9 +2428,9 @@ namespace AppWindow {
 				Netflix.onClose();
 				YoutubeSubscriptions.onClose();
 
-				window.setTimeout(() => {
+				window.setImmediate(() => {
 					app.close();
-				}, 0);
+				});
 				return;
 			}
 
@@ -2476,9 +2485,9 @@ namespace AppWindow {
 			Netflix.onClose();
 			YoutubeSubscriptions.onClose();
 
-			window.setTimeout(() => {
+			window.setImmediate(() => {
 				app.close();
-			}, 0);
+			});
 			e.stopPropagation();
 		});
 
