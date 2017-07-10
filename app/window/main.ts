@@ -501,6 +501,12 @@ namespace YoutubeMusic {
 						return bar;
 					});
 
+					const shouldVisualize = JSON.parse(localStorage.getItem('visualizing') || JSON.stringify(false));
+					visualizing = shouldVisualize;
+					if (shouldVisualize) {
+						document.body.classList.add('showVisualizer');
+					}
+
 					window.setInterval(() => {
 						checkForVisualizer(data);
 					}, 50);
@@ -1060,10 +1066,6 @@ namespace YoutubeMusic {
 			window.open(e.targetUrl, '_blank');
 		});
 
-		window.addEventListener('focus', () => {
-			view.focus();
-		});
-
 		view.addEventListener('keydown', (e) => {
 			if (e.key === '?') {
 				YoutubeMusic.getCurrentSong();
@@ -1176,9 +1178,6 @@ namespace Netflix {
 
 		view.addEventListener('newwindow', (e: NewWindowEvent) => {
 			window.open(e.targetUrl, '_blank');
-		});
-		window.addEventListener('focus', () => {
-			view.focus();
 		});
 		
 		document.querySelector('#netflixCont').appendChild(view);
@@ -1300,9 +1299,6 @@ namespace YoutubeSubscriptions {
 
 		view.addEventListener('newwindow', (e: NewWindowEvent) => {
 			window.open(e.targetUrl, '_blank');
-		});
-		window.addEventListener('focus', () => {
-			view.focus();
 		});
 		
 		document.querySelector('#youtubeSubsCont').appendChild(view);
@@ -1581,7 +1577,7 @@ namespace YoutubeSubscriptions {
 	}
 
 	function showVideo() {
-		$('#youtubeSearchCont').classList.add('showVideo');
+		$('#youtubeSubsCont').classList.add('showVideo');
 		Video.videoView.focus();
 	}
 
@@ -1606,7 +1602,7 @@ namespace YoutubeSubscriptions {
 	}
 
 	export function onFocus() {
-		if ($('#youtubeSearchCont').classList.contains('showVideo')) {
+		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
 			Video.videoView.focus();
 		} else {
 			SubBox.subBoxView.focus();
@@ -1614,7 +1610,7 @@ namespace YoutubeSubscriptions {
 	}
 
 	export function getView(): WebView {
-		if ($('#youtubeSearchCont').classList.contains('showVideo')) {
+		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
 			return Video.videoView;
 		} else {
 			return SubBox.subBoxView;
@@ -1627,7 +1623,7 @@ namespace YoutubeSubscriptions {
 		}
 
 		if (event.key === 'h') {
-			const subsCont = $('#youtubeSearchCont');
+			const subsCont = $('#youtubeSubsCont');
 			if (subsCont.classList.contains('showVideo')) {
 				subsCont.classList.remove('showVideo');
 				SubBox.subBoxView.focus();
@@ -1651,10 +1647,7 @@ namespace YoutubeSearch {
 		view.addEventListener('newwindow', (e: NewWindowEvent) => {
 			window.open(e.targetUrl, '_blank');
 		});
-		window.addEventListener('focus', () => {
-			view.focus();
-		});
-		
+
 		document.querySelector('#youtubeSearchCont').appendChild(view);
 		view.addEventListener('loadabort', (e) => {
 			e.preventDefault();
@@ -2635,7 +2628,7 @@ namespace AppWindow {
 	}
 }
 
-AppWindow.init('youtubesearch')// window.baseView || 'ytmusic');
+AppWindow.init(window.baseView || 'ytmusic');
 window.Helpers = Helpers;
 window.Netflix = Netflix;
 window.AppWindow = AppWindow;
