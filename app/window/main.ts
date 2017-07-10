@@ -2420,9 +2420,9 @@ namespace AppWindow {
 				Netflix.onClose();
 				YoutubeSubscriptions.onClose();
 
-				window.setImmediate(() => {
+				window.setTimeout(() => {
 					app.close();
-				});
+				}, 0);
 				return;
 			}
 
@@ -2477,9 +2477,9 @@ namespace AppWindow {
 			Netflix.onClose();
 			YoutubeSubscriptions.onClose();
 
-			window.setImmediate(() => {
+			window.setInterval(() => {
 				app.close();
-			});
+			}, 0);
 			e.stopPropagation();
 		});
 
