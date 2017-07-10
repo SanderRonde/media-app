@@ -10,4 +10,9 @@
 
 body {
 	background: transparent!important;
+	overflow: hidden;
+}
+
+html {
+	overflow: hidden;
 }
