@@ -509,7 +509,7 @@ body {
 }
 
 #youtubeSearchCont.showVideo.searchHidden #youtubeSearchVideoView {
-	transform: translateY(calc(-100vh - 51px));
+	transform: translateY(calc(-100vh - 53px));
 }
 
 #youtubeSearchCont.shortenSearchBarArea #youtubeSearchBarView {
