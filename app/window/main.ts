@@ -408,7 +408,7 @@ namespace YoutubeMusic {
 				volumeBarNumber.id = 'yt-ca-volumeBarNumber';
 
 				let volumeBarTimeout: number = null;
-				let visualizing = JSON.parse(localStorage.getItem('visualize'));
+				let visualizing = false;
 
 				volumeBar.appendChild(volumeBarNumber);
 				volumeBar.appendChild(volumeBarBar);
