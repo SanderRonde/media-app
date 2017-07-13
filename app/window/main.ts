@@ -2586,7 +2586,7 @@ namespace AppWindow {
 		getActiveViewClass().onFocus();
 		getActiveViewClass().Commands.play();
 		const viewsEl = $('#views');
-		viewsEl.classList.remove('ytmusic', 'netflix', 'youtubeSubscriptions');
+		viewsEl.classList.remove('ytmusic', 'netflix', 'youtubeSubscriptions', 'youtubesearch');
 		viewsEl.classList.add(view);
 	}
 
