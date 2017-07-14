@@ -3,7 +3,7 @@
 
 	"name": "Media App",
 	"description": "Runs Netflix and Youtube as a desktop app",
-	"version": "2.0.31", 
+	"version": "2.0.32", 
 	"short_name": "Media App",
 
 	"app": {
