@@ -49,7 +49,7 @@ const VALID_INPUT = arr(65, 90).map((charCode) => {
 	return String.fromCharCode(charCode).toLowerCase();
 })).concat(arr(0, 9).map(num => num + '')).concat([
 	'!','@','#','$','%','^','&','*','(',')','-','_','+','=','\'','"',
-	';',':',',','.','<','>','/','?','\\','|','`','~',' '
+	';',':',',','.','<','>','/','?','\\','|','`','~'
 ]);
 
 namespace AdBlocking {
