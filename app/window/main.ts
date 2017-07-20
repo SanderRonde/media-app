@@ -369,6 +369,14 @@ namespace Helpers {
 		}
 		return arr;
 	}
+
+	export function downloadVideo(url: string, removeOverlay: boolean = false) {
+		if (removeOverlay) {
+			const searchPageView = $('#youtubeSearchPageView');
+			searchPageView && searchPageView.remove();
+		}
+		window.open(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`, '_blank');
+	}
 }
 
 namespace YoutubeMusic {
@@ -941,12 +949,6 @@ namespace YoutubeMusic {
 
 	export function getCurrentSong() {
 		Downloading.getCurrentSong();
-	}
-
-	export function downloadVideo(url: string) {
-		const searchPageView = $('#youtubeSearchPageView');
-		searchPageView && searchPageView.remove();
-		window.open(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`, '_blank');
 	}
 
 	export namespace Commands {
@@ -1622,8 +1624,8 @@ namespace YoutubeSubscriptions {
 			return false;
 		}
 
+		const subsCont = $('#youtubeSubsCont');
 		if (event.key === 'h') {
-			const subsCont = $('#youtubeSubsCont');
 			if (subsCont.classList.contains('showVideo')) {
 				subsCont.classList.remove('showVideo');
 				SubBox.subBoxView.focus();
@@ -1632,6 +1634,11 @@ namespace YoutubeSubscriptions {
 				Video.videoView.focus();
 			}
 			return true;
+		} else if (event.key === 'd') {
+			if (subsCont.classList.contains('showVideo')) {
+				Helpers.downloadVideo(Video.videoView.src)
+				return true;
+			}
 		}
 		return false;
 	}
@@ -2098,7 +2105,8 @@ namespace YoutubeSearch {
 			return true;
 		}
 		if (event.key === 'd' && activePage === 'video') {
-			Downloading.downloadSong();	
+			//Get current video URL and download it
+			Helpers.downloadVideo(Video.videoView.src)
 			return true;
 		}
 		if (VALID_INPUT.indexOf(event.key) > -1 && 
@@ -2110,227 +2118,6 @@ namespace YoutubeSearch {
 			SearchBar.focus();
 		}
 		return false;
-	}
-
-	export function getCurrentSong() {
-		Downloading.getCurrentSong();
-	}
-
-	namespace Downloading {
-		let songFoundTimeout: number = null;
-		let songFoundName = '';
-		export function downloadSong() {
-			//Search for it on youtube
-			const view: WebView = document.createElement('webview') as WebView;
-			view.id = 'youtubeSearchPageView';
-
-			view.addContentScripts([{
-				name: 'youtubeSearchJs',
-				matches: ['*://www.youtube.com/*'],
-				js: {
-					files: ['/youtube/youtubeSearch/youtubeSearch.js', 
-						'/genericJs/keypress.js']
-				},
-				run_at: 'document_end'
-			}, {
-				name: 'youtubeSearchCss',
-				matches: ['*://www.youtube.com/*'],
-				css: {
-					files: ['/youtube/youtubeSearch/youtubeSearch.css']
-				},
-				run_at: "document_start"
-			}]);
-
-			view.src = `https://www.youtube.com/results?search_query=${
-				encodeURIComponent(songFoundName.trim().replace(/ /g, '+')).replace(/%2B/g, '+')
-			}&page=&utm_source=opensearch`;
-			document.body.appendChild(view);
-		}
-		$('#getSongDownload').addEventListener('click', downloadSong);
-
-		function displayFoundSong(name: string) {
-			$('#getSongName').innerHTML = name;
-			const dialog = $('#getSongDialog');
-			dialog.classList.add('visible');
-			dialog.classList.add('hoverable');
-			if (songFoundTimeout !== null) {
-				window.clearTimeout(songFoundTimeout);
-			}
-			songFoundName = name;
-			songFoundTimeout = window.setTimeout(() => {
-				dialog.classList.remove('visible');
-				window.setTimeout(() => {
-					dialog.classList.remove('hoverable');
-				}, 200);
-			}, 5000);
-		}
-
-		function timestampToSeconds(timestamp: string): number {
-			const split = timestamp.split(':');
-			let seconds = 0;
-			for (let i = split.length - 1; i >= 0; i--) {
-				seconds = Math.pow(60, (split.length - (i + 1))) * ~~split[i];
-			}
-			return seconds;
-		}
-
-		function getSongIndex(timestamps: Array<number|null>, time: number): number {
-			for (let i = 0; i < timestamps.length; i++) {
-				if (timestamps[i] <= time && timestamps[i + 1] >= time) {
-					return i;
-				}
-			}
-			return timestamps.length - 1;
-		}
-
-		function findOn1001Tracklists(name: string, url: string): Promise<boolean> {
-			return new Promise((resolve) => {
-				const websiteWebview = document.createElement('webview') as WebView;
-				let currentPage: 'main'|'results'|'none' = 'none';
-				websiteWebview.addContentScripts([{
-					name: 'comm',
-					matches: ['*://*/*'],
-					js: {
-						files: [
-							'/genericJs/comm.js',
-							'/genericJs/keypress.js',
-							'/youtube/1001tracklists/content.js'
-						]
-					}
-				}]);
-				websiteWebview.addEventListener('contentload', () => {
-					if (currentPage === 'none') {
-						currentPage = 'main';
-					} else if (currentPage === 'main') {
-						currentPage = 'results';
-					}
-
-					if (currentPage === 'main') {
-						Helpers.sendTaskToPage(JSON.stringify([
-							'searchFor', name
-						]), '1001tracklists', () => {
-
-						});
-					} else if (currentPage === 'results') {
-						Helpers.sendTaskToPage(JSON.stringify([
-							'findItem', url
-						]), '1001tracklists', (result: false|string) => {
-							if (result !== 'null' && result !== 'false' && result) {
-								getTrackFrom1001TracklistsUrl(result);
-							} else {
-								resolve(false);
-							}
-							websiteWebview.remove();
-						});
-					}
-				});
-				websiteWebview.src = 'https://www.1001tracklists.com';
-				document.body.appendChild(websiteWebview);
-			});
-		}
-
-		function getUrlHTML(url: string, data: RequestInit = {
-			method: 'GET'
-		}): Promise<DocumentFragment> {
-			return new Promise((resolve) => {
-				window.fetch(url, data).then((response) => {
-					return response.text();
-				}).then((html) => {
-					const doc = document.createRange().createContextualFragment(html);
-					resolve(doc);
-				});
-			});
-		}
-
-		function getTrackFrom1001TracklistsUrl(url: string) {
-			getUrlHTML(url).then((doc) => {
-				const tracks = Helpers.toArr(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
-					try {
-						const nameContainer = songContainer.querySelector('.trackFormat');
-						const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
-						const artist = namesContainers[0].innerText; 
-						const songName = namesContainers[1].innerText;
-						let remix = '';
-						if (namesContainers[2]) {
-							remix = ` (${namesContainers[2].innerText} ${namesContainers[3].innerText})`;
-						}
-
-						if (songContainer.querySelector('.cueValueField').innerText === '') {
-							return null;
-						}
-
-						const timeField = songContainer.querySelector('.cueValueField').innerText;
-						return {
-							startTime: timeField === '' ? timestampToSeconds(timeField) : null,
-							songName: `${artist} - ${songName}${remix}`
-						};
-					} catch(e) {
-						return null;
-					}
-				});
-
-				Helpers.sendTaskToPage('getTime', 'youtube', (time) => {
-					const index = getSongIndex(tracks.filter((track) => {
-						return !!track;
-					}).map((track) => {
-						return track.startTime;
-					}), ~~time);
-
-					let unsure = false;
-					if (tracks[index - 1] && tracks[index - 1].startTime === null) {
-						unsure = true;
-					} else if (tracks[index + 1] && tracks[index + 1].startTime === null) {
-						unsure = true;
-					}
-					const trackName = tracks[index].songName;
-					displayFoundSong(unsure ? `???${trackName}???` : trackName);
-				});
-			});
-		}
-
-		export function getCurrentSong() {
-			Helpers.sendTaskToPage('getTimestamps', 'youtube', (timestamps: {
-				found: true;
-				data: Array<number>|string
-			}|{
-				found: false;
-				data: {
-					name: string;
-					url: string;
-				}
-			}) => {
-				const enableOCR = false;
-				if (enableOCR && !timestamps) {
-					//Do some OCR magic
-					//getSongFromOCR(displayFoundSong);
-				} else if (timestamps.found === true) {
-					const data = timestamps.data;
-					if (!Array.isArray(data)) {
-						//It's a link to the tracklist
-						getTrackFrom1001TracklistsUrl(data);
-					} else {
-						Helpers.sendTaskToPage('getTime', 'youtube', (time) => {
-							const index = getSongIndex(data, ~~time);
-							Helpers.sendTaskToPage('getSongName' + index, 'youtube', (name) => {
-								displayFoundSong(name);
-							});
-						});
-					}
-				} else {
-					//Look if the podcast exists on 1001tracklists
-					findOn1001Tracklists(timestamps.data.name, timestamps.data.url).then((found) => {
-						if (!found) {
-							//Show not found toast
-							const toast = $('#mainToast');
-							toast.classList.add('visible');
-							window.setTimeout(() => {
-								toast.classList.remove('visible');
-							}, 5000);
-						}
-					});
-				}
-			});
-		}
 	}
 
 	export function onSearchBarFocus() {

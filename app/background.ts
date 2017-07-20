@@ -143,7 +143,7 @@ chrome.runtime.onMessage.addListener((message, messageSender, respond) => {
 			}
 			break;
 		case 'downloadvideo':
-			getAppWindow().YoutubeMusic.downloadVideo(message.url);
+			getAppWindow().Helpers.downloadVideo(message.url, true);
 			break;
 		case 'taskResult':
 			const appWindow = getAppWindow();
