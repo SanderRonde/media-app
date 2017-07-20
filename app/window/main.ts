@@ -2389,6 +2389,10 @@ namespace AppWindow {
 		YoutubeSearch.setup();
 
 		switchToview(startView, true);
+
+		window.addEventListener('keydown', (e) => {
+			handleKeyboardEvent(e as MappedKeyboardEvent)
+		});
 	}
 
 	export function getActiveViewName(): ViewNames {
@@ -2408,9 +2412,7 @@ namespace AppWindow {
 	}
 
 	export function onKeyPress(event: MappedKeyboardEvent) {
-		if (!getActiveViewClass().onKeyPress(event)) {
-			handleKeyboardEvent(event);
-		}
+		getActiveViewClass().onKeyPress(event)
 	}
 }
 
