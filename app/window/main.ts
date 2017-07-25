@@ -510,7 +510,6 @@ namespace YoutubeMusic {
 					});
 
 					const shouldVisualize = JSON.parse(localStorage.getItem('visualizing') || JSON.stringify(false));
-					visualizing = shouldVisualize;
 					if (shouldVisualize) {
 						document.body.classList.add('showVisualizer');
 					}
