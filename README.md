@@ -1,7 +1,8 @@
 # Media App
 
 Plays your watch later playlist and keeps your progress.
-Download can be found [here](https://chrome.google.com/webstore/detail/pffimndgkenjicjkcifjologcndibbld/publish-delayed?utm_source=chrome-app-launcher-info-dialog)
+Download can be found [here](https://github.com/SanderRonde/media-app/releases)
+To install, unpack it and turn on developer mode in chrome://extensions, then click "load unpacked extension" and select the folder you unpacked it in.
 
 **Make sure to install the [youtube progress-save](https://chrome.google.com/webstore/detail/youtube-progress-save/oahihanjdfabhkcjhoppkifbinfplkad) extension alongside this as it won't work without it.**
 
