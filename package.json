@@ -2,10 +2,10 @@
   "name": "media-app",
   "version": "2.0.34",
   "description": "Runs Netflix and Youtube as a desktop app",
-  "main": "app/app.js",
+  "main": "app.js",
   "build": {
     "productName": "Media App",
-    "files": "app/**.*"
+    "files": "**.*"
   },
   "scripts": {
     "test": "grunt test"
@@ -28,9 +28,15 @@
     "url": "https://github.com/SanderRonde/media-app/issues"
   },
   "homepage": "https://github.com/SanderRonde/media-app#readme",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "path": "^0.12.7",
+    "url": "^0.11.0"
+  },
   "devDependencies": {
     "@types/electron": "^1.6.10",
     "@types/firebase": "^2.4.31",
+    "electron": "^1.6.11",
     "electron-packager": "^8.2.0",
     "electron-prebuilt": "^1.4.5",
     "grunt": "^1.0.1",
