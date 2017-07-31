@@ -199,3 +199,5 @@ app/window/**/*.js
 **/**/main.js
 **/**/subBox.js
 **/*.js
+
+media-app-win32-x64/**

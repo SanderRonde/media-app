@@ -1,0 +1,31 @@
+{
+  "name": "media-app",
+  "version": "2.0.34",
+  "description": "Runs Netflix and Youtube as a desktop app",
+  "main": "app.js",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "path": "^0.12.7",
+    "url": "^0.11.0"
+  },
+  "scripts": {
+    "pack": "buld --dir",
+    "dist": "build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SanderRonde/media-app.git"
+  },
+  "keywords": [
+    "youtube",
+    "music",
+    "media",
+    "netflix"
+  ],
+  "author": "Sander Ronde <awsdfgvhbjn@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SanderRonde/media-app/issues"
+  },
+  "homepage": "https://github.com/SanderRonde/media-app#readme"
+}

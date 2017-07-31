@@ -1,4 +1,4 @@
-/// <reference path="../../typings/chrome.d.ts" />
+import * as fs from 'fs'
 
 interface Window {
 	baseView: ViewNames;
@@ -16,11 +16,6 @@ interface ReducedElement {
 	tagName: string;
 }
 
-interface LoadCommitEvent extends Event {
-	url: string;
-	isTopLevel: boolean;
-}
-
 type MappedKeyboardEvent = KeyboardEvent & {
 	currentTarget: ReducedElement;
 	path: Array<ReducedElement>;
@@ -31,10 +26,6 @@ type MappedKeyboardEvent = KeyboardEvent & {
 const $ = <K extends keyof ElementTagNameMap>(selector: K|string,
 	base: HTMLElement|Element|Document = document): HTMLElement => {
 		return base.querySelector(selector) as HTMLElement;
-	}
-const $$ = <K extends keyof ElementListTagNameMap>(selector: K|string,
-	base: HTMLElement|Element|Document = document): Array<HTMLElement> => {
-		return Array.from(base.querySelectorAll(selector)) as Array<HTMLElement>;
 	}
 
 function arr(first: number, last: number): Array<number> {
@@ -80,7 +71,7 @@ namespace AdBlocking {
 	type Rule = FullMatchType|EndsWithType|PathType;
 
 	function getList(): Promise<string> { 
-		return window.fetch(chrome.runtime.getURL('/adblocking/easylist.txt')).then((response) => {
+		return window.fetch('/adblocking/easylist.txt').then((response) => {
 			return response.text();
 		});
 	}
@@ -191,39 +182,6 @@ namespace AdBlocking {
 	}
 }
 
-interface InjectDetails {
-	code?: string;
-	file?: string; 
-}
-
-interface NewWindowEvent extends Event {
-	window: Window;
-	targetUrl: string;
-	initialWidth: number;
-	initialHeight: number;
-	name: string;
-	windowOpenPosition: string;
-}
-
-interface WebRequestListenerResult {
-	requestId: string;
-	url: string;
-	method: string;
-	frameId: number;
-	parentFrameId: number;
-	requestBody?: {
-		error: string;
-		formData: Object;
-		raw: Array<{
-			bytes?: any;
-			file?: string;
-		}>;
-	};
-	tabId: number;
-	type: 'main_frame'|'sub_frame'|'stylesheet'|'script'|'image'|'font'|'object'|'xmlhttprequest'|'ping'|'other';
-	timestamp: number;
-}
-
 interface InjectionItems {
 	code?: string;
 	files?: Array<string>;
@@ -240,24 +198,6 @@ interface ContentScriptDetails {
 	all_frames?: boolean;
 	include_globs?: Array<string>;
 	exclude_globs?: Array<string>; 
-}
-
-interface WebView extends HTMLElement {
-	executeScript: (details: InjectDetails, callback?: (result: Array<any>) => void) => void;
-	request: {
-		onBeforeRequest: {
-			addListener: (listener: (details: WebRequestListenerResult) => void|{
-				cancel: boolean
-			}, urls: {
-				urls: Array<string>;
-			}, permissions?: Array<string>) => void;
-		}
-	};
-	addContentScripts: (scripts: Array<ContentScriptDetails>) => void;
-	src: string;
-	back: (callback?: () => void) => void;
-	canGoBack<T extends boolean>(value: T): T;
-	canGoForward<T extends boolean>(value: T): T;
 }
 
 interface YoutubeVideoPlayer extends HTMLElement {
@@ -278,6 +218,13 @@ interface YoutubeVideoPlayer extends HTMLElement {
 }
 
 type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions'|'youtubesearch';
+
+interface MatchPattern {
+	scheme: string;
+	host: string;
+	path: string;
+	invalid?: boolean;
+}
 
 namespace Helpers {
 	export function stringifyFunction(fn: Function): string {
@@ -323,15 +270,11 @@ namespace Helpers {
 
 	export function hacksecute<T extends {
 		[key: string]: number|string|boolean;
-	}>(view: WebView, fn: (REPLACE: T) => void, parameters?: T) {
+	}>(view: Electron.WebviewTag, fn: (REPLACE: T) => void, parameters?: T) {
 		if (!view.src) {
 			return;
 		}
-		view.executeScript({
-			code: replaceParameters(`(${createTag(fn).toString()})();`
-				.replace(/\$\{EXTENSIONIDSTRING\}/,
-					chrome.runtime.id), parameters || {})
-		});
+		view.executeJavaScript(replaceParameters(`(${createTag(fn).toString()})();`, parameters || {}), false);
 	}
 
 	let taskIds = 0;
@@ -346,20 +289,20 @@ namespace Helpers {
 	};
 
 	export function sendTaskToPage(name: string, page: string, callback: (result: any) => void) {
-		chrome.storage.local.get('tasks', (data) => {
-			data['tasks'] = data['tasks'] || [];
-			data['tasks'].push({
-				name: name,
-				page: page,
-				id: ++taskIds
-			});
+		// chrome.storage.local.get('tasks', (data) => {
+		// 	data['tasks'] = data['tasks'] || [];
+		// 	data['tasks'].push({
+		// 		name: name,
+		// 		page: page,
+		// 		id: ++taskIds
+		// 	});
 
-			taskListeners[taskIds] = callback;
+		// 	taskListeners[taskIds] = callback;
 
-			chrome.storage.local.set({
-				tasks: data['tasks']
-			});
-		});
+		// 	chrome.storage.local.set({
+		// 		tasks: data['tasks']
+		// 	});
+		// });
 	}
 
 	export function toArr(iterable: any): Array<any> {
@@ -377,10 +320,146 @@ namespace Helpers {
 		}
 		window.open(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`, '_blank');
 	}
+
+	const MatchPatterns = class MatchPatterns {
+		static urlMatchesPattern(pattern: string, url: string) {
+			let urlPattern: MatchPattern | '<all_urls>';
+			try {
+				urlPattern = this._parsePattern(url);
+			} catch (e) {
+				return false;
+			}
+
+			const matchPattern = this._parsePattern(pattern);
+			if (urlPattern === '<all_urls>' || matchPattern === '<all_urls>') {
+				return true;
+			}
+			return (this._matchesScheme(matchPattern.scheme, urlPattern.scheme) &&
+				this._matchesHost(matchPattern.host, urlPattern.host) &&
+				this._matchesPath(matchPattern.path, urlPattern.path));
+		}
+
+		private static _parsePattern(url: string): MatchPattern | '<all_urls>' {
+			if (url === '<all_urls>') {
+				return '<all_urls>';
+			}
+
+			try {
+				const [scheme, hostAndPath] = url.split('://');
+				const [host, ...path] = hostAndPath.split('/');
+
+				return {
+					scheme: scheme,
+					host: host,
+					path: path.join('/')
+				};
+			} catch (e) {
+				return {
+					scheme: '*',
+					host: '*',
+					path: '*',
+					invalid: true
+				};
+			}
+		}
+		private static _matchesScheme(scheme1: string, scheme2: string): boolean {
+			if (scheme1 === '*') {
+				return true;
+			}
+			return scheme1 === scheme2;
+		}
+		private static _matchesHost(host1: string, host2: string): boolean {
+			if (host1 === '*') {
+				return true;
+			}
+
+			if (host1[0] === '*') {
+				const host1Split = host1.slice(2);
+				const index = host2.indexOf(host1Split);
+				return index === host2.length - host1Split.length;
+			}
+
+			return (host1 === host2);
+		}
+		private static _matchesPath(path1: string, path2: string): boolean {
+			const path1Split = path1.split('*');
+			const path1Length = path1Split.length;
+			const wildcards = path1Length - 1;
+
+			if (wildcards === 0) {
+				return path1 === path2;
+			}
+
+			if (path2.indexOf(path1Split[0]) !== 0) {
+				return false;
+			}
+
+			path2 = path2.slice(path1Split[0].length);
+			for (let i = 1; i < path1Length; i++) {
+				if (path2.indexOf(path1Split[i]) === -1) {
+					return false;
+				}
+				path2 = path2.slice(path1Split[i].length);
+			}
+			return true;
+		}
+	}
+
+	function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
+		if (config.code) {
+			if (isJS) {
+				view.executeJavaScript(config.code, false);
+			} else {
+				view.insertCSS(config.code);
+			}
+		}
+		if (config.files) {
+			Promise.all<string>(config.files.map((filepath: string) => {
+				return new Promise<string>((resolve) => {
+					fs.readFile(filepath, 'utf8', (err, data) => {
+						if (err) {
+							console.error('Error loading file', filepath, err);
+						} else {
+							resolve(data);
+						}
+					});
+				});
+			})).then((files) => {
+				files.forEach((file) => {
+					if (isJS) {
+						view.executeJavaScript(file, false);
+					} else {
+						view.insertCSS(file);
+					}
+				});
+			});
+		}
+	}
+
+	export function addContentScripts(view: Electron.WebviewTag, configArr: Array<ContentScriptDetails>) {
+		view.addEventListener('did-finish-load', () => {
+			for (let i = 0; i < configArr.length; i++) {
+				const config = configArr[i];
+				let matches: boolean = false;
+				config.matches = Array.isArray(config.matches) ? config.matches : [config.matches];
+				for (let j = 0; j < config.matches.length; j++) {
+					if (MatchPatterns.urlMatchesPattern(config.matches[i], view.getURL())) {
+						matches = true;
+						break;
+					}
+				}
+				
+				if (matches) {
+					config.css && runCodeType(view, config.css, false);
+					config.js && runCodeType(view, config.js, true);
+				}
+			}
+		});
+	}
 }
 
 namespace YoutubeMusic {
-	let view: WebView = null;
+	let view: Electron.WebviewTag = null;
 
 	namespace Visualization {
 		let visualizing = false;
@@ -734,10 +813,12 @@ namespace YoutubeMusic {
 		let songFoundName = '';
 		export function downloadSong() {
 			//Search for it on youtube
-			const view: WebView = document.createElement('webview') as WebView;
+			const view: Electron.WebviewTag = document.createElement('webview');
+			view.setAttribute('nodeintegration', 'nodeintegration')
 			view.id = 'youtubeSearchPageView';
+			view.setAttribute('nodeintegration', 'nodeintegration')
 
-			view.addContentScripts([{
+			Helpers.addContentScripts(view, [{
 				name: 'youtubeSearchJs',
 				matches: ['*://www.youtube.com/*'],
 				js: {
@@ -754,9 +835,9 @@ namespace YoutubeMusic {
 				run_at: "document_start"
 			}]);
 
-			view.src = `https://www.youtube.com/results?search_query=${
+			view.loadURL(`https://www.youtube.com/results?search_query=${
 				encodeURIComponent(songFoundName.trim().replace(/ /g, '+')).replace(/%2B/g, '+')
-			}&page=&utm_source=opensearch`;
+			}&page=&utm_source=opensearch`);
 			document.body.appendChild(view);
 		}
 		$('#getSongDownload').addEventListener('click', downloadSong);
@@ -798,9 +879,10 @@ namespace YoutubeMusic {
 
 		function findOn1001Tracklists(name: string, url: string): Promise<boolean> {
 			return new Promise((resolve) => {
-				const websiteWebview = document.createElement('webview') as WebView;
+				const websiteWebview = document.createElement('webview');
+				websiteWebview.setAttribute('nodeintegration', 'nodeintegration')
 				let currentPage: 'main'|'results'|'none' = 'none';
-				websiteWebview.addContentScripts([{
+				Helpers.addContentScripts(websiteWebview, [{
 					name: 'comm',
 					matches: ['*://*/*'],
 					js: {
@@ -811,7 +893,7 @@ namespace YoutubeMusic {
 						]
 					}
 				}]);
-				websiteWebview.addEventListener('contentload', () => {
+				websiteWebview.addEventListener('did-finish-load', () => {
 					if (currentPage === 'none') {
 						currentPage = 'main';
 					} else if (currentPage === 'main') {
@@ -837,7 +919,7 @@ namespace YoutubeMusic {
 						});
 					}
 				});
-				websiteWebview.src = 'https://www.1001tracklists.com';
+				websiteWebview.loadURL('https://www.1001tracklists.com');
 				document.body.appendChild(websiteWebview);
 			});
 		}
@@ -1033,7 +1115,7 @@ namespace YoutubeMusic {
 
 	function addViewListeners() {
 		blockViewAds();
-		view.addContentScripts([{
+		Helpers.addContentScripts(view, [{
 			name: 'js',
 			matches: ['*://www.youtube.com/*'],
 			js: {
@@ -1053,18 +1135,18 @@ namespace YoutubeMusic {
 			run_at: 'document_start'
 		}]);
 
-		view.addEventListener('contentload', () => {
+		view.addEventListener('did-finish-load', () => {
 			Content.init();
 		});
 
-		view.addEventListener('loadcommit', (e: LoadCommitEvent) => {
-			if (e.isTopLevel) {
+		view.addEventListener('load-commit', (e) => {
+			if (e.isMainFrame) {
 				window.setTimeout(Content.init, 1000);
 			}
 		});
 
-		view.addEventListener('newwindow', (e: NewWindowEvent) => {
-			window.open(e.targetUrl, '_blank');
+		view.addEventListener('new-window', (e) => {
+			window.open(e.url, '_blank');
 		});
 
 		view.addEventListener('keydown', (e) => {
@@ -1075,7 +1157,7 @@ namespace YoutubeMusic {
 	}
 
 	function launch(url: string) {
-		view.src = url;
+		view.loadURL(url);
 	}
 
 	export function respondUrl(response: string|null) {
@@ -1110,13 +1192,14 @@ namespace YoutubeMusic {
 	}
 
 	export function init() {
-		chrome.runtime.sendMessage({
-			cmd: 'getUrl'
-		});
+		// chrome.runtime.sendMessage({
+		// 	cmd: 'getUrl'
+		// });
 	}
 
 	export function setup() {
-		view = document.createElement('webview') as WebView;
+		view = document.createElement('webview');
+		view.setAttribute('nodeintegration', 'nodeintegration')
 		view.id = 'ytmaWebview';
 		view.setAttribute('partition', 'persist:main-music');
 		window.setTimeout(() => {
@@ -1128,8 +1211,7 @@ namespace YoutubeMusic {
 
 	export function onClose() {
 		//Save progress
-		view.executeScript({
-			code: `(${(() => {
+		view.executeJavaScript(`(${(() => {
 				const vidId = location.href.split('v=')[1].split('&')[0];
 				let vidIndex = location.href.split('index=')[1];
 				if (vidIndex.indexOf('&') > -1) {
@@ -1138,19 +1220,18 @@ namespace YoutubeMusic {
 				const [mins, secs] = document.querySelector('.ytp-time-current').innerHTML.split(':');
 				const address = 'https://www.youtube.com/watch';
 				const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
-				chrome.runtime.sendMessage({
-					cmd: 'setUrl',
-					url: url
-				});
-			}).toString()})()`
-		});
+				// chrome.runtime.sendMessage({
+				// 	cmd: 'setUrl',
+				// 	url: url
+				// });
+			}).toString()})()`, false);
 	}
 
 	export function onFocus() {
 		view.focus();
 	}
 
-	export function getView(): WebView {
+	export function getView(): Electron.WebviewTag {
 		return view;
 	}
 
@@ -1173,12 +1254,13 @@ namespace YoutubeMusic {
 }
 
 namespace Netflix {
-	function initView(): WebView {
-		const view = document.createElement('webview') as WebView;
+	function initView(): Electron.WebviewTag {
+		const view = document.createElement('webview');
 		view.setAttribute('partition', 'persist:netflix');
+		view.setAttribute('nodeintegration', 'nodeintegration')
 
-		view.addEventListener('newwindow', (e: NewWindowEvent) => {
-			window.open(e.targetUrl, '_blank');
+		view.addEventListener('new-window', (e) => {
+			window.open(e.url, '_blank');
 		});
 		
 		document.querySelector('#netflixCont').appendChild(view);
@@ -1187,14 +1269,14 @@ namespace Netflix {
 	}
 
 	namespace Video {
-		export let videoView: WebView = null;
+		export let videoView: Electron.WebviewTag = null;
 
 		export function setup() {
 			videoView = initView();
 			videoView.id = 'netflixWebView';
 
 			window.setTimeout(() => {
-				videoView.addContentScripts([{
+				Helpers.addContentScripts(videoView, [{
 					name: 'js',
 					matches: ['*://*/*'],
 					js: {
@@ -1271,20 +1353,20 @@ namespace Netflix {
 
 	export function init() {
 		window.setTimeout(() => {
-			Video.videoView.src = 'https://www.netflix.com/browse';
+			Video.videoView.loadURL('https://www.netflix.com/browse');
 		}, 15);
 	}
 
 	export function onClose() {
 		//Go for a semi-clean exit
-		Video.videoView.src && Video.videoView.back();
+		Video.videoView.src && Video.videoView.canGoBack() && Video.videoView.goBack();
 	}
 
 	export function onFocus() {
 		Video.videoView.focus();
 	}
 
-	export function getView(): WebView {
+	export function getView(): Electron.WebviewTag {
 		return Video.videoView;
 	}
 
@@ -1294,12 +1376,13 @@ namespace Netflix {
 }
 
 namespace YoutubeSubscriptions {
-	function initView(): WebView {
-		const view = document.createElement('webview') as WebView;
+	function initView(): Electron.WebviewTag {
+		const view = document.createElement('webview');
 		view.setAttribute('partition', 'persist:youtubeSubscriptions');
+		view.setAttribute('nodeintegration', 'nodeintegration')
 
-		view.addEventListener('newwindow', (e: NewWindowEvent) => {
-			window.open(e.targetUrl, '_blank');
+		view.addEventListener('new-window', (e) => {
+			window.open(e.url, '_blank');
 		});
 		
 		document.querySelector('#youtubeSubsCont').appendChild(view);
@@ -1371,24 +1454,22 @@ namespace YoutubeSubscriptions {
 		}
 
 		export function magicButton() {
-			SubBox.subBoxView.executeScript({
-				code: Helpers.stringifyFunction(() => {
+			SubBox.subBoxView.executeJavaScript(Helpers.stringifyFunction(() => {
 					(window as any).videos.selected.goLeft();
 					(window as any).videos.selected.launchCurrent();
-				})
-			})
+				}), false);
 		}
 	}
 
 	namespace Video {
-		export let videoView: WebView = null;
+		export let videoView: Electron.WebviewTag = null;
 
 		export function setup() {
 			videoView = initView();
 			videoView.id = 'youtubeSubsVideoView';
 
 			window.setTimeout(() => {
-				videoView.addContentScripts([{
+				Helpers.addContentScripts(videoView, [{
 					name: 'js',
 					matches: ['*://www.youtube.com/*'],
 					js: {
@@ -1409,7 +1490,7 @@ namespace YoutubeSubscriptions {
 					run_at: 'document_start'
 				}]);
 
-				videoView.addEventListener('contentload', () => {
+				videoView.addEventListener('did-finish-load', () => {
 					Helpers.hacksecute(videoView, () => {
 						const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 						const playerApi = document.getElementById('player-api');
@@ -1547,14 +1628,14 @@ namespace YoutubeSubscriptions {
 	}
 
 	namespace SubBox {
-		export let subBoxView: WebView = null;
+		export let subBoxView: Electron.WebviewTag = null;
 
 		export function setup() {
 			subBoxView = initView();
 			subBoxView.id = 'youtubeSubsSubBoxView';
 
 			window.setTimeout(() => {
-				subBoxView.addContentScripts([{
+				Helpers.addContentScripts(subBoxView, [{
 					name: 'js',
 					matches: ['*://www.youtube.com/*'],
 					js: {
@@ -1583,7 +1664,7 @@ namespace YoutubeSubscriptions {
 	}
 
 	export function changeVideo(url: string) {
-		Video.videoView.src = url;
+		Video.videoView.loadURL(url)
 		showVideo();
 	}
 
@@ -1594,7 +1675,7 @@ namespace YoutubeSubscriptions {
 
 	export function init() {
 		window.setTimeout(() => {
-			SubBox.subBoxView.src = 'http://www.youtube.com/feed/subscriptions';
+			SubBox.subBoxView.loadURL('http://www.youtube.com/feed/subscriptions');
 		}, 15);
 	}
 
@@ -1610,7 +1691,7 @@ namespace YoutubeSubscriptions {
 		}
 	}
 
-	export function getView(): WebView {
+	export function getView(): Electron.WebviewTag {
 		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
 			return Video.videoView;
 		} else {
@@ -1646,18 +1727,16 @@ namespace YoutubeSubscriptions {
 namespace YoutubeSearch {
 	let activePage: 'video'|'results' = 'results';
 
-	function initView(): WebView {
-		const view = document.createElement('webview') as WebView;
+	function initView(): Electron.WebviewTag {
+		const view = document.createElement('webview');
 		view.setAttribute('partition', 'persist:youtubeSubscriptions');
+		view.setAttribute('nodeintegration', 'nodeintegration')
 
-		view.addEventListener('newwindow', (e: NewWindowEvent) => {
-			window.open(e.targetUrl, '_blank');
+		view.addEventListener('new-window', (e) => {
+			window.open(e.url, '_blank');
 		});
 
 		document.querySelector('#youtubeSearchCont').appendChild(view);
-		view.addEventListener('loadabort', (e) => {
-			e.preventDefault();
-		});
 
 		return view;
 	}
@@ -1729,14 +1808,14 @@ namespace YoutubeSearch {
 	}
 
 	export namespace Video {
-		export let videoView: WebView = null;
+		export let videoView: Electron.WebviewTag = null;
 
 		export function setup() {
 			videoView = initView();
 			videoView.id = 'youtubeSearchVideoView';
 
 			window.setTimeout(() => {
-				videoView.addContentScripts([{
+				Helpers.addContentScripts(videoView, [{
 					name: 'js',
 					matches: ['*://www.youtube.com/*'],
 					js: {
@@ -1757,7 +1836,7 @@ namespace YoutubeSearch {
 					run_at: 'document_start'
 				}]);
 
-				videoView.addEventListener('contentload', () => {
+				videoView.addEventListener('did-finish-load', () => {
 					Helpers.hacksecute(videoView, () => {
 						const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 						const playerApi = document.getElementById('player-api');
@@ -1894,20 +1973,20 @@ namespace YoutubeSearch {
 		}
 
 		export function navTo(url: string) {
-			videoView.src = url;
+			videoView.loadURL(url);
 			showVideo();
 		}
 	}
 
 	namespace SearchResultsPage {
-		export let searchResultsView: WebView = null;
+		export let searchResultsView: Electron.WebviewTag = null;
 
 		export function setup() {
 			searchResultsView = initView();
 			searchResultsView.id = 'youtubeSearchResultsView';
 
 			window.setTimeout(() => {
-				searchResultsView.addContentScripts([{
+				Helpers.addContentScripts(searchResultsView, [{
 					name: 'js',
 					matches: ['*://www.youtube.com/*'],
 					js: {
@@ -1927,23 +2006,23 @@ namespace YoutubeSearch {
 					run_at: 'document_start'
 				}]);
 
-				searchResultsView.request.onBeforeRequest.addListener((details) => {
-					return {
-						cancel: details.url.indexOf('watch') > -1
-					}
-				}, {
-					urls: ['*://*/*']
-				}, ['blocking']);
+				// searchResultsView.request.onBeforeRequest.addListener((details) => {
+				// 	return {
+				// 		cancel: details.url.indexOf('watch') > -1
+				// 	}
+				// }, {
+				// 	urls: ['*://*/*']
+				// }, ['blocking']);
 			}, 10);
 		}
 
 		export function navTo(url: string) {
-			searchResultsView.src = url;
+			searchResultsView.loadURL(url);
 		}
 	}
 
 	namespace SearchBar {
-		export let searchBarView: WebView = null;
+		export let searchBarView: Electron.WebviewTag = null;
 
 		export function setup() {
 			searchBarView = initView();
@@ -1951,7 +2030,7 @@ namespace YoutubeSearch {
 			searchBarView.setAttribute('allowtransparency', 'on');
 
 			window.setTimeout(() => {
-				searchBarView.addContentScripts([{
+				Helpers.addContentScripts(searchBarView, [{
 					name: 'js',
 					matches: ['*://www.youtube.com/*'],
 					js: {
@@ -1970,20 +2049,13 @@ namespace YoutubeSearch {
 					run_at: 'document_start'
 				}]);
 
-				searchBarView.addEventListener('loadcommit', (e: Event & {
-					url: string;
-					isTopLevel: boolean;
-				}) => {
-					if (e.isTopLevel) {
-						searchBarView.canGoBack(false);
-						searchBarView.canGoForward(false);
+				searchBarView.addEventListener('load-commit', (e) => {
+					if (e.isMainFrame) {
+						searchBarView.stop();
 						SearchResultsPage.navTo(e.url);
 						if (activePage === 'video') {
 							$('#youtubeSearchCont').classList.remove('showVideo');
 						}
-					} else {
-						searchBarView.canGoBack(true);
-						searchBarView.canGoForward(true);
 					}
 				});
 
@@ -2041,7 +2113,7 @@ namespace YoutubeSearch {
 	}
 
 	export function changeVideo(url: string) {
-		Video.videoView.src = url;
+		Video.videoView.loadURL(url);
 		showVideo();
 	}
 
@@ -2054,7 +2126,7 @@ namespace YoutubeSearch {
 	export function init() {
 		window.setTimeout(() => {
 			SearchResultsPage.navTo('https://www.youtube.com/');
-			SearchBar.searchBarView.src = 'https://www.youtube.com/';
+			SearchBar.searchBarView.loadURL('https://www.youtube.com/');
 		}, 15);
 	}
 
@@ -2074,7 +2146,7 @@ namespace YoutubeSearch {
 		$('#titleBarRight').style.width = 'calc(50vw - 335px)';
 	}
 
-	export function getView(): WebView {
+	export function getView(): Electron.WebviewTag {
 		if (activePage === 'video') {
 			return Video.videoView;
 		} else {
@@ -2150,7 +2222,7 @@ namespace YoutubeSearch {
 }
 
 namespace AppWindow {
-	export const app = chrome.app.window.current();
+	export const app = window;
 	const titleBar = document.querySelector('#titleBar');
 	let activeView: ViewNames = null;
 	
@@ -2201,13 +2273,12 @@ namespace AppWindow {
 			escapePresses++;
 			if (escapePresses >= 3) {
 				//Close app
-				const app = chrome.app.window.current();
 				YoutubeMusic.onClose();
 				Netflix.onClose();
 				YoutubeSubscriptions.onClose();
 
 				window.setTimeout(() => {
-					app.close();
+					window.close();
 				}, 0);
 				return;
 			}
@@ -2223,9 +2294,9 @@ namespace AppWindow {
 		const events: Array<AppEvent> = ['onBoundsChanged', 'onClosed',
 			'onFullscreened', 'onMaximized', 'onMinimized', 'onRestored'];
 		events.forEach((eventName) => {
-			app[eventName].addListener((event) => {
-				fireEvent(eventName, event);
-			});
+			// app[eventName].addListener((event) => {
+			// 	fireEvent(eventName, event);
+			// });
 		});
 	}
 
@@ -2277,28 +2348,28 @@ namespace AppWindow {
 	}
 
 	function addRuntimeListeners() {
-		chrome.runtime.onMessage.addListener(function (message: {
-			cmd: string
-		}) {
-			const activeViewView = getActiveViewClass().Commands;
-			switch (message.cmd) {
-				case 'lowerVolume':
-					activeViewView.lowerVolume();
-					break;
-				case 'raiseVolume':
-					activeViewView.raiseVolume();
-					break;
-				case 'pausePlay':
-					activeViewView.togglePlay();
-					break;
-				case 'pause':
-					activeViewView.pause();
-					break;
-				case 'play':
-					activeViewView.play();
-					break;
-			}
-		});
+		// chrome.runtime.onMessage.addListener(function (message: {
+		// 	cmd: string
+		// }) {
+		// 	const activeViewView = getActiveViewClass().Commands;
+		// 	switch (message.cmd) {
+		// 		case 'lowerVolume':
+		// 			activeViewView.lowerVolume();
+		// 			break;
+		// 		case 'raiseVolume':
+		// 			activeViewView.raiseVolume();
+		// 			break;
+		// 		case 'pausePlay':
+		// 			activeViewView.togglePlay();
+		// 			break;
+		// 		case 'pause':
+		// 			activeViewView.pause();
+		// 			break;
+		// 		case 'play':
+		// 			activeViewView.play();
+		// 			break;
+		// 	}
+		// });
 	}
 
 	function showSpinner() {
@@ -2321,9 +2392,9 @@ namespace AppWindow {
 
 			Exiting.handleEscapePress();
 		} else if (event.key === 'F11') {
-			chrome.runtime.sendMessage({
-				cmd: 'toggleFullscreen'
-			});
+			// chrome.runtime.sendMessage({
+			// 	cmd: 'toggleFullscreen'
+			// });
 		} else if (event.key === 'F1') {
 			switchToview('youtubeSubscriptions');
 		} else if (event.key === 'F2') {
@@ -2402,7 +2473,7 @@ namespace AppWindow {
 		return getViewByName(getActiveViewName());
 	}
 
-	export function getActiveViewView(): WebView {
+	export function getActiveViewView(): Electron.WebviewTag {
 		return AppWindow.getActiveViewClass().getView();
 	}
 
