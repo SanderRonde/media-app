@@ -1,6 +1,14 @@
 import * as fs from 'fs'
+import * as md5 from 'md5'
+import * as firebase from 'firebase'
+import { shell, ipcRenderer } from 'electron'
+import { firebaseConfig } from '../genericJs/secrets'
 
-interface Window {
+firebase.initializeApp(firebaseConfig);
+
+declare let window: CustomWindow;
+
+interface CustomWindow extends Window {
 	baseView: ViewNames;
 	Helpers: typeof Helpers;
 	Netflix: typeof Netflix;
@@ -43,144 +51,150 @@ const VALID_INPUT = arr(65, 90).map((charCode) => {
 	';',':',',','.','<','>','/','?','\\','|','`','~'
 ]);
 
-namespace AdBlocking {
-	let ready: boolean = false;
-	let rules: {
-		fullMatch: Array<RegExp>;
-		endsWith: Array<RegExp>;
-		path: Array<RegExp>;
-	} = null;
+// namespace AdBlocking {
+// 	let ready: boolean = false;
+// 	let rules: {
+// 		fullMatch: Array<RegExp>;
+// 		endsWith: Array<RegExp>;
+// 		path: Array<RegExp>;
+// 	} = null;
 
-	interface RuleBase {
-		type: 'fullMatch'|'endsWith'|'path';
-		rule: RegExp;
-	}
+// 	interface RuleBase {
+// 		type: 'fullMatch'|'endsWith'|'path';
+// 		rule: RegExp;
+// 	}
 
-	interface FullMatchType extends RuleBase {
-		type: 'fullMatch';
-	}
+// 	interface FullMatchType extends RuleBase {
+// 		type: 'fullMatch';
+// 	}
 
-	interface EndsWithType extends RuleBase {
-		type: 'endsWith';
-	}
+// 	interface EndsWithType extends RuleBase {
+// 		type: 'endsWith';
+// 	}
 
-	interface PathType extends RuleBase {
-		type: 'path';
-	}
+// 	interface PathType extends RuleBase {
+// 		type: 'path';
+// 	}
 
-	type Rule = FullMatchType|EndsWithType|PathType;
+// 	type Rule = FullMatchType|EndsWithType|PathType;
 
-	function getList(): Promise<string> { 
-		return window.fetch('/adblocking/easylist.txt').then((response) => {
-			return response.text();
-		});
-	}
+// 	function getList(): Promise<string> { 
+// 		return new Promise<string>((resolve, reject) => {
+// 			fs.readFile('adblocking/easylist.txt', 'utf8', (err, data) => {
+// 				if (err) {
+// 					reject(err)
+// 				} else {
+// 					resolve(data);
+// 				}
+// 			});
+// 		});
+// 	}
 
-	const alphabetChar = /[a-z|A-Z]/;
-	function stringToRegex(url: string): RegExp {
-		return new RegExp(url.split('').map((char) => {
-			if (char === '*') {
-				return '([a-z|A-Z]|[0-9])+';
-			}
-			return (alphabetChar.exec(char) ? char : '\\' + char);
-		}).join(''));
-	}
+// 	const alphabetChar = /[a-z|A-Z]/;
+// 	function stringToRegex(url: string): RegExp {
+// 		return new RegExp(url.split('').map((char) => {
+// 			if (char === '*') {
+// 				return '([a-z|A-Z]|[0-9])+';
+// 			}
+// 			return (alphabetChar.exec(char) ? char : '\\' + char);
+// 		}).join(''));
+// 	}
 
-	function processLine(line: string): Rule {
-		if (line.indexOf('##') > -1) {
-			return null;
-		}
+// 	function processLine(line: string): Rule {
+// 		if (line.indexOf('##') > -1) {
+// 			return null;
+// 		}
 
-		if (line.startsWith('/')) {
-			return {
-				type: 'path',
-				rule: stringToRegex(line)
-			};
-		} else if (line.startsWith('||') && line.endsWith('^')) {
-			return {
-				type: 'endsWith',
-				rule: stringToRegex(line)
-			}
-		} else if (line.startsWith('|') && line.endsWith('|')) {
-			return {
-				type: 'fullMatch',
-				rule: stringToRegex(line)
-			};
-		}
-		return null;
-	}
+// 		if (line.startsWith('/')) {
+// 			return {
+// 				type: 'path',
+// 				rule: stringToRegex(line)
+// 			};
+// 		} else if (line.startsWith('||') && line.endsWith('^')) {
+// 			return {
+// 				type: 'endsWith',
+// 				rule: stringToRegex(line)
+// 			}
+// 		} else if (line.startsWith('|') && line.endsWith('|')) {
+// 			return {
+// 				type: 'fullMatch',
+// 				rule: stringToRegex(line)
+// 			};
+// 		}
+// 		return null;
+// 	}
 
-	function preProcessList(list: Array<string>): {
-		fullMatch: Array<RegExp>;
-		endsWith: Array<RegExp>;
-		path: Array<RegExp>;
-	} {
-		const res = list.map((line) => {
-			return processLine(line);
-		}).filter((el) => {
-			return el !== null;
-		});
-		return {
-			fullMatch: res.filter(item => item.type === 'fullMatch').map(item => item.rule),
-			endsWith: res.filter(item => item.type === 'endsWith').map(item => item.rule),
-			path: res.filter(item => item.type === 'path').map(item => item.rule)
-		}
-	}
+// 	function preProcessList(list: Array<string>): {
+// 		fullMatch: Array<RegExp>;
+// 		endsWith: Array<RegExp>;
+// 		path: Array<RegExp>;
+// 	} {
+// 		const res = list.map((line) => {
+// 			return processLine(line);
+// 		}).filter((el) => {
+// 			return el !== null;
+// 		});
+// 		return {
+// 			fullMatch: res.filter(item => item.type === 'fullMatch').map(item => item.rule),
+// 			endsWith: res.filter(item => item.type === 'endsWith').map(item => item.rule),
+// 			path: res.filter(item => item.type === 'path').map(item => item.rule)
+// 		}
+// 	}
 
-	new Promise((resolve) => {
-		getList().then((fetchedList) => {
-			rules = preProcessList(fetchedList.split('\n'));
-			resolve();
-		});
-	}).then(() => {
-		ready = true;
-	});
+// 	new Promise((resolve) => {
+// 		getList().then((fetchedList) => {
+// 			rules = preProcessList(fetchedList.split('\n'));
+// 			resolve();
+// 		});
+// 	}).then(() => {
+// 		ready = true;
+// 	});
 
-	function splitURL(url: string): {
-		path: string;
-		host: string;
-	} {
-		const noProtocol = url.split('://')[1];
-		const hostAndPathSplit = noProtocol.split('/');
-		return {
-			path: hostAndPathSplit[1],
-			host: hostAndPathSplit[0]
-		}
-	}
+// 	function splitURL(url: string): {
+// 		path: string;
+// 		host: string;
+// 	} {
+// 		const noProtocol = url.split('://')[1];
+// 		const hostAndPathSplit = noProtocol.split('/');
+// 		return {
+// 			path: hostAndPathSplit[1],
+// 			host: hostAndPathSplit[0]
+// 		}
+// 	}
 
-	function isBlocked(url: string): boolean {
-		const { path, host } = splitURL(url);
+// 	function isBlocked(url: string): boolean {
+// 		const { path, host } = splitURL(url);
 
-		for (let i = 0; i < rules.fullMatch.length; i++) {
-			if (rules.fullMatch[i].exec(url)) {
-				return true;
-			}
-		}
-		for (let i = 0; i < rules.endsWith.length; i++) {
-			if (rules.endsWith[i].exec(url) && host.endsWith(rules.endsWith[i].exec(url)[0])) {
-				return true;
-			}
-		}
-		for (let i = 0; i < rules.path.length; i++) {
-			if (rules.path[i].exec(url) && path.endsWith(rules.path[i].exec(url)[0])) {
-				return true;
-			}
-		}
-		return false;
-	}
+// 		for (let i = 0; i < rules.fullMatch.length; i++) {
+// 			if (rules.fullMatch[i].exec(url)) {
+// 				return true;
+// 			}
+// 		}
+// 		for (let i = 0; i < rules.endsWith.length; i++) {
+// 			if (rules.endsWith[i].exec(url) && host.endsWith(rules.endsWith[i].exec(url)[0])) {
+// 				return true;
+// 			}
+// 		}
+// 		for (let i = 0; i < rules.path.length; i++) {
+// 			if (rules.path[i].exec(url) && path.endsWith(rules.path[i].exec(url)[0])) {
+// 				return true;
+// 			}
+// 		}
+// 		return false;
+// 	}
 
-	export function BlockAd(url: string): boolean {
-		if (!ready) {
-			return false;
-		}
+// 	export function BlockAd(url: string): boolean {
+// 		if (!ready) {
+// 			return false;
+// 		}
 
-		if (isBlocked(url)) {
-			console.log(`Blocked ad from loading ${url}`);
-			return true;
-		}
-		return false;
-	}
-}
+// 		if (isBlocked(url)) {
+// 			console.log(`Blocked ad from loading ${url}`);
+// 			return true;
+// 		}
+// 		return false;
+// 	}
+// }
 
 interface InjectionItems {
 	code?: string;
@@ -274,6 +288,7 @@ namespace Helpers {
 		if (!view.src) {
 			return;
 		}
+		console.log('Hacksecuting', fn);
 		view.executeJavaScript(replaceParameters(`(${createTag(fn).toString()})();`, parameters || {}), false);
 	}
 
@@ -289,20 +304,13 @@ namespace Helpers {
 	};
 
 	export function sendTaskToPage(name: string, page: string, callback: (result: any) => void) {
-		// chrome.storage.local.get('tasks', (data) => {
-		// 	data['tasks'] = data['tasks'] || [];
-		// 	data['tasks'].push({
-		// 		name: name,
-		// 		page: page,
-		// 		id: ++taskIds
-		// 	});
+		ipcRenderer.send('task', {
+			name: name,
+			page: page,
+			id: ++taskIds
+		});
 
-		// 	taskListeners[taskIds] = callback;
-
-		// 	chrome.storage.local.set({
-		// 		tasks: data['tasks']
-		// 	});
-		// });
+		taskListeners[taskIds] = callback;
 	}
 
 	export function toArr(iterable: any): Array<any> {
@@ -318,7 +326,7 @@ namespace Helpers {
 			const searchPageView = $('#youtubeSearchPageView');
 			searchPageView && searchPageView.remove();
 		}
-		window.open(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`, '_blank');
+		shell.openExternal(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`);
 	}
 
 	const MatchPatterns = class MatchPatterns {
@@ -405,10 +413,24 @@ namespace Helpers {
 		}
 	}
 
+	function ensureNoPrevExec(code: string): string {
+		return `(() => {
+			if (window['${md5(code)}'] === true) {
+				return;
+			}
+			window['${md5(code)}'] = true;
+			
+			${code}
+		})()`;
+	}
+
 	function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
+		if (isJS) {
+			view.executeJavaScript('var exports = exports || {}', false);			
+		}
 		if (config.code) {
 			if (isJS) {
-				view.executeJavaScript(config.code, false);
+				view.executeJavaScript(ensureNoPrevExec(config.code), false);
 			} else {
 				view.insertCSS(config.code);
 			}
@@ -424,12 +446,12 @@ namespace Helpers {
 						}
 					});
 				});
-			})).then((files) => {
-				files.forEach((file) => {
+			})).then((fileContents) => {
+				fileContents.forEach((fileContent) => {
 					if (isJS) {
-						view.executeJavaScript(file, false);
+						view.executeJavaScript(ensureNoPrevExec(fileContent), false);
 					} else {
-						view.insertCSS(file);
+						view.insertCSS(fileContent);
 					}
 				});
 			});
@@ -437,7 +459,11 @@ namespace Helpers {
 	}
 
 	export function addContentScripts(view: Electron.WebviewTag, configArr: Array<ContentScriptDetails>) {
-		view.addEventListener('did-finish-load', () => {
+		view.addEventListener('dom-ready', (e) => {
+			if (view.getURL().indexOf('example.com') > -1) {
+				return;
+			}
+
 			for (let i = 0; i < configArr.length; i++) {
 				const config = configArr[i];
 				let matches: boolean = false;
@@ -455,6 +481,20 @@ namespace Helpers {
 				}
 			}
 		});
+	}
+
+	function genOnceListener(fn: Function, onTriggered: () => void): Function {
+		return () => {
+			onTriggered()
+			fn();
+		}
+	}
+
+	export function once<Y extends string>(target: Electron.WebviewTag, event: Y, fn: Function) {
+		const listener = genOnceListener(fn, () => {
+			target.removeEventListener(event as any, listener as any);
+		});
+		target.addEventListener(event as any, listener as any);
 	}
 }
 
@@ -500,7 +540,7 @@ namespace YoutubeMusic {
 				volumeBar.appendChild(volumeBarNumber);
 				volumeBar.appendChild(volumeBarBar);
 				document.body.appendChild(volumeBar);
-
+				
 				function cleanupData(dataArray: Float32Array): Array<number> {
 					for (let i in dataArray) {
 						if (dataArray[i] <= -100 || dataArray[i] === -80 || dataArray[i] === -50) {
@@ -623,6 +663,7 @@ namespace YoutubeMusic {
 									}
 									setupVisualizer();
 
+										console.log('Done');
 									localStorage.setItem('loaded', 'ytmusic');
 								}, Math.max(2500 - timePassed, 0));
 							}
@@ -813,24 +854,22 @@ namespace YoutubeMusic {
 		let songFoundName = '';
 		export function downloadSong() {
 			//Search for it on youtube
-			const view: Electron.WebviewTag = document.createElement('webview');
-			view.setAttribute('nodeintegration', 'nodeintegration')
-			view.id = 'youtubeSearchPageView';
-			view.setAttribute('nodeintegration', 'nodeintegration')
+			const view = $('#youtubeSearchPageView') as Electron.WebviewTag;
 
+			view.style.display = 'block';
 			Helpers.addContentScripts(view, [{
 				name: 'youtubeSearchJs',
 				matches: ['*://www.youtube.com/*'],
 				js: {
-					files: ['/youtube/youtubeSearch/youtubeSearch.js', 
-						'/genericJs/keypress.js']
+					files: ['youtube/youtubeSearch/youtubeSearch.js', 
+						'genericJs/keypress.js']
 				},
 				run_at: 'document_end'
 			}, {
 				name: 'youtubeSearchCss',
 				matches: ['*://www.youtube.com/*'],
 				css: {
-					files: ['/youtube/youtubeSearch/youtubeSearch.css']
+					files: ['youtube/youtubeSearch/youtubeSearch.css']
 				},
 				run_at: "document_start"
 			}]);
@@ -838,7 +877,6 @@ namespace YoutubeMusic {
 			view.loadURL(`https://www.youtube.com/results?search_query=${
 				encodeURIComponent(songFoundName.trim().replace(/ /g, '+')).replace(/%2B/g, '+')
 			}&page=&utm_source=opensearch`);
-			document.body.appendChild(view);
 		}
 		$('#getSongDownload').addEventListener('click', downloadSong);
 
@@ -879,21 +917,20 @@ namespace YoutubeMusic {
 
 		function findOn1001Tracklists(name: string, url: string): Promise<boolean> {
 			return new Promise((resolve) => {
-				const websiteWebview = document.createElement('webview');
-				websiteWebview.setAttribute('nodeintegration', 'nodeintegration')
+				const websiteWebview = $('#1001TracklistsView') as Electron.WebviewTag;
 				let currentPage: 'main'|'results'|'none' = 'none';
 				Helpers.addContentScripts(websiteWebview, [{
 					name: 'comm',
 					matches: ['*://*/*'],
 					js: {
 						files: [
-							'/genericJs/comm.js',
-							'/genericJs/keypress.js',
-							'/youtube/1001tracklists/content.js'
+							'genericJs/comm.js',
+							'genericJs/keypress.js',
+							'youtube/1001tracklists/content.js'
 						]
 					}
 				}]);
-				websiteWebview.addEventListener('did-finish-load', () => {
+				Helpers.once(websiteWebview	, 'did-finish-load', () => {
 					if (currentPage === 'none') {
 						currentPage = 'main';
 					} else if (currentPage === 'main') {
@@ -915,12 +952,12 @@ namespace YoutubeMusic {
 							} else {
 								resolve(false);
 							}
-							websiteWebview.remove();
+							websiteWebview.style.display = 'none';
 						});
 					}
 				});
 				websiteWebview.loadURL('https://www.1001tracklists.com');
-				document.body.appendChild(websiteWebview);
+				websiteWebview.style.display = 'block';
 			});
 		}
 
@@ -1090,27 +1127,29 @@ namespace YoutubeMusic {
 		}
 
 		export function play() {
+			console.trace();
 			Helpers.hacksecute(view, () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
-				player.playVideo();
+				player && player.playVideo();
 			});
 		}
 	}
 
 	function blockViewAds() {
-		const CANCEL = {
-			cancel: true
-		};
-		view.request.onBeforeRequest.addListener((request) => {
-			if (AdBlocking.BlockAd(request.url)) {
-				return CANCEL;
-			}
-			return {
-				cancel: false
-			};
-		}, {
-			urls: ['*://*/*']
-		}, ['blocking']);
+		//TODO: this
+		// const CANCEL = {
+		// 	cancel: true
+		// };
+		// view.request.onBeforeRequest.addListener((request) => {
+		// 	if (AdBlocking.BlockAd(request.url)) {
+		// 		return CANCEL;
+		// 	}
+		// 	return {
+		// 		cancel: false
+		// 	};
+		// }, {
+		// 	urls: ['*://*/*']
+		// }, ['blocking']);
 	}
 
 	function addViewListeners() {
@@ -1120,9 +1159,9 @@ namespace YoutubeMusic {
 			matches: ['*://www.youtube.com/*'],
 			js: {
 				files: [
-					'/genericJs/comm.js',
-					'/genericJs/keypress.js',
-					'/youtube/content/content.js'
+					'genericJs/comm.js',
+					'genericJs/keypress.js',
+					'youtube/content/content.js'
 				]
 			},
 			run_at: 'document_end'
@@ -1130,13 +1169,15 @@ namespace YoutubeMusic {
 			name: 'css',
 			matches: ['*://www.youtube.com/*'],
 			css: {
-				files: ['/youtube/content/content.css']
+				files: ['youtube/content/content.css']
 			},
 			run_at: 'document_start'
 		}]);
 
 		view.addEventListener('did-finish-load', () => {
-			Content.init();
+			if (view.getURL().indexOf('example.com') === -1) {
+				Content.init();
+			}
 		});
 
 		view.addEventListener('load-commit', (e) => {
@@ -1146,27 +1187,13 @@ namespace YoutubeMusic {
 		});
 
 		view.addEventListener('new-window', (e) => {
-			window.open(e.url, '_blank');
-		});
-
-		view.addEventListener('keydown', (e) => {
-			if (e.key === '?') {
-				YoutubeMusic.getCurrentSong();
-			}
+			shell.openExternal(e.url);
 		});
 	}
 
 	function launch(url: string) {
-		view.loadURL(url);
-	}
-
-	export function respondUrl(response: string|null) {
-		if (response && typeof response === 'string') {
-			launch(response);
-		} else {
-			//Do setup
-			$('#setupCenterer').style.display = 'block';
-		}
+		//TODO: change this lol
+		view.loadURL('https://www.youtube.com/watch?v=ih-NNLjTCPs&list=WL&index=804&t=3260');
 	}
 
 	function addListeners() {
@@ -1177,8 +1204,8 @@ namespace YoutubeMusic {
 				});
 			}
 		});
-		AppWindow.listen('onRestored', () => {
-			if (!AppWindow.app.isMinimized() && Visualization.isVisualizing()) {
+		AppWindow.listen('onRestored', async () => {
+			if (!await AppWindow.sendBackgroundPageMessage('isMinimized') && Visualization.isVisualizing()) {
 				Helpers.hacksecute(view, () => {
 					document.body.classList.add('showVisualizer');
 				});
@@ -1192,43 +1219,57 @@ namespace YoutubeMusic {
 	}
 
 	export function init() {
-		// chrome.runtime.sendMessage({
-		// 	cmd: 'getUrl'
-		// });
+		const db = firebase.database();
+		const urlRef = db.ref('url');
+		urlRef.once('value', (snapshot) => {
+			const snapshotVal = snapshot.val();
+			console.log(snapshotVal);
+			if (snapshotVal && snapshotVal.url && typeof snapshotVal.url === 'string') {
+				launch(snapshotVal.url);
+			} else {
+				alert('Could not find valid url');
+			}
+		});
 	}
 
 	export function setup() {
-		view = document.createElement('webview');
-		view.setAttribute('nodeintegration', 'nodeintegration')
-		view.id = 'ytmaWebview';
-		view.setAttribute('partition', 'persist:main-music');
-		window.setTimeout(() => {
-			addViewListeners();
-			document.querySelector('#youtubePlaylistCont').appendChild(view);
-			addListeners();
-		}, 10);
+		return new Promise((resolve) => {
+			const webview = document.getElementById('ytmaWebview') as Electron.WebviewTag;
+			webview.addEventListener('dom-ready', () => {
+				view = webview;
+				addViewListeners();
+				addListeners();
+				resolve(webview);
+			})
+		});
 	}
 
 	export function onClose() {
 		//Save progress
 		view.executeJavaScript(`(${(() => {
-				const vidId = location.href.split('v=')[1].split('&')[0];
-				let vidIndex = location.href.split('index=')[1];
-				if (vidIndex.indexOf('&') > -1) {
-					vidIndex = vidIndex.split('&')[0];
+			const vidId = location.href.split('v=')[1].split('&')[0];
+			let vidIndex = location.href.split('index=')[1];
+			if (vidIndex.indexOf('&') > -1) {
+				vidIndex = vidIndex.split('&')[0];
+			}
+			const [mins, secs] = document.querySelector('.ytp-time-current').innerHTML.split(':');
+			const address = 'https://www.youtube.com/watch';
+			const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
+			
+			require('electron').ipcRenderer.send('toBgPage', {
+				type: 'passAlong',
+				data: {
+					type: 'saveUrl',
+					data: {
+						url: url
+					}
 				}
-				const [mins, secs] = document.querySelector('.ytp-time-current').innerHTML.split(':');
-				const address = 'https://www.youtube.com/watch';
-				const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
-				// chrome.runtime.sendMessage({
-				// 	cmd: 'setUrl',
-				// 	url: url
-				// });
-			}).toString()})()`, false);
+			});
+		}).toString()})()`, false);
 	}
 
 	export function onFocus() {
-		view.focus();
+		view && view.focus();
 	}
 
 	export function getView(): Electron.WebviewTag {
@@ -1236,6 +1277,7 @@ namespace YoutubeMusic {
 	}
 
 	export function onKeyPress(event: MappedKeyboardEvent): boolean {
+		console.log('Key', event, 'was pressed');
 		if (AppWindow.getActiveViewName() !== 'ytmusic') {
 			return false;
 		}
@@ -1248,31 +1290,41 @@ namespace YoutubeMusic {
 				document.body.classList.toggle('showVisualizer');
 			});
 			return true;
+		} else if (event.key === '?') {
+			YoutubeMusic.getCurrentSong();
+			return true;
 		}
 		return false;
 	}
 }
 
 namespace Netflix {
-	function initView(): Electron.WebviewTag {
-		const view = document.createElement('webview');
-		view.setAttribute('partition', 'persist:netflix');
-		view.setAttribute('nodeintegration', 'nodeintegration')
-
-		view.addEventListener('new-window', (e) => {
-			window.open(e.url, '_blank');
+	function initView(): Promise<Electron.WebviewTag> {
+		return new Promise((resolve) => {
+			const view = document.getElementById('netflixWebView') as Electron.WebviewTag;
+			view.addEventListener('dom-ready', () => {
+				resolve(view);
+			});
 		});
-		
-		document.querySelector('#netflixCont').appendChild(view);
-
-		return view;
 	}
 
 	namespace Video {
-		export let videoView: Electron.WebviewTag = null;
+		let videoView: Electron.WebviewTag = null;
+		let videoPromise: Promise<Electron.WebviewTag> = null;
 
-		export function setup() {
-			videoView = initView();
+		export async function getView(): Promise<Electron.WebviewTag> {
+			return new Promise<Electron.WebviewTag>((resolve) => {
+				if (videoView) {
+					resolve(videoView);
+				} else {
+					videoPromise.then(resolve);
+				}
+			});
+		}
+
+		export async function setup() {
+			videoPromise = initView();
+			videoView = await videoPromise;
 			videoView.id = 'netflixWebView';
 
 			window.setTimeout(() => {
@@ -1281,9 +1333,9 @@ namespace Netflix {
 					matches: ['*://*/*'],
 					js: {
 						files: [
-							'/genericJs/comm.js',
-							'/genericJs/keypress.js',
-							'/netflix/video/video.js'
+							'genericJs/comm.js',
+							'genericJs/keypress.js',
+							'netflix/video/video.js'
 						]
 					},
 					run_at: 'document_idle'
@@ -1301,8 +1353,8 @@ namespace Netflix {
 			//Not possible
 		}
 
-		export function togglePlay() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function togglePlay() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const video = (document.querySelector('video') as HTMLVideoElement);
 
 				if (!(window as any).playerStatus) {
@@ -1328,23 +1380,23 @@ namespace Netflix {
 			});
 		}
 
-		export function pause() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function pause() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const video = (document.querySelector('video') as HTMLVideoElement);
 				video.pause();
 			});
 		}
 
-		export function play() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function play() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const video = (document.querySelector('video') as HTMLVideoElement);
 				video.play();
 			});
 		}
 	}
 
-	export function setup() {
-		Video.setup();
+	export async function setup() {
+		await Video.setup();
 	}
 
 	interface ClickableElement extends Element {
@@ -1352,22 +1404,22 @@ namespace Netflix {
 	}
 
 	export function init() {
-		window.setTimeout(() => {
-			Video.videoView.loadURL('https://www.netflix.com/browse');
+		window.setTimeout(async () => {
+			(await Video.getView()).loadURL('https://www.netflix.com/browse');
 		}, 15);
 	}
 
-	export function onClose() {
+	export async function onClose() {
 		//Go for a semi-clean exit
-		Video.videoView.src && Video.videoView.canGoBack() && Video.videoView.goBack();
+		(await Video.getView()).src && (await Video.getView()).canGoBack() && (await Video.getView()).goBack();
 	}
 
-	export function onFocus() {
-		Video.videoView.focus();
+	export async function onFocus() {
+		(await Video.getView()).focus();
 	}
 
-	export function getView(): Electron.WebviewTag {
-		return Video.videoView;
+	export async function getView(): Promise<Electron.WebviewTag> {
+		return (await Video.getView());
 	}
 
 	export function onKeyPress(event: MappedKeyboardEvent) { 
@@ -1376,23 +1428,22 @@ namespace Netflix {
 }
 
 namespace YoutubeSubscriptions {
-	function initView(): Electron.WebviewTag {
-		const view = document.createElement('webview');
-		view.setAttribute('partition', 'persist:youtubeSubscriptions');
-		view.setAttribute('nodeintegration', 'nodeintegration')
-
-		view.addEventListener('new-window', (e) => {
-			window.open(e.url, '_blank');
+	function initView(id: string): Promise<Electron.WebviewTag> {
+		return new Promise<Electron.WebviewTag>((resolve) => {
+			const view = $(`#${id}`) as Electron.WebviewTag;
+			view.addEventListener('dom-ready', () => {
+				view.addEventListener('new-window', (e) => {
+					shell.openExternal(e.url);
+				});
+				
+				resolve(view);
+			});
 		});
-		
-		document.querySelector('#youtubeSubsCont').appendChild(view);
-
-		return view;
 	}
 
 	export namespace Commands {
-		export function lowerVolume() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function lowerVolume() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				let vol = player.getVolume();
 				if (!player.isMuted()) {
@@ -1404,8 +1455,8 @@ namespace YoutubeSubscriptions {
 			});
 		}
 
-		export function raiseVolume() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function raiseVolume() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				let vol = player.getVolume();
 				if (player.isMuted()) {
@@ -1420,8 +1471,8 @@ namespace YoutubeSubscriptions {
 			});
 		}
 
-		export function togglePlay() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function togglePlay() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				const state = player.getPlayerState();
 				if (state === 2) {
@@ -1436,25 +1487,25 @@ namespace YoutubeSubscriptions {
 			});
 		}
 
-		export function pause() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function pause() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.pauseVideo();
 			});
 		}
 
-		export function play() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function play() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.playVideo();
 			});
-			if (Video.videoView.src) {
+			if ((await Video.getView()).src) {
 				showVideo();
 			}
 		}
 
-		export function magicButton() {
-			SubBox.subBoxView.executeJavaScript(Helpers.stringifyFunction(() => {
+		export async function magicButton() {
+			(await SubBox.getView()).executeJavaScript(Helpers.stringifyFunction(() => {
 					(window as any).videos.selected.goLeft();
 					(window as any).videos.selected.launchCurrent();
 				}), false);
@@ -1462,11 +1513,24 @@ namespace YoutubeSubscriptions {
 	}
 
 	namespace Video {
-		export let videoView: Electron.WebviewTag = null;
+		let videoView: Electron.WebviewTag = null;
+		let videoPromise: Promise<Electron.WebviewTag> = null;
 
-		export function setup() {
-			videoView = initView();
-			videoView.id = 'youtubeSubsVideoView';
+		export function getView(): Promise<Electron.WebviewTag> {
+			return new Promise((resolve) => {
+				if (videoView) {
+					resolve(videoView);	
+				} else {
+					videoPromise.then(resolve);
+				}
+			});
+		}
+
+		export async function setup() {
+			videoPromise = initView('youtubeSubsVideoView');
+			console.log(videoPromise);
+			videoView = await videoPromise;
+			console.log(videoPromise, videoView);
 
 			window.setTimeout(() => {
 				Helpers.addContentScripts(videoView, [{
@@ -1474,7 +1538,7 @@ namespace YoutubeSubscriptions {
 					matches: ['*://www.youtube.com/*'],
 					js: {
 						files: [
-							'/genericJs/keypress.js'
+							'genericJs/keypress.js'
 						]
 					},
 					run_at: 'document_end'
@@ -1483,156 +1547,171 @@ namespace YoutubeSubscriptions {
 					matches: ['*://www.youtube.com/*'],
 					css: {
 						files: [
-							'/youtube/content/content.css',
-							'/youtubeSubs/video/youtubeVideo.css'
+							'youtube/content/content.css',
+							'youtubeSubs/video/youtubeVideo.css'
 						]
 					},
 					run_at: 'document_start'
 				}]);
 
 				videoView.addEventListener('did-finish-load', () => {
-					Helpers.hacksecute(videoView, () => {
-						const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
-						const playerApi = document.getElementById('player-api');
-						const volumeBar = document.createElement('div');
-						const volumeBarBar = document.createElement('div');
-						const volumeBarNumber = document.createElement('div');
-						let volumeBarTimeout: number = null;
+					window.setTimeout(() => {
+						Helpers.hacksecute(videoView, () => {
+							const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
+							const playerApi = document.getElementById('player-api');
+							const volumeBar = document.createElement('div');
+							const volumeBarBar = document.createElement('div');
+							const volumeBarNumber = document.createElement('div');
+							let volumeBarTimeout: number = null;
 
-						volumeBar.id = 'yt-ca-volumeBar';
-						volumeBarBar.id = 'yt-ca-volumeBarBar';
-						volumeBarNumber.id = 'yt-ca-volumeBarNumber';
+							volumeBar.id = 'yt-ca-volumeBar';
+							volumeBarBar.id = 'yt-ca-volumeBarBar';
+							volumeBarNumber.id = 'yt-ca-volumeBarNumber';
 
-						volumeBar.appendChild(volumeBarNumber);
-						volumeBar.appendChild(volumeBarBar);
-						document.body.appendChild(volumeBar);
+							volumeBar.appendChild(volumeBarNumber);
+							volumeBar.appendChild(volumeBarBar);
+							document.body.appendChild(volumeBar);
 
-						function prepareVideo() {
-							setTimeout(() => {							
-								function reloadIfAd() {
-									if (player.getAdState() === 1) {
-										window.location.reload();
-									}
-
-									if (player.getPlayerState() === 3) {
-										window.setTimeout(reloadIfAd, 250);
-									} else {
-										player.setPlaybackQuality('hd1080');
-										if (player.getPlaybackQuality() !== 'hd1080') {
-											player.setPlaybackQuality('hd720');
+							console.log('Preparing your boy');
+							function prepareVideo() {
+								setTimeout(() => {							
+									function reloadIfAd() {
+										if (player.getAdState() === 1) {
+											window.location.reload();
 										}
-										
-										if (document.querySelector('.ytp-size-button')
-												.getAttribute('title') === 'Theatermodus') {
-											player.setSizeStyle(true, true);
-										}
+										console.log('Preparing your boy');
 
-										localStorage.setItem('loaded', 'ytmusic');
+										if (player.getPlayerState() === 3) {
+											window.setTimeout(reloadIfAd, 250);
+										} else {
+											player.setPlaybackQuality('hd1080');
+											if (player.getPlaybackQuality() !== 'hd1080') {
+												player.setPlaybackQuality('hd720');
+											}
+											
+											if (document.querySelector('.ytp-size-button')
+													.getAttribute('title') === 'Theatermodus') {
+												player.setSizeStyle(true, true);
+											}
+
+											localStorage.setItem('loaded', 'ytmusic');
+										}
 									}
+									reloadIfAd();
+								}, 2500);
+							}
+
+							prepareVideo();
+
+							document.body.addEventListener('keydown', (e) => {
+								if (e.key === 'k') {
+									//Hide or show video
+									document.body.classList.toggle('showHiddens');
 								}
-								reloadIfAd();
-							}, 2500);
-						}
+							});
 
-						prepareVideo();
+							function updateSizes() {
+								playerApi.style.width = window.innerWidth + 'px';
+								playerApi.style.height = (window.innerHeight - 15) + 'px';
 
-						document.body.addEventListener('keydown', (e) => {
-							if (e.key === 'k') {
-								//Hide or show video
-								document.body.classList.toggle('showHiddens');
-							}
-						});
-
-						function updateSizes() {
-							playerApi.style.width = window.innerWidth + 'px';
-							playerApi.style.height = (window.innerHeight - 15) + 'px';
-
-							player.setSize();
-						}
-
-						updateSizes();
-						window.addEventListener('resize', updateSizes);
-
-						function setPlayerVolume(volume: number) {
-							player.setVolume(volume);
-
-							localStorage.setItem('yt-player-volume', JSON.stringify({
-								data: JSON.stringify({
-									volume: volume,
-									muted: (volume === 0)
-								}),
-								creation: Date.now(),
-								expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
-							}));
-						}
-
-						//Code that has to be executed "inline"
-						function increaseVolume() {
-							let vol = player.getVolume();
-							if (player.isMuted()) {
-								//Treat volume as 0
-								vol = 0;
-								player.unMute();
+								player.setSize();
 							}
 
-							vol += 5;
-							vol = (vol > 100 ? 100 : vol);
-							setPlayerVolume(vol);
-						}
+							updateSizes();
+							window.addEventListener('resize', updateSizes);
 
-						function lowerVolume() {
-							let vol = player.getVolume();
-							if (!player.isMuted()) {
-								vol -= 5;
-								
-								vol = (vol < 0 ? 0 : vol);
+							function setPlayerVolume(volume: number) {
+								player.setVolume(volume);
+
+								localStorage.setItem('yt-player-volume', JSON.stringify({
+									data: JSON.stringify({
+										volume: volume,
+										muted: (volume === 0)
+									}),
+									creation: Date.now(),
+									expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
+								}));
+							}
+
+							//Code that has to be executed "inline"
+							function increaseVolume() {
+								let vol = player.getVolume();
+								if (player.isMuted()) {
+									//Treat volume as 0
+									vol = 0;
+									player.unMute();
+								}
+
+								vol += 5;
+								vol = (vol > 100 ? 100 : vol);
 								setPlayerVolume(vol);
 							}
-						}
 
-						function showVolumeBar() {
-							const volume = player.getVolume();
-							localStorage.setItem('volume', volume + '');
-							volumeBarNumber.innerHTML = volume + '';
-							volumeBarBar.style.transform = `scaleX(${volume / 100})`;
-							volumeBar.classList.add('visible');
-							if (volumeBarTimeout !== null) {
-								window.clearTimeout(volumeBarTimeout);
+							function lowerVolume() {
+								let vol = player.getVolume();
+								if (!player.isMuted()) {
+									vol -= 5;
+									
+									vol = (vol < 0 ? 0 : vol);
+									setPlayerVolume(vol);
+								}
 							}
-							volumeBarTimeout = window.setTimeout(() => {
-								volumeBar.classList.remove('visible');
-								volumeBarTimeout = null;
-							}, 2000);
-						}
 
-						function onScroll(isDown: boolean) {
-							if (isDown) {
-								lowerVolume();
-							} else {
-								increaseVolume();
+							function showVolumeBar() {
+								const volume = player.getVolume();
+								localStorage.setItem('volume', volume + '');
+								volumeBarNumber.innerHTML = volume + '';
+								volumeBarBar.style.transform = `scaleX(${volume / 100})`;
+								volumeBar.classList.add('visible');
+								if (volumeBarTimeout !== null) {
+									window.clearTimeout(volumeBarTimeout);
+								}
+								volumeBarTimeout = window.setTimeout(() => {
+									volumeBar.classList.remove('visible');
+									volumeBarTimeout = null;
+								}, 2000);
 							}
-							showVolumeBar();
-						}
 
-						function addListeners() {
-							window.onwheel = (e) => {
-								onScroll(e.deltaY > 0);
-							};
-						}
+							function onScroll(isDown: boolean) {
+								if (isDown) {
+									lowerVolume();
+								} else {
+									increaseVolume();
+								}
+								showVolumeBar();
+							}
 
-						addListeners();
-					});
+							function addListeners() {
+								window.onwheel = (e) => {
+									onScroll(e.deltaY > 0);
+								};
+							}
+
+							addListeners();
+						});
+					}, 2500);
 				});
 			}, 10);
 		}
 	}
 
 	namespace SubBox {
-		export let subBoxView: Electron.WebviewTag = null;
+		let subBoxView: Electron.WebviewTag = null;
+		let subBoxPromise: Promise<Electron.WebviewTag> = null;
 
-		export function setup() {
-			subBoxView = initView();
-			subBoxView.id = 'youtubeSubsSubBoxView';
+		export function getView(): Promise<Electron.WebviewTag> {
+			return new Promise((resolve) => {
+				if (subBoxView) {
+					resolve(subBoxView);	
+				} else {
+					subBoxPromise.then(resolve);
+				}
+			});
+		}
+
+		export async function setup() {
+			subBoxPromise = initView('youtubeSubsSubBoxView');
+			subBoxView = await subBoxPromise;
 
 			window.setTimeout(() => {
 				Helpers.addContentScripts(subBoxView, [{
@@ -1640,9 +1719,9 @@ namespace YoutubeSubscriptions {
 					matches: ['*://www.youtube.com/*'],
 					js: {
 						files: [
-							'/genericJs/comm.js',
-							'/genericJs/keypress.js',
-							'/youtubeSubs/subBox/subBox.js'
+							'genericJs/comm.js',
+							'genericJs/keypress.js',
+							'youtubeSubs/subBox/subBox.js'
 						]
 					},
 					run_at: 'document_end'
@@ -1650,7 +1729,7 @@ namespace YoutubeSubscriptions {
 					name: 'css',
 					matches: ['*://www.youtube.com/*'],
 					css: {
-						files: ['/youtubeSubs/subBox/subBox.css']
+						files: ['youtubeSubs/subBox/subBox.css']
 					},
 					run_at: 'document_start'
 				}]);
@@ -1658,24 +1737,28 @@ namespace YoutubeSubscriptions {
 		}
 	}
 
-	function showVideo() {
+	async function showVideo() {
 		$('#youtubeSubsCont').classList.add('showVideo');
-		Video.videoView.focus();
+		(await Video.getView()).focus();
 	}
 
-	export function changeVideo(url: string) {
-		Video.videoView.loadURL(url)
+	export async function changeVideo(url: string) {
+		(await Video.getView()).loadURL(url)
 		showVideo();
 	}
 
-	export function setup() {
-		SubBox.setup();
-		Video.setup();
+	export async function setup() {
+		console.log('Starting');
+		await Promise.all([
+			SubBox.setup(),
+			Video.setup()
+		]);
 	}
 
 	export function init() {
-		window.setTimeout(() => {
-			SubBox.subBoxView.loadURL('http://www.youtube.com/feed/subscriptions');
+		console.log('Initting');
+		window.setTimeout(async () => {
+			(await SubBox.getView()).loadURL('http://www.youtube.com/feed/subscriptions');
 		}, 15);
 	}
 
@@ -1683,23 +1766,23 @@ namespace YoutubeSubscriptions {
 		//Nothing really
 	}
 
-	export function onFocus() {
+	export async function onFocus() {
 		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
-			Video.videoView.focus();
+			(await Video.getView()).focus();
 		} else {
-			SubBox.subBoxView.focus();
+			(await SubBox.getView()).focus();
 		}
 	}
 
-	export function getView(): Electron.WebviewTag {
+	export async function getView(): Promise<Electron.WebviewTag> {
 		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
-			return Video.videoView;
+			return (await Video.getView());
 		} else {
-			return SubBox.subBoxView;
+			return (await SubBox.getView());
 		}
 	}
 
-	export function onKeyPress(event: MappedKeyboardEvent): boolean {
+	export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
 		if (AppWindow.getActiveViewName() !== 'youtubeSubscriptions') {
 			return false;
 		}
@@ -1708,15 +1791,15 @@ namespace YoutubeSubscriptions {
 		if (event.key === 'h') {
 			if (subsCont.classList.contains('showVideo')) {
 				subsCont.classList.remove('showVideo');
-				SubBox.subBoxView.focus();
+				(await SubBox.getView()).focus();
 			} else {
 				subsCont.classList.add('showVideo');
-				Video.videoView.focus();
+				(await Video.getView()).focus();
 			}
 			return true;
 		} else if (event.key === 'd') {
 			if (subsCont.classList.contains('showVideo')) {
-				Helpers.downloadVideo(Video.videoView.src)
+				Helpers.downloadVideo((await Video.getView()).src)
 				return true;
 			}
 		}
@@ -1727,23 +1810,22 @@ namespace YoutubeSubscriptions {
 namespace YoutubeSearch {
 	let activePage: 'video'|'results' = 'results';
 
-	function initView(): Electron.WebviewTag {
-		const view = document.createElement('webview');
-		view.setAttribute('partition', 'persist:youtubeSubscriptions');
-		view.setAttribute('nodeintegration', 'nodeintegration')
-
-		view.addEventListener('new-window', (e) => {
-			window.open(e.url, '_blank');
+	function initView(): Promise<Electron.WebviewTag> {
+		return new Promise<Electron.WebviewTag>((resolve) => {
+			const view = $(`#youtubeSearchVideoView`) as Electron.WebviewTag;
+			view.addEventListener('dom-ready', () => {
+				view.addEventListener('new-window', (e) => {
+					shell.openExternal(e.url);
+				});
+				
+				resolve(view);
+			});
 		});
-
-		document.querySelector('#youtubeSearchCont').appendChild(view);
-
-		return view;
 	}
 
 	export namespace Commands {
-		export function lowerVolume() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function lowerVolume() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				let vol = player.getVolume();
 				if (!player.isMuted()) {
@@ -1755,8 +1837,8 @@ namespace YoutubeSearch {
 			});
 		}
 
-		export function raiseVolume() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function raiseVolume() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				let vol = player.getVolume();
 				if (player.isMuted()) {
@@ -1771,8 +1853,8 @@ namespace YoutubeSearch {
 			});
 		}
 
-		export function togglePlay() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function togglePlay() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				const state = player.getPlayerState();
 				if (state === 2) {
@@ -1787,19 +1869,19 @@ namespace YoutubeSearch {
 			});
 		}
 
-		export function pause() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function pause() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.pauseVideo();
 			});
 		}
 
-		export function play() {
-			Helpers.hacksecute(Video.videoView, () => {
+		export async function play() {
+			Helpers.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.playVideo();
 			});
-			if (Video.videoView.src) {
+			if ((await Video.getView()).src) {
 				showVideo();
 			}
 		}
@@ -1808,11 +1890,22 @@ namespace YoutubeSearch {
 	}
 
 	export namespace Video {
-		export let videoView: Electron.WebviewTag = null;
+		let videoView: Electron.WebviewTag = null;
+		let videoPromise: Promise<Electron.WebviewTag> = null;
 
-		export function setup() {
-			videoView = initView();
-			videoView.id = 'youtubeSearchVideoView';
+		export async function getView(): Promise<Electron.WebviewTag> {
+			return new Promise<Electron.WebviewTag>((resolve) => {
+				if (videoView) {
+					resolve(videoView);
+				} else {
+					videoPromise.then(resolve);
+				}
+			});
+		}
+
+		export async function setup() {
+			videoPromise = initView();
+			videoView = await videoPromise;
 
 			window.setTimeout(() => {
 				Helpers.addContentScripts(videoView, [{
@@ -1820,7 +1913,7 @@ namespace YoutubeSearch {
 					matches: ['*://www.youtube.com/*'],
 					js: {
 						files: [
-							'/genericJs/keypress.js'
+							'genericJs/keypress.js'
 						]
 					},
 					run_at: 'document_end'
@@ -1829,8 +1922,8 @@ namespace YoutubeSearch {
 					matches: ['*://www.youtube.com/*'],
 					css: {
 						files: [
-							'/youtube/content/content.css',
-							'/youtubeSubs/video/youtubeVideo.css'
+							'youtube/content/content.css',
+							'youtubeSubs/video/youtubeVideo.css'
 						]
 					},
 					run_at: 'document_start'
@@ -1838,135 +1931,148 @@ namespace YoutubeSearch {
 
 				videoView.addEventListener('did-finish-load', () => {
 					Helpers.hacksecute(videoView, () => {
-						const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
-						const playerApi = document.getElementById('player-api');
-						const volumeBar = document.createElement('div');
-						const volumeBarBar = document.createElement('div');
-						const volumeBarNumber = document.createElement('div');
-						let volumeBarTimeout: number = null;
-
-						volumeBar.id = 'yt-ca-volumeBar';
-						volumeBarBar.id = 'yt-ca-volumeBarBar';
-						volumeBarNumber.id = 'yt-ca-volumeBarNumber';
-
-						volumeBar.appendChild(volumeBarNumber);
-						volumeBar.appendChild(volumeBarBar);
-						document.body.appendChild(volumeBar);
-
-						function prepareVideo() {
-							setTimeout(() => {							
-								function reloadIfAd() {
-									if (player.getAdState() === 1) {
-										window.location.reload();
+						function getPlayer() {
+							return new Promise<YoutubeVideoPlayer>((resolve) => {
+								const timer = window.setInterval(() => {
+									if (document.querySelector('.html5-video-player')) {
+										resolve(document.querySelector('.html5-video-player') as YoutubeVideoPlayer);
+										window.clearInterval(timer);
 									}
+								}, 500);
+							});
+						}
 
-									if (player.getPlayerState() === 3) {
-										window.setTimeout(reloadIfAd, 250);
-									} else {
-										player.setPlaybackQuality('hd1080');
-										if (player.getPlaybackQuality() !== 'hd1080') {
-											player.setPlaybackQuality('hd720');
-										}
-										
-										if (document.querySelector('.ytp-size-button')
-												.getAttribute('title') === 'Theatermodus') {
-											player.setSizeStyle(true, true);
+						(async () => {
+							const player: YoutubeVideoPlayer = await getPlayer();
+							const playerApi = document.getElementById('player-api');
+							const volumeBar = document.createElement('div');
+							const volumeBarBar = document.createElement('div');
+							const volumeBarNumber = document.createElement('div');
+							let volumeBarTimeout: number = null;
+
+							volumeBar.id = 'yt-ca-volumeBar';
+							volumeBarBar.id = 'yt-ca-volumeBarBar';
+							volumeBarNumber.id = 'yt-ca-volumeBarNumber';
+
+							volumeBar.appendChild(volumeBarNumber);
+							volumeBar.appendChild(volumeBarBar);
+							document.body.appendChild(volumeBar);
+
+							function prepareVideo() {
+								setTimeout(() => {							
+									function reloadIfAd() {
+										if (player.getAdState() === 1) {
+											window.location.reload();
 										}
 
-										localStorage.setItem('loaded', 'ytmusic');
+										if (player.getPlayerState() === 3) {
+											window.setTimeout(reloadIfAd, 250);
+										} else {
+											player.setPlaybackQuality('hd1080');
+											if (player.getPlaybackQuality() !== 'hd1080') {
+												player.setPlaybackQuality('hd720');
+											}
+											
+											if (document.querySelector('.ytp-size-button')
+													.getAttribute('title') === 'Theatermodus') {
+												player.setSizeStyle(true, true);
+											}
+
+											localStorage.setItem('loaded', 'ytmusic');
+										}
 									}
+									reloadIfAd();
+								}, 2500);
+							}
+
+							prepareVideo();
+
+							document.body.addEventListener('keydown', (e) => {
+								if (e.key === 'k') {
+									//Hide or show video
+									document.body.classList.toggle('showHiddens');
 								}
-								reloadIfAd();
-							}, 2500);
-						}
+							});
 
-						prepareVideo();
+							function updateSizes() {
+								playerApi.style.width = window.innerWidth + 'px';
+								playerApi.style.height = (window.innerHeight - 15) + 'px';
 
-						document.body.addEventListener('keydown', (e) => {
-							if (e.key === 'k') {
-								//Hide or show video
-								document.body.classList.toggle('showHiddens');
-							}
-						});
-
-						function updateSizes() {
-							playerApi.style.width = window.innerWidth + 'px';
-							playerApi.style.height = (window.innerHeight - 15) + 'px';
-
-							player.setSize();
-						}
-
-						updateSizes();
-						window.addEventListener('resize', updateSizes);
-
-						function setPlayerVolume(volume: number) {
-							player.setVolume(volume);
-
-							localStorage.setItem('yt-player-volume', JSON.stringify({
-								data: JSON.stringify({
-									volume: volume,
-									muted: (volume === 0)
-								}),
-								creation: Date.now(),
-								expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
-							}));
-						}
-
-						//Code that has to be executed "inline"
-						function increaseVolume() {
-							let vol = player.getVolume();
-							if (player.isMuted()) {
-								//Treat volume as 0
-								vol = 0;
-								player.unMute();
+								player.setSize();
 							}
 
-							vol += 5;
-							vol = (vol > 100 ? 100 : vol);
-							setPlayerVolume(vol);
-						}
+							updateSizes();
+							window.addEventListener('resize', updateSizes);
 
-						function lowerVolume() {
-							let vol = player.getVolume();
-							if (!player.isMuted()) {
-								vol -= 5;
-								
-								vol = (vol < 0 ? 0 : vol);
+							function setPlayerVolume(volume: number) {
+								player.setVolume(volume);
+
+								localStorage.setItem('yt-player-volume', JSON.stringify({
+									data: JSON.stringify({
+										volume: volume,
+										muted: (volume === 0)
+									}),
+									creation: Date.now(),
+									expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
+								}));
+							}
+
+							//Code that has to be executed "inline"
+							function increaseVolume() {
+								let vol = player.getVolume();
+								if (player.isMuted()) {
+									//Treat volume as 0
+									vol = 0;
+									player.unMute();
+								}
+
+								vol += 5;
+								vol = (vol > 100 ? 100 : vol);
 								setPlayerVolume(vol);
 							}
-						}
 
-						function showVolumeBar() {
-							const volume = player.getVolume();
-							localStorage.setItem('volume', volume + '');
-							volumeBarNumber.innerHTML = volume + '';
-							volumeBarBar.style.transform = `scaleX(${volume / 100})`;
-							volumeBar.classList.add('visible');
-							if (volumeBarTimeout !== null) {
-								window.clearTimeout(volumeBarTimeout);
+							function lowerVolume() {
+								let vol = player.getVolume();
+								if (!player.isMuted()) {
+									vol -= 5;
+									
+									vol = (vol < 0 ? 0 : vol);
+									setPlayerVolume(vol);
+								}
 							}
-							volumeBarTimeout = window.setTimeout(() => {
-								volumeBar.classList.remove('visible');
-								volumeBarTimeout = null;
-							}, 2000);
-						}
 
-						function onScroll(isDown: boolean) {
-							if (isDown) {
-								lowerVolume();
-							} else {
-								increaseVolume();
+							function showVolumeBar() {
+								const volume = player.getVolume();
+								localStorage.setItem('volume', volume + '');
+								volumeBarNumber.innerHTML = volume + '';
+								volumeBarBar.style.transform = `scaleX(${volume / 100})`;
+								volumeBar.classList.add('visible');
+								if (volumeBarTimeout !== null) {
+									window.clearTimeout(volumeBarTimeout);
+								}
+								volumeBarTimeout = window.setTimeout(() => {
+									volumeBar.classList.remove('visible');
+									volumeBarTimeout = null;
+								}, 2000);
 							}
-							showVolumeBar();
-						}
 
-						function addListeners() {
-							window.onwheel = (e) => {
-								onScroll(e.deltaY > 0);
-							};
-						}
+							function onScroll(isDown: boolean) {
+								if (isDown) {
+									lowerVolume();
+								} else {
+									increaseVolume();
+								}
+								showVolumeBar();
+							}
 
-						addListeners();
+							function addListeners() {
+								window.onwheel = (e) => {
+									onScroll(e.deltaY > 0);
+								};
+							}
+
+							addListeners();
+						})();
 					});
 				});
 			}, 10);
@@ -1979,10 +2085,22 @@ namespace YoutubeSearch {
 	}
 
 	namespace SearchResultsPage {
-		export let searchResultsView: Electron.WebviewTag = null;
+		let searchResultsView: Electron.WebviewTag = null;
+		let searchResultsPromise: Promise<Electron.WebviewTag> = null;
 
-		export function setup() {
-			searchResultsView = initView();
+		export async function getView(): Promise<Electron.WebviewTag> {
+			return new Promise<Electron.WebviewTag>((resolve) => {
+				if (searchResultsView) {
+					resolve(searchResultsView);
+				} else {
+					searchResultsPromise.then(resolve);
+				}
+			});
+		}
+
+		export async function setup() {
+			searchResultsPromise = initView();
+			searchResultsView = await searchResultsPromise;
 			searchResultsView.id = 'youtubeSearchResultsView';
 
 			window.setTimeout(() => {
@@ -1991,9 +2109,9 @@ namespace YoutubeSearch {
 					matches: ['*://www.youtube.com/*'],
 					js: {
 						files: [
-							'/genericJs/comm.js',
-							'/genericJs/keypress.js',
-							'/youtubeSearch/results/results.js'
+							'genericJs/comm.js',
+							'genericJs/keypress.js',
+							'youtubeSearch/results/results.js'
 						]
 					},
 					run_at: 'document_end'
@@ -2001,7 +2119,7 @@ namespace YoutubeSearch {
 					name: 'css',
 					matches: ['*://www.youtube.com/*'],
 					css: {
-						files: ['/youtubeSearch/results/results.css']
+						files: ['youtubeSearch/results/results.css']
 					},
 					run_at: 'document_start'
 				}]);
@@ -2022,50 +2140,58 @@ namespace YoutubeSearch {
 	}
 
 	namespace SearchBar {
-		export let searchBarView: Electron.WebviewTag = null;
+		let searchBarView: Electron.WebviewTag = null;
+		let searchBarPromise: Promise<Electron.WebviewTag> = null;
 
-		export function setup() {
-			searchBarView = initView();
-			searchBarView.id = 'youtubeSearchBarView';
-			searchBarView.setAttribute('allowtransparency', 'on');
+		export async function getView(): Promise<Electron.WebviewTag> {
+			return new Promise<Electron.WebviewTag>((resolve) => {
+				if (searchBarView) {
+					resolve(searchBarView);
+				} else {
+					searchBarPromise.then(resolve);
+				}
+			});
+		}
 
-			window.setTimeout(() => {
-				Helpers.addContentScripts(searchBarView, [{
-					name: 'js',
-					matches: ['*://www.youtube.com/*'],
-					js: {
-						files: [
-							'/genericJs/comm.js',
-							'/genericJs/keypress.js'
-						]
-					},
-					run_at: 'document_end'
-				}, {
-					name: 'css',
-					matches: ['*://www.youtube.com/*'],
-					css: {
-						files: ['/youtubeSearch/searchBar/searchBar.css']
-					},
-					run_at: 'document_start'
-				}]);
+		export async function setup() {
+			searchBarPromise = initView();
+			searchBarView = await searchBarPromise;
 
-				searchBarView.addEventListener('load-commit', (e) => {
-					if (e.isMainFrame) {
-						searchBarView.stop();
-						SearchResultsPage.navTo(e.url);
-						if (activePage === 'video') {
-							$('#youtubeSearchCont').classList.remove('showVideo');
-						}
+			Helpers.addContentScripts(searchBarView, [{
+				name: 'js',
+				matches: ['*://www.youtube.com/*'],
+				js: {
+					files: [
+						'genericJs/comm.js',
+						'genericJs/keypress.js'
+					]
+				},
+				run_at: 'document_end'
+			}, {
+				name: 'css',
+				matches: ['*://www.youtube.com/*'],
+				css: {
+					files: ['youtubeSearch/searchBar/searchBar.css']
+				},
+				run_at: 'document_start'
+			}]);
+
+			searchBarView.addEventListener('load-commit', (e) => {
+				if (e.isMainFrame) {
+					searchBarView.stop();
+					SearchResultsPage.navTo(e.url);
+					if (activePage === 'video') {
+						$('#youtubeSearchCont').classList.remove('showVideo');
 					}
-				});
+				}
+			});
 
-				searchBarView.addEventListener('focus', (e) => {
-					$('#youtubeSearchCont').classList.remove('shortenSearchBarArea');
-				});
-				searchBarView.addEventListener('blur', (e) => {
-					$('#youtubeSearchCont').classList.add('shortenSearchBarArea');
-				});
-			}, 10);
+			(searchBarView as any).addEventListener('focus', () => {
+				$('#youtubeSearchCont').classList.remove('shortenSearchBarArea');
+			});
+			(searchBarView as any).addEventListener('blur', () => {
+				$('#youtubeSearchCont').classList.add('shortenSearchBarArea');
+			});
 		}
 
 		export function toggle() {
@@ -2105,28 +2231,30 @@ namespace YoutubeSearch {
 		}
 	}
 
-	function showVideo() {
+	async function showVideo() {
 		activePage = 'video';
 		$('#youtubeSearchCont').classList.add('showVideo');
 		SearchBar.hide();
-		Video.videoView.focus();
+		(await Video.getView()).focus();
 	}
 
-	export function changeVideo(url: string) {
-		Video.videoView.loadURL(url);
+	export async function changeVideo(url: string) {
+		(await Video.getView()).loadURL(url);
 		showVideo();
 	}
 
-	export function setup() {
-		SearchBar.setup();
-		SearchResultsPage.setup();
-		Video.setup();
+	export async function setup() {
+		return Promise.all([
+			SearchBar.setup(),
+			SearchResultsPage.setup(),
+			Video.setup()
+		]);
 	}
 
-	export function init() {
-		window.setTimeout(() => {
+	export async function init() {
+		window.setTimeout(async () => {
 			SearchResultsPage.navTo('https://www.youtube.com/');
-			SearchBar.searchBarView.loadURL('https://www.youtube.com/');
+			(await SearchBar.getView()).loadURL('https://www.youtube.com/');
 		}, 15);
 	}
 
@@ -2135,26 +2263,26 @@ namespace YoutubeSearch {
 		$('#titleBarRight').style.width = 'calc(50vw)';
 	}
 
-	export function onFocus() {
+	export async function onFocus() {
 		if (activePage === 'video') {
-			Video.videoView.focus();
+			(await Video.getView()).focus();
 		} else {
-			SearchBar.searchBarView.focus();
+			(await SearchBar.getView()).focus();
 		}
 
 		$('#titleBarLeft').style.width = 'calc(50vw - 335px)';
 		$('#titleBarRight').style.width = 'calc(50vw - 335px)';
 	}
 
-	export function getView(): Electron.WebviewTag {
+	export async function getView(): Promise<Electron.WebviewTag> {
 		if (activePage === 'video') {
-			return Video.videoView;
+			return Video.getView();
 		} else {
-			return SearchResultsPage.searchResultsView;
+			return SearchResultsPage.getView();
 		}
 	}
 
-	export function onKeyPress(event: MappedKeyboardEvent): boolean {
+	export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
 		if (AppWindow.getActiveViewName() !== 'youtubesearch') {
 			return false;
 		}
@@ -2164,11 +2292,11 @@ namespace YoutubeSearch {
 			if (activePage === 'video') {
 				subsCont.classList.remove('showVideo');
 				activePage = 'results';
-				SearchResultsPage.searchResultsView.focus();
+				(await SearchResultsPage.getView()).focus();
 			} else {
 				subsCont.classList.add('showVideo');
 				activePage = 'video';
-				Video.videoView.focus();
+				(await Video.getView()).focus();
 			}
 			return true;
 		}
@@ -2177,7 +2305,7 @@ namespace YoutubeSearch {
 		}
 		if (event.key === 'd' && activePage === 'video') {
 			//Get current video URL and download it
-			Helpers.downloadVideo(Video.videoView.src)
+			Helpers.downloadVideo((await Video.getView()).src)
 			return true;
 		}
 		if (VALID_INPUT.indexOf(event.key) > -1 && 
@@ -2191,25 +2319,25 @@ namespace YoutubeSearch {
 		return false;
 	}
 
-	export function onSearchBarFocus() {
-		if (AppWindow.getActiveViewName() === 'youtubesearch' && SearchBar.searchBarView) {
-			SearchBar.searchBarView.focus();
-			Helpers.hacksecute(SearchBar.searchBarView, () => {
+	export async function onSearchBarFocus() {
+		if (AppWindow.getActiveViewName() === 'youtubesearch' && (await SearchBar.getView())) {
+			(await SearchBar.getView()).focus();
+			Helpers.hacksecute((await SearchBar.getView()), () => {
 				document.getElementById('masthead-search-term').focus();
 			});
 		}
 	}
 
-	export function onPaste(data: string) {
+	export async function onPaste(data: string) {
 		const reg = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})/;
 		if (reg.exec(data)) {
-			if (AppWindow.getActiveViewName() === 'youtubesearch' && Video.videoView) {
+			if (AppWindow.getActiveViewName() === 'youtubesearch' && (await Video.getView())) {
 				Video.navTo(data);
 			} else {
 				//Go to that view and focus the video
 				AppWindow.switchToview('youtubesearch');
-				const interval = window.setInterval(() => {
-					if (AppWindow.loadedViews.indexOf('youtubesearch') > -1 && Video.videoView) {
+				const interval = window.setInterval(async () => {
+					if (AppWindow.loadedViews.indexOf('youtubesearch') > -1 && (await Video.getView())) {
 						//It's loaded
 						window.clearInterval(interval);
 
@@ -2221,30 +2349,62 @@ namespace YoutubeSearch {
 	}
 }
 
+export interface MessageReasons {
+	isMinimized: boolean;
+	isFullscreen: boolean;
+	isMaximized: boolean;
+
+	onFullscreened: void;
+	onMaximized: void;
+	onRestored: void;
+	onMinimized: void;
+
+	restore: void;
+	exitFullscreen: void;
+	enterFullscreen: void;
+	minimize: void;
+	maximize: void;
+	close: void;
+}
+
+export interface PassedAlongMessages {
+	loadingCompleted: {
+		view: ViewNames;
+	};
+	taskResult: {
+		result: any;
+		name: string;
+		id: number;
+	};
+	saveUrl: {
+		url: string;
+	};
+	keyPress: MappedKeyboardEvent;
+	paste: string;
+}
+
 namespace AppWindow {
-	export const app = window;
 	const titleBar = document.querySelector('#titleBar');
 	let activeView: ViewNames = null;
 	
-	type AppEvent = 'onBoundsChanged'|'onClosed'|'onFullscreened'|
-			'onMaximized'|'onMinimized'|'onRestored';
+	type AppEvent = 'onFullscreened'|'onMaximized'|'onRestored'|'onMinimized';
 	
 	const listeners: Array<{
 		event: AppEvent;
-		callback: (event: Event) => void;
+		callback: () => void;
 	}> = [];
-	export function listen(event: AppEvent, callback: (event: Event) => void) {
+	export function listen(event: AppEvent, callback: () => void) {
 		listeners.push({
 			event: event,
 			callback: callback
 		});
 	}
 
-	function fireEvent(event: AppEvent, data: Event) {
+	function fireEvent(event: AppEvent) {
 		listeners.filter((listener) => {
 			return listener.event === event;
 		}).forEach((listener) => {
-			listener.callback(data);
+			listener.callback();
 		});
 	}
 
@@ -2290,19 +2450,27 @@ namespace AppWindow {
 		}
 	}
 
-	function prepareEventListeners() {
-		const events: Array<AppEvent> = ['onBoundsChanged', 'onClosed',
-			'onFullscreened', 'onMaximized', 'onMinimized', 'onRestored'];
-		events.forEach((eventName) => {
-			// app[eventName].addListener((event) => {
-			// 	fireEvent(eventName, event);
-			// });
+	function createEventLoop(name: AppEvent, cb: () => void) {
+		sendBackgroundPageMessage(name).then(() => {
+			cb();
+			createEventLoop(name, cb);
 		});
 	}
 
-	function updateButtonsState() {
-		titleBar.classList[app.isMaximized() ? 'add' : 'remove']('maximized');
-		titleBar.classList[app.isFullscreen() ? 'add' : 'remove']('fullscreen');
+	function prepareEventListeners() {
+		const events: Array<AppEvent> = ['onFullscreened', 'onMaximized', 'onRestored', 'onMinimized'];
+		events.forEach((eventName) => {
+			sendBackgroundPageMessage(eventName).then(() => {
+				createEventLoop(eventName, () => {
+					fireEvent(eventName);
+				});
+			})
+		});
+	}
+
+	async function updateButtonsState() {
+		titleBar.classList[await sendBackgroundPageMessage('isMaximized') ? 'add' : 'remove']('maximized');
+		titleBar.classList[await sendBackgroundPageMessage('isFullscreen') ? 'add' : 'remove']('fullscreen');
 	}
 
 	function setupListeners() {
@@ -2317,25 +2485,27 @@ namespace AppWindow {
 			titleBar.classList.remove('focused');
 		});
 
-		document.querySelector('#fullscreen').addEventListener('click', (e) => {
-			app[app.isFullscreen() ? 'restore' : 'fullscreen']();
+		document.querySelector('#fullscreen').addEventListener('click', async (e: MouseEvent) => {
+			sendBackgroundPageMessage(await sendBackgroundPageMessage('isFullscreen') ?
+				'exitFullscreen' : 'enterFullscreen');
 			e.stopPropagation();
 		});
-		document.querySelector('#minimize').addEventListener('click', (e) => {
-			app.minimize();
+		document.querySelector('#minimize').addEventListener('click', async (e: MouseEvent) => {
+			sendBackgroundPageMessage('minimize');
 			e.stopPropagation();
 		});
-		document.querySelector('#maximize').addEventListener('click', (e) => {
-			app[app.isMaximized() ? 'restore' : 'maximize']();
+		document.querySelector('#maximize').addEventListener('click', async (e: MouseEvent) => {
+			sendBackgroundPageMessage(await sendBackgroundPageMessage('isMaximized') ?
+				'restore' : 'maximize')
 			e.stopPropagation();
 		});
-		document.querySelector('#close').addEventListener('click', (e) => {
+		document.querySelector('#close').addEventListener('click', (e: MouseEvent) => {
 			YoutubeMusic.onClose();
 			Netflix.onClose();
 			YoutubeSubscriptions.onClose();
 
 			window.setInterval(() => {
-				app.close();
+				sendBackgroundPageMessage('close');
 			}, 0);
 			e.stopPropagation();
 		});
@@ -2348,6 +2518,7 @@ namespace AppWindow {
 	}
 
 	function addRuntimeListeners() {
+		//TODO: this
 		// chrome.runtime.onMessage.addListener(function (message: {
 		// 	cmd: string
 		// }) {
@@ -2385,16 +2556,16 @@ namespace AppWindow {
 	function handleKeyboardEvent(event: MappedKeyboardEvent) {
 		if (event.key === 'Escape') {
 			const youtubeSearchPageView = $('#youtubeSearchPageView');
-			if (youtubeSearchPageView) {
-				youtubeSearchPageView.remove();
+			if (youtubeSearchPageView.style.display === 'block') {
+				youtubeSearchPageView.style.display = 'none';
 				return;
 			}
 
 			Exiting.handleEscapePress();
 		} else if (event.key === 'F11') {
-			// chrome.runtime.sendMessage({
-			// 	cmd: 'toggleFullscreen'
-			// });
+			sendBackgroundPageMessage('isFullscreen').then((isFullscreen) => {
+				sendBackgroundPageMessage(isFullscreen ? 'exitFullscreen' : 'enterFullscreen');
+			});
 		} else if (event.key === 'F1') {
 			switchToview('youtubeSubscriptions');
 		} else if (event.key === 'F2') {
@@ -2410,7 +2581,10 @@ namespace AppWindow {
 	export function onLoadingComplete(view: ViewNames) {
 		loadedViews.push(view);
 		if (activeView === view) {
-			hideSpinner();
+			//Wait for the JS/CSS to apply
+			window.setTimeout(() => {
+				hideSpinner();
+			}, 500);
 		} else {
 			getViewByName(view).Commands.pause();
 		}
@@ -2447,16 +2621,19 @@ namespace AppWindow {
 		viewsEl.classList.add(view);
 	}
 
-	export function init(startView: ViewNames) {
+	export async function init(startView: ViewNames) {
 		activeView = startView;
 
+		listenForMessages();
 		prepareEventListeners();
 		setupListeners();
 		addRuntimeListeners();
-		YoutubeMusic.setup();
-		Netflix.setup();
-		YoutubeSubscriptions.setup();
-		YoutubeSearch.setup();
+		await Promise.all([
+			YoutubeMusic.setup(),
+			Netflix.setup(),
+			YoutubeSubscriptions.setup(),
+			YoutubeSearch.setup()
+		]);
 
 		switchToview(startView, true);
 
@@ -2473,8 +2650,8 @@ namespace AppWindow {
 		return getViewByName(getActiveViewName());
 	}
 
-	export function getActiveViewView(): Electron.WebviewTag {
-		return AppWindow.getActiveViewClass().getView();
+	export async function getActiveViewView(): Promise<Electron.WebviewTag> {
+		return await AppWindow.getActiveViewClass().getView();
 	}
 
 	export function onFocus() {
@@ -2482,11 +2659,104 @@ namespace AppWindow {
 	}
 
 	export function onKeyPress(event: MappedKeyboardEvent) {
+		console.log('Some key was pressed');
 		getActiveViewClass().onKeyPress(event)
+	}
+
+	const channels: Array<{
+		identifier: string;
+		fn: (data: MessageReasons[keyof MessageReasons]) => void
+	}> = [];
+
+	function genRandomString(): string {
+		const possibleLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		let str = '';
+		for (let i = 0; i < 100; i++) {
+			str += possibleLetters.charAt(Math.floor(Math.random() * possibleLetters.length));
+		}
+
+		return str;
+	}
+
+	function genIdentifier(): string {
+		let str: string = null;
+		do {
+			str = genRandomString();
+		} while (channels.filter((val) => {
+			return val.identifier === str;
+		}).length > 0)
+
+		return str;
+	}
+
+	function saveURL(url: string) {
+		const db = firebase.database()
+		const ref = db.ref('url');
+		ref.update({
+			url: url
+		});
+	}
+
+	function listenForMessages() {
+		ipcRenderer.on('fromBgPage', (event: Event, message: {
+			identifier: string;
+			data: MessageReasons[keyof MessageReasons]
+		}) => {
+			const identifier = message.identifier;
+			channels.filter((val) => {
+				return val.identifier === identifier
+			}).forEach((val) => {
+				val.fn(message.data);
+				channels.splice(channels.indexOf(val), 1);
+			});
+		});
+		ipcRenderer.on('passedAlong', <T extends keyof PassedAlongMessages>(event: Event, message: {
+			type: T;
+			data: PassedAlongMessages[T]
+		}) => {
+			const { type, data } = message;
+			switch (type) {
+				case 'loadingCompleted':
+					onLoadingComplete((data as PassedAlongMessages['loadingCompleted']).view);
+					break;
+				case 'taskResult':
+					const res = data as PassedAlongMessages['taskResult'];
+					Helpers.returnTaskValue(res.result, res.id);
+					break;
+				case 'saveUrl':
+					const saveUrlRes = data as PassedAlongMessages['saveUrl'];
+					saveURL(saveUrlRes.url);
+					break;
+				case 'keyPress':
+					const keyPressRes = data as PassedAlongMessages['keyPress'];
+					onKeyPress(keyPressRes);
+					break;
+				case 'paste':
+					const pasteData = data as PassedAlongMessages['paste'];
+					YoutubeSearch.onPaste(pasteData);
+					break;
+			}
+		});
+	}
+
+	export async function sendBackgroundPageMessage<T extends keyof MessageReasons>(reason: T): Promise<MessageReasons[T]> {
+		const identifier = genIdentifier();
+		return new Promise<MessageReasons[T]>((resolve) => {
+			channels.push({
+				identifier: identifier,
+				fn: (data) => {
+					resolve(data);
+				}
+			});
+			ipcRenderer.send('toBgPage', {
+				identifier: identifier,
+				type: reason,
+			});
+		});
 	}
 }
 
-AppWindow.init(window.baseView || 'ytmusic');
+AppWindow.init('ytmusic');
 window.Helpers = Helpers;
 window.Netflix = Netflix;
 window.AppWindow = AppWindow;

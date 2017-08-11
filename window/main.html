@@ -124,24 +124,23 @@
 			</div>
 		</div>
 		<div id="views">
-			<div id="youtubeSubsCont"></div>
-			<div id="youtubePlaylistCont"></div>
-			<div id="youtubeSearchCont"></div>
-			<div id="netflixCont"></div>
+			<div id="youtubeSubsCont">
+				<webview id="youtubeSubsVideoView" src="https://www.example.com" partition="persist:youtubeSubscriptions" nodeintegration></webview>
+				<webview id="youtubeSubsSubBoxView" partition="persist:youtubeSubscriptions" nodeintegration src="https://www.example.com"></webview>
+			</div>
+			<div id="youtubePlaylistCont">
+				<webview id="ytmaWebview" partition="persist:youtubeplaylist" nodeintegration src="https://www.example.com"></webview>
+			</div>
+			<div id="youtubeSearchCont">
+				<webview id="youtubeSearchVideoView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
+			</div>
+			<div id="netflixCont">
+				<webview id="netflixWebView" partition="persist:netflix" nodeintegration src="https://www.example.com"></webview>
+			</div>
 		</div>
-		<script src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>
-		<script>
-		// Initialize Firebase
-		var config = {
-			apiKey: "AIzaSyDa7cK3G5K347BKpGYGtya1wAa-ko7TDEU",
-			authDomain: "mediaapp-14955.firebaseapp.com",
-			databaseURL: "https://mediaapp-14955.firebaseio.com",
-			projectId: "mediaapp-14955",
-			storageBucket: "",
-			messagingSenderId: "57178386157"
-		};
-		firebase.initializeApp(config);
-		</script>
+		<webview id="youtubeSearchPageView" style="display:none;" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
+		<webview id="1001TracklistsView" style="display:none;" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
+		<script>const exports = {};</script>
 		<script src="main.js"></script>
 	</body>
 </html>

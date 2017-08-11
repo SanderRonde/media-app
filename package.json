@@ -29,13 +29,15 @@
   },
   "homepage": "https://github.com/SanderRonde/media-app#readme",
   "dependencies": {
+    "firebase": "^4.2.0",
     "fs": "0.0.1-security",
+    "md5": "^2.2.1",
     "path": "^0.12.7",
     "url": "^0.11.0"
   },
   "devDependencies": {
     "@types/electron": "^1.6.10",
-    "@types/firebase": "^2.4.31",
+    "@types/md5": "^2.1.32",
     "electron": "^1.6.11",
     "electron-packager": "^8.2.0",
     "electron-prebuilt": "^1.4.5",

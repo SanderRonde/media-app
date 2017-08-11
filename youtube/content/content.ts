@@ -1,8 +1,23 @@
+var ipcRenderer = require('electron').ipcRenderer;
+
 declare const Tesseract: any;
 
 interface Window {
 	saveProgress(): void;
 	doTask2(name: string, id: number, done: (result: any) => void): void;
+	commToPage(task: string, callback: (result: string) => void): void;
+}
+
+function saveNewUrl(url: string) {
+	ipcRenderer.send('toBgPage', {
+		type: 'passAlong',
+		data: {
+			type: 'saveUrl',
+			data: {
+				url: url
+			}
+		}
+	});
 }
 
 window.saveProgress = () => {
@@ -17,10 +32,7 @@ window.saveProgress = () => {
 		~~secs + ((~~mins + (~~hours * 60)) * 60)
 	}`;
 	
-	chrome.runtime.sendMessage({
-		cmd: 'setUrl',
-		url: url
-	});
+	saveNewUrl(url);
 }
 
 const canv = document.createElement('canvas');

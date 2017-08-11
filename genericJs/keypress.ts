@@ -1,3 +1,5 @@
+import { ipcRenderer } from 'electron'
+
 function mapElement(el: HTMLElement): Partial<HTMLElement> {
 	if (el instanceof HTMLElement) {
 		return {
@@ -65,19 +67,27 @@ function mapKeyEvent(e: KeyboardEvent): KeyboardEvent & {
 }
 
 document.body.addEventListener('keydown', (e) => {
+	console.log('Key was pressed');
 	if (e.srcElement.tagName !== 'INPUT') {
-		chrome.runtime.sendMessage({
-			cmd: 'keypress',
-			event: mapKeyEvent(e)
+		console.log('Sending message');
+		ipcRenderer.send('toBgPage', {
+			type: 'passAlong',
+			data: {
+				type: 'keyPress',
+				data: mapKeyEvent(e)
+			}
 		});
 	}
 });
 
 document.body.addEventListener('paste', (e) => {
 	if (e.srcElement.tagName !== 'INPUT') {
-		chrome.runtime.sendMessage({
-			cmd: 'paste',
-			data: e.clipboardData.getData('Text')
+		ipcRenderer.send('toBgPage', {
+			type: 'passAlong',
+			data: {
+				type: 'paste',
+				data: e.clipboardData.getData('Text')
+			}
 		});
 	}
 });

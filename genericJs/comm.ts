@@ -1,6 +1,8 @@
 /// <reference path="../youtube/1001tracklists/content.ts" />
 /// <reference path="../youtube/content/content.ts" />
 
+var ipcRenderer = require('electron').ipcRenderer;
+
 interface Window {
 	commToPage(task: string, callback: (result: string) => void): void;
 }
@@ -17,7 +19,7 @@ function listenForCommPageResponse(id: number, callback: (result: string|boolean
 	}, 50);
 }
 
-window.commToPage = function(task, callback) {
+window.commToPage = function(task: string, callback: (result: string) => void) {
 	let tasks: {
 		name: string;
 		id: number;
@@ -42,40 +44,46 @@ function getTaskRunner() {
 	return window.doTask1 || window.doTask2;
 }
 
-chrome.storage.onChanged.addListener((changes, areaName) => {
-	if (areaName === 'local') {
-		if (changes.tasks &&
-				Array.isArray(changes.tasks.newValue) &&
-				changes.tasks.newValue.length > 0) {
-			changes.tasks.newValue.forEach((task) => {
-				if (location.href.indexOf(task.page) > -1) {
-					getTaskRunner() && getTaskRunner()(task.name, task.id, (result) => {
-						chrome.runtime.sendMessage({
-							cmd: 'taskResult',
-							result: result,
-							name: task.name,
-							id: task.id
-						});
-					});
+ipcRenderer.on('task', (event: Event, task: {
+	name: string;
+	page: string;
+	id: number;
+}) => {
+	if (location.href.indexOf(task.page) > -1) {
+		getTaskRunner() && getTaskRunner()(task.name, task.id, (result) => {
+			ipcRenderer.send('toBpPage', {
+				type: 'passAlong',
+				data: {
+					type: 'taskResult',
+					data: {
+						result: result,
+						name: task.name,
+						id: task.id
+					}
 				}
 			});
-			chrome.storage.local.set({
-				tasks: []
-			});
-		}
+		});
 	}
 });
 
-localStorage.removeItem('loaded');
 let loaded = false;
 const intervalId = window.setInterval(() => {
-	if (localStorage.getItem('loaded')) {
+	if (localStorage.getItem('loaded') && localStorage.getItem('loaded') !== 'none') {
 		loaded = true;
 		window.clearInterval(intervalId);
+
+		console.log('Something has loaded');
 		
-		chrome.runtime.sendMessage({
-			cmd: 'loadingCompleted',
-			view: localStorage.getItem('loaded')
+		ipcRenderer.send('toBgPage', {
+			type: 'passAlong',
+			data: {
+				type: 'loadingCompleted',
+				data: {
+					view: localStorage.getItem('loaded')
+				}
+			}
 		});
+
+		localStorage.setItem('loaded', 'none');
 	}
 }, 250);

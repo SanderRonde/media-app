@@ -1,5 +1,6 @@
 interface Window {
 	doTask1(name: string, id: number, done: (result: string|boolean|number) => void): void
+	doTask2(name: string, id: number, done: (result: string|boolean|number) => void): void
 }
 
 function toQueryString(obj: {

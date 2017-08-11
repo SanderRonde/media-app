@@ -12,13 +12,13 @@
         "noFallthroughCasesInSwitch": true,
         "noImplicitReturns": true,
         "noUnusedLocals": true,
-        "target": "es5",
+        "target": "es2015",
         "lib": ["dom", "es2015"],
         "watch": true
 	}, 
     "allowJs": true,
     "compileOnSave": true,
     "include": [
-        "./app"
+        "."
     ]
 }
