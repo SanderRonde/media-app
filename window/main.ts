@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 import * as md5 from 'md5'
 import * as firebase from 'firebase'
+import * as browserify from 'browserify'
 import { shell, ipcRenderer } from 'electron'
 import { firebaseConfig } from '../genericJs/secrets'
 
@@ -51,6 +52,7 @@ const VALID_INPUT = arr(65, 90).map((charCode) => {
 	';',':',',','.','<','>','/','?','\\','|','`','~'
 ]);
 
+//TODO: this
 // namespace AdBlocking {
 // 	let ready: boolean = false;
 // 	let rules: {
@@ -424,13 +426,55 @@ namespace Helpers {
 		})()`;
 	}
 
-	function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
+	function promiseWriteFile(file: string, content: string): Promise<void> {
+		return new Promise((resolve, reject) => {
+			fs.writeFile(file, content, {
+				encoding: 'utf8'
+			}, (err) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve();
+				}
+			});
+		});
+	}
+
+	function promiseDeleteFile(file: string) {
+		return new Promise((resolve, reject) => {
+			fs.unlink(file, (err) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve();
+				}
+			})
+		});
+	}
+
+	const activeFiles: Array<number> = [];
+
+	async function inlineDependencies(code: string): Promise<string> {
+		let index = 0;
+		while (activeFiles.indexOf(index) > -1) {
+			index++;
+		}
+		activeFiles.push(index);
+
+		const filePath = `./tempfile${index}.js`;
+		await promiseWriteFile(filePath, code);
+		const bundle = browserify(filePath).bundle().read();
+		await promiseDeleteFile(filePath);
+		return bundle as string;
+	}
+
+	async function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
 		if (isJS) {
 			view.executeJavaScript('var exports = exports || {}', false);			
 		}
 		if (config.code) {
 			if (isJS) {
-				view.executeJavaScript(ensureNoPrevExec(config.code), false);
+				view.executeJavaScript(ensureNoPrevExec(await inlineDependencies(config.code)), false);
 			} else {
 				view.insertCSS(config.code);
 			}
@@ -447,9 +491,9 @@ namespace Helpers {
 					});
 				});
 			})).then((fileContents) => {
-				fileContents.forEach((fileContent) => {
+				fileContents.forEach(async (fileContent) => {
 					if (isJS) {
-						view.executeJavaScript(ensureNoPrevExec(fileContent), false);
+						view.executeJavaScript(ensureNoPrevExec(await inlineDependencies(fileContent)), false);
 					} else {
 						view.insertCSS(fileContent);
 					}
