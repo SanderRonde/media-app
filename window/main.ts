@@ -1,7 +1,6 @@
 import * as fs from 'fs'
 import * as md5 from 'md5'
 import * as firebase from 'firebase'
-import * as browserify from 'browserify'
 import { shell, ipcRenderer,  } from 'electron'
 import { firebaseConfig } from '../genericJs/secrets'
 
@@ -426,55 +425,41 @@ namespace Helpers {
 		})()`;
 	}
 
-	function promiseWriteFile(file: string, content: string): Promise<void> {
-		return new Promise((resolve, reject) => {
-			fs.writeFile(file, content, {
-				encoding: 'utf8'
-			}, (err) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve();
-				}
-			});
-		});
-	}
+	// function readStream(stream: NodeJS.ReadableStream): Promise<string> {
+	// 	return new Promise<string>((resolve) => {
+	// 		let data = '';
+	// 		stream.on('data', (chunk: string) => {
+	// 			data += chunk;
+	// 		});
+	// 		stream.on('end', () => {
+	// 			resolve(data);
+	// 		});
+	// 	});
+	// }
 
-	function promiseDeleteFile(file: string) {
-		return new Promise((resolve, reject) => {
-			fs.unlink(file, (err) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve();
-				}
-			})
-		});
-	}
+	// async function inlineDependencies(code: string): Promise<string> {
+	// 	const fileStream = new stream.Readable();
+	// 	fileStream.push(code);
+	// 	fileStream.push(null);
 
-	const activeFiles: Array<number> = [];
+	// 	code = code.replace(/require\(['"]electron['"]\)/, `'ELECTRONPLACEHOLDER'`)
 
-	async function inlineDependencies(code: string): Promise<string> {
-		let index = 0;
-		while (activeFiles.indexOf(index) > -1) {
-			index++;
-		}
-		activeFiles.push(index);
+	// 	console.log(code);
+	// 	const outputStream = browserify().add(fileStream).bundle();
+	// 	const bundle = (await readStream(outputStream))
+	// 		.replace(/ELECTRONPLACEHOLDER/, `require('electron')`)
 
-		const filePath = `./tempfile${index}.js`;
-		await promiseWriteFile(filePath, code);
-		const bundle = browserify(filePath).bundle().read();
-		await promiseDeleteFile(filePath);
-		return bundle as string;
-	}
+	// 	console.log(bundle);
+	// 	return bundle;
+	// }
 
-	async function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
+	function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
 		if (isJS) {
 			view.executeJavaScript('var exports = exports || {}', false);			
 		}
 		if (config.code) {
 			if (isJS) {
-				view.executeJavaScript(ensureNoPrevExec(await inlineDependencies(config.code)), false);
+				view.executeJavaScript(ensureNoPrevExec(config.code), false);
 			} else {
 				view.insertCSS(config.code);
 			}
@@ -493,7 +478,7 @@ namespace Helpers {
 			})).then((fileContents) => {
 				fileContents.forEach(async (fileContent) => {
 					if (isJS) {
-						view.executeJavaScript(ensureNoPrevExec(await inlineDependencies(fileContent)), false);
+						view.executeJavaScript(ensureNoPrevExec(fileContent), false);
 					} else {
 						view.insertCSS(fileContent);
 					}
