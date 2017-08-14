@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as md5 from 'md5'
 import * as firebase from 'firebase'
 import * as browserify from 'browserify'
-import { shell, ipcRenderer } from 'electron'
+import { shell, ipcRenderer,  } from 'electron'
 import { firebaseConfig } from '../genericJs/secrets'
 
 firebase.initializeApp(firebaseConfig);
@@ -2409,6 +2409,14 @@ export interface MessageReasons {
 	minimize: void;
 	maximize: void;
 	close: void;
+
+	magicButton: void;
+	lowerVolume: void;
+	raiseVolume: void;
+	pausePlay: void;
+	focus: void;
+	pause: void;
+	play: void;
 }
 
 export interface PassedAlongMessages {
@@ -2561,30 +2569,31 @@ namespace AppWindow {
 		});
 	}
 
-	function addRuntimeListeners() {
-		//TODO: this
-		// chrome.runtime.onMessage.addListener(function (message: {
-		// 	cmd: string
-		// }) {
-		// 	const activeViewView = getActiveViewClass().Commands;
-		// 	switch (message.cmd) {
-		// 		case 'lowerVolume':
-		// 			activeViewView.lowerVolume();
-		// 			break;
-		// 		case 'raiseVolume':
-		// 			activeViewView.raiseVolume();
-		// 			break;
-		// 		case 'pausePlay':
-		// 			activeViewView.togglePlay();
-		// 			break;
-		// 		case 'pause':
-		// 			activeViewView.pause();
-		// 			break;
-		// 		case 'play':
-		// 			activeViewView.play();
-		// 			break;
-		// 	}
-		// });
+	function onShortcut(command: keyof MessageReasons) {
+		const activeViewView = getActiveViewClass().Commands;
+		switch (command) {
+			case 'lowerVolume':
+				activeViewView.lowerVolume();
+				break;
+			case 'raiseVolume':
+				activeViewView.raiseVolume();
+				break;
+			case 'pausePlay':
+				activeViewView.togglePlay();
+				break;
+			case 'pause':
+				activeViewView.pause();
+				break;
+			case 'play':
+				activeViewView.play();
+				break;
+			case 'focus':
+				onFocus();
+				break;
+			case 'magicButton':
+				onMagicButton();
+				break;
+		}
 	}
 
 	function showSpinner() {
@@ -2671,7 +2680,6 @@ namespace AppWindow {
 		listenForMessages();
 		prepareEventListeners();
 		setupListeners();
-		addRuntimeListeners();
 		await Promise.all([
 			YoutubeMusic.setup(),
 			Netflix.setup(),
@@ -2703,7 +2711,6 @@ namespace AppWindow {
 	}
 
 	export function onKeyPress(event: MappedKeyboardEvent) {
-		console.log('Some key was pressed');
 		getActiveViewClass().onKeyPress(event)
 	}
 
@@ -2744,15 +2751,23 @@ namespace AppWindow {
 	function listenForMessages() {
 		ipcRenderer.on('fromBgPage', (event: Event, message: {
 			identifier: string;
-			data: MessageReasons[keyof MessageReasons]
+			data: MessageReasons[keyof MessageReasons];
+			type: 'response';
+		}|{
+			cmd: keyof MessageReasons
+			type: 'event';
 		}) => {
-			const identifier = message.identifier;
-			channels.filter((val) => {
-				return val.identifier === identifier
-			}).forEach((val) => {
-				val.fn(message.data);
-				channels.splice(channels.indexOf(val), 1);
-			});
+			if (message.type === 'response') {
+				const identifier = message.identifier;
+				channels.filter((val) => {
+					return val.identifier === identifier
+				}).forEach((val) => {
+					val.fn(message.data);
+					channels.splice(channels.indexOf(val), 1);
+				});
+			} else {
+				onShortcut(message.cmd);
+			}
 		});
 		ipcRenderer.on('passedAlong', <T extends keyof PassedAlongMessages>(event: Event, message: {
 			type: T;

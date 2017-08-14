@@ -1,5 +1,5 @@
 import {
-	app, BrowserWindow, ipcMain
+	app, BrowserWindow, ipcMain, globalShortcut
 } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
@@ -9,8 +9,42 @@ import { MessageReasons, PassedAlongMessages } from './window/main'
 
 let activeWindow: Electron.BrowserWindow = null;
 
+type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
+	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+	'W', 'X', 'Y', 'Z', 'Shift', 'Alt', 'Left', 'Right', 'Down',
+	'Up', 'MediaNextTrack', 'MediaPreviousTrack', 'MediaStop',
+	'MediaPlayPause', 'Space', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const map = new Map<
+	Array<keys[keyof keys]|Array<keys[keyof keys]|Array<keys[keyof keys]>>>,
+	keyof MessageReasons>([
+		[[['Shift', 'Alt', 'F']], 'focus'],
+		[[['Shift', 'Alt', 'Left']], 'lowerVolume'],
+		[[['Shift', 'Alt', 'Right']], 'raiseVolume'],
+		[[['Shift', 'Alt', 'Down'], 'MediaPlayPause'], 'pausePlay'],
+		[[['Shift', 'Alt', 'Up'], 'MediaNextTrack'], 'magicButton'],
+
+		[['MediaStop'], 'pause'],
+		[['MediaPlayPause'], 'pausePlay'],
+	]);
+
 (() => {
+	function registerShortcuts() {
+		for (let [keys, command] of map.entries()) {
+			for (let key in keys) {
+				if (Array.isArray(key)) {
+					key = key.join('+');
+				}
+
+				globalShortcut.register(key, () => {
+					sendMessage(command);
+				});
+			}
+		}
+	}
+
 	function createWindow () {
+		registerShortcuts();
+
 		activeWindow = new BrowserWindow({
 			width: 1024,
 			height: 740,
@@ -51,7 +85,15 @@ let activeWindow: Electron.BrowserWindow = null;
 	function respondToMessage<T extends keyof MessageReasons>(identifier: string, response: MessageReasons[T]) {
 		activeWindow && activeWindow.webContents.send('fromBgPage', {
 			identifier: identifier,
-			data: response
+			data: response,
+			type: 'response'
+		});
+	}
+
+	function sendMessage(data: keyof MessageReasons) {
+		activeWindow && activeWindow.webContents.send('fromBgPage', {
+			cmd: data,
+			type: 'event'
 		});
 	}
 
