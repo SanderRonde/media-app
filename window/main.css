@@ -1,5 +1,17 @@
+@font-face {
+	font-family: 'Roboto';
+	src: url('../fonts/Roboto-Regular.ttf');
+}
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('../fonts/Roboto-Bold.ttf');
+	font-weight: bold;
+}
+
 html {
 	overflow: hidden;
+	font-family: 'Roboto', 'Segoe UI';
 }
 
 body {
@@ -217,7 +229,7 @@ body {
 	color: white;
 	margin-top: calc(((100vh / 3) * 2) - 19px);
 	border: 5px solid #F44336;
-	pointer-events: all;
+	pointer-events: none;
 	opacity: 0;
 	transform: translateY(50px);
 	transition: opacity 200ms ease-in-out, transform 200ms ease-in-out;
@@ -258,6 +270,7 @@ body {
 
 #getSongDialog.visible, #getSongDialog.hoverable:hover {
 	opacity: 1;
+	pointer-events: all;
 	transform: translateY(0);
 }
 
