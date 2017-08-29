@@ -9,12 +9,12 @@
         "preserveConstEnums": false,
         "listFiles": true,
         "pretty": true,
+        "sourceMap": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitReturns": true,
         "noUnusedLocals": true,
         "target": "es2015",
-        "lib": ["dom", "es2015"],
-        "watch": true
+        "lib": ["dom", "es2015"]
 	}, 
     "allowJs": true,
     "compileOnSave": true,
