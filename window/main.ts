@@ -294,7 +294,6 @@ namespace Helpers {
 		if (!view.src) {
 			return;
 		}
-		console.log('Hacksecuting', fn);
 		view.executeJavaScript(replaceParameters(`(${createTag(fn).toString()})();`, parameters || {}), false);
 	}
 
@@ -529,6 +528,14 @@ namespace Helpers {
 			target.removeEventListener(event as any, listener as any);
 		});
 		target.addEventListener(event as any, listener as any);
+	}
+
+	export function wait(duration: number): Promise<void> {
+		return new Promise((resolve) => {
+			window.setTimeout(() => {
+				resolve();
+			}, duration);
+		})
 	}
 
 	export function delay(fn: () => Promise<any>|void, duration: number): Promise<void> {
@@ -1445,12 +1452,10 @@ namespace Netflix {
 	}
 
 	export async function init() {
-		await Helpers.delay(async () => {
-			(await Video.getView()).loadURL('https://www.netflix.com/browse');
-			Helpers.delay(() => {
-				AppWindow.onLoadingComplete('netflix');
-			}, 5000);
-		}, 15);
+		await Helpers.wait(15);
+		(await Video.getView()).loadURL('https://www.netflix.com/browse');
+		await Helpers.wait(5000);
+		AppWindow.onLoadingComplete('netflix');
 	}
 
 	export async function onClose() {
@@ -1802,9 +1807,8 @@ namespace YoutubeSubscriptions {
 
 	export async function init() {
 		console.log('Initting');
-		await Helpers.delay(async () => {
-				(await SubBox.getView()).loadURL('http://www.youtube.com/feed/subscriptions');
-		}, 15);
+		await Helpers.wait(15);
+		(await SubBox.getView()).loadURL('http://www.youtube.com/feed/subscriptions');
 	}
 
 	export function onClose() {
@@ -2297,10 +2301,9 @@ namespace YoutubeSearch {
 	}
 
 	export async function init() {
-		await Helpers.delay(async () => {
-			SearchResultsPage.navTo('https://www.youtube.com/');
-			(await SearchBar.getView()).loadURL('https://www.youtube.com/');
-		}, 15);
+		await Helpers.wait(15);
+		SearchResultsPage.navTo('https://www.youtube.com/');
+		(await SearchBar.getView()).loadURL('https://www.youtube.com/');
 	}
 
 	export function onClose() {
@@ -2614,10 +2617,9 @@ namespace AppWindow {
 	}
 
 	async function showSpinner() {
-		await Helpers.delay(() => {
-			$('#spinner').classList.add('active');
-			$('#spinnerCont').classList.remove('hidden');
-		}, 100);
+		await Helpers.wait(100);
+		$('#spinner').classList.add('active');
+		$('#spinnerCont').classList.remove('hidden');
 	}
 	
 	function hideSpinner() {
@@ -2679,18 +2681,23 @@ namespace AppWindow {
 		}
 
 		activeView = view;
-		if (loadedViews.indexOf(view) === -1) {
+		const isLoaded = loadedViews.indexOf(view) === -1;
+		if (isLoaded) {
 			await showSpinner();
 			await getViewByName(view).init();
 		} else {
 			hideSpinner();
-			getActiveViewClass().onFocus();
 			getActiveViewClass().Commands.play();
 		}
 
 		const viewsEl = $('#views');
 		viewsEl.classList.remove('ytmusic', 'netflix', 'youtubeSubscriptions', 'youtubesearch');
 		viewsEl.classList.add(view);
+
+		if (!isLoaded) {
+			await Helpers.wait(500);
+			getActiveViewClass().onFocus();
+		}
 	}
 
 	export async function init(startView: ViewNames) {
