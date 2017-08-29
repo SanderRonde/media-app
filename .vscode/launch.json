@@ -6,8 +6,9 @@
 		  "request": "launch",
 		  "name": "Electron Main",
 		  "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
-		  "program": "${workspaceRoot}/app.js",
-		  "protocol": "legacy"
+			"program": "${workspaceRoot}/app.ts",
+			"sourceMaps": true,
+			"protocol": "legacy"
 	  }
   ]
 }
