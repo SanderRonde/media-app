@@ -67,9 +67,7 @@ function mapKeyEvent(e: KeyboardEvent): KeyboardEvent & {
 }
 
 document.body.addEventListener('keydown', (e) => {
-	console.log('Key was pressed');
 	if (e.srcElement.tagName !== 'INPUT') {
-		console.log('Sending message');
 		ipcRenderer.send('toBgPage', {
 			type: 'passAlong',
 			data: {

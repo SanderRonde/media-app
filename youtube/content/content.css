@@ -6,76 +6,41 @@ html {
 	overflow: scroll;
 }
 
-.ad-container {
+#masthead-container {
+	display: none;
+}
+
+.showHiddens #masthead-container {
+	display: block;
+}
+
+#page-manager, #top {
+	margin-top: 0!important;
+}
+
+.showHiddens #page-manager {
+	margin-top: 56px;
+}
+
+#comments, #meta, #report, #pla-shelf, #info, #messages,
+#alerts, #related, #playlist, .video-ads, .ytp-ad-progress {
 	display: none;
 }
 
 .ytp-chrome-bottom {
-	min-width: calc(100vw - 44px);
+	bottom: 10px!important;
 }
 
-video {
-	min-width: 100vw;
-	min-height: calc(100vh - 5px);
+video, #player {
+	min-width: 100vw!important;
+	min-height: calc(100vh - 5px)!important;
 	left: 0!important;
 	top: 0!important;
 	background-color: white;
 }
 
-#player-api {
-	position: fixed;
-	border: 20px solid white;
-	left: -20px;
-	top: -30px;
-	right: 0;
-	bottom: 0;
-	margin-left: 0;
-	min-width: 100vw;
-	border-bottom: 0;
-}
-
-#player {
-	max-width: none!important;
-}
-
-.showHiddens #player {
+.showHiddens video, .showHiddens #player {
 	display: none;
-}
-
-#masthead-positioner {
-	display: none;
-}
-
-#masthead-positioner-height-offset {
-	display: none;
-}
-
-.showHiddens #masthead-positioner {
-	display: block;
-}
-
-.showHiddens #masthead-positioner-height-offset {
-	display: block;
-}
-
-.yt-dialog-base {
-	display: none;
-}
-
-#player-playlist,
-#content,
-#footer-container,
-#feed-privacy-lb,
-.alerts-wrapper {
-	display: none;
-}
-
-.showHiddens #player-playlist,
-.showHiddens #content,
-.showHiddens #footer-container,
-.showHiddens #feed-privacy-lb,
-.showHiddens .alerts-wrapper {
-	display: block;
 }
 
 #yt-ca-volumeBar {

@@ -231,7 +231,7 @@ interface YoutubeVideoPlayer extends HTMLElement {
 	getAdState(): number;
 	setPlaybackQuality(quality: string): void;
 	getPlaybackQuality(): string;
-	setSizeStyle(expanded: boolean, expandedAgain: boolean): void;
+	setSizeStyle(showExpansionIcon: boolean, expanded: boolean): void;
 	setSize(): void;
 	getCurrentTime(): number;
 	seekTo(seconds: number): void;
@@ -697,7 +697,15 @@ namespace YoutubeMusic {
 					}, 50);
 				}
 
+				function doTempInterval(fn: () => void, interval: number, max: number) {
+					const intervalId = window.setInterval(fn, interval);
+					window.setTimeout(() => {
+						window.clearInterval(intervalId);
+					}, max);
+				}
+
 				function prepareVideo() {
+					console.log('preparing');
 					let timePassed: number = 0;
 					setTimeout(() => {
 						timePassed += 500;
@@ -716,13 +724,12 @@ namespace YoutubeMusic {
 										player.setPlaybackQuality('hd720');
 									}
 									
-									if (document.querySelector('.ytp-size-button')
-											.getAttribute('title') === 'Theatermodus') {
-										player.setSizeStyle(true, true);
-									}
+									console.log('Setting size style');
+									doTempInterval(() => {
+										player.setSizeStyle(false, true);
+									}, 250, 5000);
 									setupVisualizer();
-
-										console.log('Done');
+									console.log('Done');
 									localStorage.setItem('loaded', 'ytmusic');
 								}, Math.max(2500 - timePassed, 0));
 							}
@@ -1252,7 +1259,7 @@ namespace YoutubeMusic {
 
 	function launch(url: string) {
 		//TODO: change this lol
-		view.loadURL('https://www.youtube.com/watch?v=ih-NNLjTCPs&list=WL&index=804&t=3260');
+		view.loadURL('https://www.youtube.com/watch?v=ih-NNLjTCPs&list=WL&index=804&t=1260');
 	}
 
 	function addListeners() {
@@ -1657,10 +1664,7 @@ namespace YoutubeSubscriptions {
 												player.setPlaybackQuality('hd720');
 											}
 											
-											if (document.querySelector('.ytp-size-button')
-													.getAttribute('title') === 'Theatermodus') {
-												player.setSizeStyle(true, true);
-											}
+											player.setSizeStyle(false, true);
 
 											localStorage.setItem('loaded', 'ytmusic');
 										}
@@ -2048,10 +2052,7 @@ namespace YoutubeSearch {
 												player.setPlaybackQuality('hd720');
 											}
 											
-											if (document.querySelector('.ytp-size-button')
-													.getAttribute('title') === 'Theatermodus') {
-												player.setSizeStyle(true, true);
-											}
+											player.setSizeStyle(false, true);
 
 											localStorage.setItem('loaded', 'ytmusic');
 										}
