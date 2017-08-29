@@ -1,11 +1,18 @@
 import {
-	app, BrowserWindow, ipcMain, globalShortcut
+	app, BrowserWindow, ipcMain, globalShortcut, dialog
 } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import { MessageReasons, PassedAlongMessages } from './window/main'
+const widevine: {
+	load(app: Electron.App, dest: string): boolean;
+	downloadAsync(app: Electron.App, dest: string): Promise<void>;
+} = require('electron-widevinecdm')
 
 ///<reference path="window/main.ts"/>
+
+const widevinePath = path.join(app.getPath('appData'), 'widevine');
+const widevineExists = widevine.load(app, widevinePath);
 
 let activeWindow: Electron.BrowserWindow = null;
 
@@ -30,30 +37,55 @@ const map = new Map<
 (() => {
 	function registerShortcuts() {
 		for (let [keys, command] of map.entries()) {
-			for (let key in keys) {
-				if (Array.isArray(key)) {
-					key = key.join('+');
-				}
+			for (let key of keys) {
+				const keyCommand = Array.isArray(key) ? key.join('+') : key;
 
-				globalShortcut.register(key, () => {
+				globalShortcut.register(keyCommand as any, () => {
 					sendMessage(command);
 				});
 			}
 		}
 	}
 
-	function createWindow () {
+	async function loadWidevine() {
+		return new Promise(async (resolve) => {
+			if (widevineExists) {
+				resolve();
+			} else {
+				await widevine.downloadAsync(app, widevinePath);
+				app.relaunch();
+				dialog.showMessageBox({
+					message: 'You need to relaunch the app to use widevineCDM',
+					buttons: [
+						'Relaunch now',
+						'Cancel',
+					],
+					defaultId: 0,
+					cancelId: 1,
+				}, (response) => {
+					if (response === 0) {
+						app.quit();
+					}
+				});
+			}
+		});
+	}
+
+	async function createWindow () {
+		await loadWidevine();
+
 		registerShortcuts();
 
 		activeWindow = new BrowserWindow({
 			width: 1024,
 			height: 740,
-			icon: path.join(__dirname, 'icons/128.png'),
+			icon: path.join(__dirname, 'icons/48.png'),
 			frame: false,
 			titleBarStyle: 'hidden',
 			title: 'Media App',
 			webPreferences: {
-				nodeIntegration: true
+				nodeIntegration: true,
+				plugins: true
 			}
 		});
 
@@ -74,11 +106,6 @@ const map = new Map<
 	app.on('window-all-closed', () => {
 		if (process.platform !== 'darwin') {
 			app.quit();
-		}
-	});
-	app.on('activate', () => {
-		if (activeWindow === null) {
-			createWindow();
 		}
 	});
 
