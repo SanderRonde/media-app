@@ -1859,9 +1859,9 @@ namespace YoutubeSubscriptions {
 namespace YoutubeSearch {
 	let activePage: 'video'|'results' = 'results';
 
-	function initView(): Promise<Electron.WebviewTag> {
+	function initView(id: string): Promise<Electron.WebviewTag> {
 		return new Promise<Electron.WebviewTag>((resolve) => {
-			const view = $(`#youtubeSearchVideoView`) as Electron.WebviewTag;
+			const view = $(`#${id}`) as Electron.WebviewTag;
 			view.addEventListener('dom-ready', () => {
 				view.addEventListener('new-window', (e) => {
 					shell.openExternal(e.url);
@@ -1953,7 +1953,7 @@ namespace YoutubeSearch {
 		}
 
 		export async function setup() {
-			videoPromise = initView();
+			videoPromise = initView('youtubeSearchVideoView');
 			videoView = await videoPromise;
 
 			window.setTimeout(() => {
@@ -2148,7 +2148,7 @@ namespace YoutubeSearch {
 		}
 
 		export async function setup() {
-			searchResultsPromise = initView();
+			searchResultsPromise = initView('youtubeSearchResultsView');
 			searchResultsView = await searchResultsPromise;
 			searchResultsView.id = 'youtubeSearchResultsView';
 
@@ -2203,7 +2203,7 @@ namespace YoutubeSearch {
 		}
 
 		export async function setup() {
-			searchBarPromise = initView();
+			searchBarPromise = initView('youtubeSearchBarView');
 			searchBarView = await searchBarPromise;
 
 			Helpers.addContentScripts(searchBarView, [{

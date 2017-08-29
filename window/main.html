@@ -133,12 +133,13 @@
 			</div>
 			<div id="youtubeSearchCont">
 				<webview id="youtubeSearchVideoView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
+				<webview id="youtubeSearchResultsView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
+				<webview id="youtubeSearchBarView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
 			</div>
 			<div id="netflixCont">
 				<webview id="netflixWebView" partition="persist:netflix" src="https://www.example.com" plugins></webview>
 			</div>
 		</div>
-		<webview id="youtubeSearchPageView" style="display:none;" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
 		<webview id="1001TracklistsView" style="display:none;" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
 		<script>const exports = {};</script>
 		<script src="main.js"></script>
