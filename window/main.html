@@ -125,8 +125,8 @@
 		</div>
 		<div id="views">
 			<div id="youtubeSubsCont">
-				<webview id="youtubeSubsVideoView" src="https://www.example.com" partition="persist:youtubeSubscriptions" nodeintegration></webview>
 				<webview id="youtubeSubsSubBoxView" partition="persist:youtubeSubscriptions" nodeintegration src="https://www.example.com"></webview>
+				<webview id="youtubeSubsVideoView" src="https://www.example.com" partition="persist:youtubeSubscriptions" nodeintegration></webview>
 			</div>
 			<div id="youtubePlaylistCont">
 				<webview id="ytmaWebview" partition="persist:youtubeplaylist" nodeintegration src="https://www.example.com"></webview>
@@ -135,7 +135,7 @@
 				<webview id="youtubeSearchVideoView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
 			</div>
 			<div id="netflixCont">
-				<webview id="netflixWebView" partition="persist:netflix" nodeintegration src="https://www.example.com"></webview>
+				<webview id="netflixWebView" partition="persist:netflix" src="https://www.example.com" plugins></webview>
 			</div>
 		</div>
 		<webview id="youtubeSearchPageView" style="display:none;" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
