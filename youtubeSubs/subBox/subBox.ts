@@ -1,3 +1,5 @@
+var ipcRenderer = require('electron').ipcRenderer;
+
 interface Window {
 	videos: VideoIdentifier;
 	navToLink(link: string, video?: TransformedVideo): void;
@@ -603,9 +605,14 @@ function identifyVideos() {
 }
 
 window.navToLink = (link, video) => {
-	chrome.runtime.sendMessage({
-		cmd: 'changeYoutubeSubsLink',
-		link: link
+	ipcRenderer.send('toBpPage', {
+		type: 'passAlong',
+		data: {
+			type: 'changeYoutubeSubsLink',
+			data: {
+				link: link
+			}
+		}
 	});
 	if (video) {
 		window.videos.selected.setCurrent(video);
