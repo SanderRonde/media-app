@@ -202,3 +202,5 @@ app/window/**/*.js
 
 media-app-win32-x64/**
 genericJs/secrets.ts
+
+**/*.map
