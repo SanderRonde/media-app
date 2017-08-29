@@ -51,6 +51,11 @@ const VALID_INPUT = arr(65, 90).map((charCode) => {
 	';',':',',','.','<','>','/','?','\\','|','`','~'
 ]);
 
+const EXAMPLE_STYLES = `html, body, a {
+	background-color: white!important;
+	color: white!important;
+}`;
+
 //TODO: this
 // namespace AdBlocking {
 // 	let ready: boolean = false;
@@ -496,7 +501,7 @@ namespace Helpers {
 			if (view.getURL().indexOf('example.com') > -1) {
 				//Make background white
 				runCodeType(view, {
-					files: ['main/examplestyles.css']
+					code: EXAMPLE_STYLES
 				}, false)
 				return;
 			}
@@ -1357,6 +1362,9 @@ namespace Netflix {
 		return new Promise((resolve) => {
 			const view = document.getElementById('netflixWebView') as Electron.WebviewTag;
 			view.addEventListener('dom-ready', () => {
+				if (view.getURL().indexOf('example.com') > -1) {
+					view.insertCSS(EXAMPLE_STYLES);
+				}
 				resolve(view);
 			});
 		});
@@ -1484,10 +1492,18 @@ namespace YoutubeSubscriptions {
 	function initView(id: string): Promise<Electron.WebviewTag> {
 		return new Promise<Electron.WebviewTag>((resolve) => {
 			const view = $(`#${id}`) as Electron.WebviewTag;
+			let hasListener = false;
 			view.addEventListener('dom-ready', () => {
-				view.addEventListener('new-window', (e) => {
-					shell.openExternal(e.url);
-				});
+				if (view.getURL().indexOf('example.com') > -1) {
+					view.insertCSS(EXAMPLE_STYLES);
+				}
+
+				if (!hasListener) {
+					view.addEventListener('new-window', (e) => {
+						shell.openExternal(e.url);
+					});
+					hasListener = true;
+				}
 				
 				resolve(view);
 			});
@@ -1582,9 +1598,7 @@ namespace YoutubeSubscriptions {
 
 		export async function setup() {
 			videoPromise = initView('youtubeSubsVideoView');
-			console.log(videoPromise);
 			videoView = await videoPromise;
-			console.log(videoPromise, videoView);
 
 			window.setTimeout(() => {
 				Helpers.addContentScripts(videoView, [{
@@ -1866,10 +1880,18 @@ namespace YoutubeSearch {
 	function initView(id: string): Promise<Electron.WebviewTag> {
 		return new Promise<Electron.WebviewTag>((resolve) => {
 			const view = $(`#${id}`) as Electron.WebviewTag;
+			let hasListener = false;
 			view.addEventListener('dom-ready', () => {
-				view.addEventListener('new-window', (e) => {
-					shell.openExternal(e.url);
-				});
+				if (view.getURL().indexOf('example.com') > -1) {
+					view.insertCSS(EXAMPLE_STYLES);
+				}
+
+				if (!hasListener) {
+					view.addEventListener('new-window', (e) => {
+						shell.openExternal(e.url);
+					});
+					hasListener = true;
+				}
 				
 				resolve(view);
 			});
