@@ -724,12 +724,10 @@ namespace YoutubeMusic {
 										player.setPlaybackQuality('hd720');
 									}
 									
-									console.log('Setting size style');
 									doTempInterval(() => {
 										player.setSizeStyle(false, true);
 									}, 250, 5000);
 									setupVisualizer();
-									console.log('Done');
 									localStorage.setItem('loaded', 'ytmusic');
 								}, Math.max(2500 - timePassed, 0));
 							}
@@ -1647,14 +1645,19 @@ namespace YoutubeSubscriptions {
 							volumeBar.appendChild(volumeBarBar);
 							document.body.appendChild(volumeBar);
 
-							console.log('Preparing your boy');
+							function doTempInterval(fn: () => void, interval: number, max: number) {
+								const intervalId = window.setInterval(fn, interval);
+								window.setTimeout(() => {
+									window.clearInterval(intervalId);
+								}, max);
+							}
+
 							function prepareVideo() {
 								setTimeout(() => {							
 									function reloadIfAd() {
 										if (player.getAdState() === 1) {
 											window.location.reload();
 										}
-										console.log('Preparing your boy');
 
 										if (player.getPlayerState() === 3) {
 											window.setTimeout(reloadIfAd, 250);
@@ -1664,7 +1667,9 @@ namespace YoutubeSubscriptions {
 												player.setPlaybackQuality('hd720');
 											}
 											
-											player.setSizeStyle(false, true);
+											doTempInterval(() => {
+												player.setSizeStyle(false, true);
+											}, 250, 5000);
 
 											localStorage.setItem('loaded', 'ytmusic');
 										}
@@ -2037,6 +2042,13 @@ namespace YoutubeSearch {
 							volumeBar.appendChild(volumeBarBar);
 							document.body.appendChild(volumeBar);
 
+							function doTempInterval(fn: () => void, interval: number, max: number) {
+								const intervalId = window.setInterval(fn, interval);
+								window.setTimeout(() => {
+									window.clearInterval(intervalId);
+								}, max);
+							}
+
 							function prepareVideo() {
 								setTimeout(() => {							
 									function reloadIfAd() {
@@ -2052,7 +2064,9 @@ namespace YoutubeSearch {
 												player.setPlaybackQuality('hd720');
 											}
 											
-											player.setSizeStyle(false, true);
+											doTempInterval(() => {
+												player.setSizeStyle(false, true);
+											}, 250, 5000);
 
 											localStorage.setItem('loaded', 'ytmusic');
 										}
