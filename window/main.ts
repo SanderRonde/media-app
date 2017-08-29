@@ -494,6 +494,10 @@ namespace Helpers {
 	export function addContentScripts(view: Electron.WebviewTag, configArr: Array<ContentScriptDetails>) {
 		view.addEventListener('dom-ready', (e) => {
 			if (view.getURL().indexOf('example.com') > -1) {
+				//Make background white
+				runCodeType(view, {
+					files: ['main/examplestyles.css']
+				}, false)
 				return;
 			}
 
