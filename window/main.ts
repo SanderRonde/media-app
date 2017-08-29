@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as md5 from 'md5'
 import * as firebase from 'firebase'
-import { shell, ipcRenderer,  } from 'electron'
+import { shell, ipcRenderer, clipboard } from 'electron'
 import { firebaseConfig } from '../genericJs/secrets'
 
 firebase.initializeApp(firebaseConfig);
@@ -233,6 +233,11 @@ interface YoutubeVideoPlayer extends HTMLElement {
 }
 
 type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions'|'youtubesearch';
+const KeyListeningViews: Array<ViewNames> = [
+	'ytmusic',
+	'youtubeSubscriptions',
+	'youtubesearch'
+];
 
 interface MatchPattern {
 	scheme: string;
@@ -524,6 +529,15 @@ namespace Helpers {
 			target.removeEventListener(event as any, listener as any);
 		});
 		target.addEventListener(event as any, listener as any);
+	}
+
+	export function delay(fn: () => Promise<any>|void, duration: number): Promise<void> {
+		return new Promise((resolve) => {
+			window.setTimeout(async () => {
+				await fn();
+				resolve();
+			}, duration);
+		});
 	}
 }
 
@@ -1362,13 +1376,11 @@ namespace Netflix {
 					matches: ['*://*/*'],
 					js: {
 						files: [
-							'genericJs/comm.js',
-							'genericJs/keypress.js',
 							'netflix/video/video.js'
 						]
 					},
 					run_at: 'document_idle'
-				}])
+				}]);
 			}, 10);
 		}
 	}
@@ -1432,9 +1444,12 @@ namespace Netflix {
 		click: () => void;
 	}
 
-	export function init() {
-		window.setTimeout(async () => {
+	export async function init() {
+		await Helpers.delay(async () => {
 			(await Video.getView()).loadURL('https://www.netflix.com/browse');
+			Helpers.delay(() => {
+				AppWindow.onLoadingComplete('netflix');
+			}, 5000);
 		}, 15);
 	}
 
@@ -1528,7 +1543,8 @@ namespace YoutubeSubscriptions {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.playVideo();
 			});
-			if ((await Video.getView()).src) {
+			console.log((await Video.getView()).src);
+			if ((await Video.getView()).src.indexOf('example.com') === -1) {
 				showVideo();
 			}
 		}
@@ -1784,10 +1800,10 @@ namespace YoutubeSubscriptions {
 		]);
 	}
 
-	export function init() {
+	export async function init() {
 		console.log('Initting');
-		window.setTimeout(async () => {
-			(await SubBox.getView()).loadURL('http://www.youtube.com/feed/subscriptions');
+		await Helpers.delay(async () => {
+				(await SubBox.getView()).loadURL('http://www.youtube.com/feed/subscriptions');
 		}, 15);
 	}
 
@@ -1910,7 +1926,7 @@ namespace YoutubeSearch {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.playVideo();
 			});
-			if ((await Video.getView()).src) {
+			if ((await Video.getView()).src.indexOf('exmaple.com') === -1) {
 				showVideo();
 			}
 		}
@@ -2281,7 +2297,7 @@ namespace YoutubeSearch {
 	}
 
 	export async function init() {
-		window.setTimeout(async () => {
+		await Helpers.delay(async () => {
 			SearchResultsPage.navTo('https://www.youtube.com/');
 			(await SearchBar.getView()).loadURL('https://www.youtube.com/');
 		}, 15);
@@ -2364,7 +2380,7 @@ namespace YoutubeSearch {
 				Video.navTo(data);
 			} else {
 				//Go to that view and focus the video
-				AppWindow.switchToview('youtubesearch');
+				await AppWindow.switchToview('youtubesearch');
 				const interval = window.setInterval(async () => {
 					if (AppWindow.loadedViews.indexOf('youtubesearch') > -1 && (await Video.getView())) {
 						//It's loaded
@@ -2418,6 +2434,9 @@ export interface PassedAlongMessages {
 	};
 	keyPress: MappedKeyboardEvent;
 	paste: string;
+	changeYoutubeSubsLink: {
+		link: string;
+	}
 }
 
 namespace AppWindow {
@@ -2552,6 +2571,19 @@ namespace AppWindow {
 				YoutubeSearch.onSearchBarFocus();
 			}
 		});
+
+		document.addEventListener('keydown', (e) => {
+			if (KeyListeningViews.indexOf(getActiveViewName()) === -1) {
+				if (e.key === 'v' && e.ctrlKey) {
+					//It's a paste
+					const pasteData = clipboard.readText();
+					YoutubeSearch.onPaste(pasteData);
+				} else {
+					//This view has no listeners itself, pass them along
+					onKeyPress(e as MappedKeyboardEvent);
+				}
+			}
+		});
 	}
 
 	function onShortcut(command: keyof MessageReasons) {
@@ -2581,9 +2613,11 @@ namespace AppWindow {
 		}
 	}
 
-	function showSpinner() {
-		$('#spinner').classList.add('active');
-		$('#spinnerCont').classList.remove('hidden');
+	async function showSpinner() {
+		await Helpers.delay(() => {
+			$('#spinner').classList.add('active');
+			$('#spinnerCont').classList.remove('hidden');
+		}, 100);
 	}
 	
 	function hideSpinner() {
@@ -2634,7 +2668,7 @@ namespace AppWindow {
 		}
 	}
 
-	export function switchToview(view: ViewNames, first: boolean = false) {
+	export async function switchToview(view: ViewNames, first: boolean = false) {
 		if (view === activeView && !first) {
 			return;
 		} 
@@ -2644,16 +2678,16 @@ namespace AppWindow {
 			getActiveViewClass().Commands.pause();
 		}
 
+		activeView = view;
 		if (loadedViews.indexOf(view) === -1) {
-			showSpinner();
-			getViewByName(view).init();
+			await showSpinner();
+			await getViewByName(view).init();
 		} else {
 			hideSpinner();
+			getActiveViewClass().onFocus();
+			getActiveViewClass().Commands.play();
 		}
 
-		activeView = view;
-		getActiveViewClass().onFocus();
-		getActiveViewClass().Commands.play();
 		const viewsEl = $('#views');
 		viewsEl.classList.remove('ytmusic', 'netflix', 'youtubeSubscriptions', 'youtubesearch');
 		viewsEl.classList.add(view);
@@ -2661,6 +2695,7 @@ namespace AppWindow {
 
 	export async function init(startView: ViewNames) {
 		activeView = startView;
+		$('#views').classList.add(startView);
 
 		listenForMessages();
 		prepareEventListeners();
@@ -2778,6 +2813,10 @@ namespace AppWindow {
 				case 'paste':
 					const pasteData = data as PassedAlongMessages['paste'];
 					YoutubeSearch.onPaste(pasteData);
+					break;
+				case 'changeYoutubeSubsLink':
+					const youtubeSubsData = data as PassedAlongMessages['changeYoutubeSubsLink'];
+					YoutubeSubscriptions.changeVideo(youtubeSubsData.link);
 					break;
 			}
 		});
