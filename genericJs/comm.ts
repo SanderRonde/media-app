@@ -51,7 +51,7 @@ ipcRenderer.on('task', (event: Event, task: {
 }) => {
 	if (location.href.indexOf(task.page) > -1) {
 		getTaskRunner() && getTaskRunner()(task.name, task.id, (result) => {
-			ipcRenderer.send('toBpPage', {
+			ipcRenderer.send('toBgPage', {
 				type: 'passAlong',
 				data: {
 					type: 'taskResult',
