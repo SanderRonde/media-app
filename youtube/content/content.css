@@ -27,16 +27,20 @@ html {
 	display: none;
 }
 
-.ytp-chrome-bottom {
-	bottom: 10px!important;
+.ytp-endscreen-content {
+	display: none;
 }
 
 video, #player {
 	min-width: 100vw!important;
-	min-height: calc(100vh - 5px)!important;
+	min-height: 100vh!important;
 	left: 0!important;
 	top: 0!important;
 	background-color: white;
+}
+
+#player {
+	position: absolute!important;
 }
 
 .showHiddens video, .showHiddens #player {
