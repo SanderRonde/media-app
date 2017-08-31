@@ -497,6 +497,7 @@ namespace Helpers {
 	}
 
 	async function runScripts(url: string, view: Electron.WebviewTag, config: ContentScriptDetails) {
+		console.log('Running', config);
 		if (config.run_at === 'document_start') {
 			await Helpers.wait(150);
 		}
@@ -1361,7 +1362,7 @@ namespace YoutubeMusic {
 		return view;
 	}
 
-	export function onKeyPress(event: MappedKeyboardEvent): boolean {
+	export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
 		if (AppWindow.getActiveViewName() !== 'ytmusic') {
 			return false;
 		}
@@ -1377,6 +1378,8 @@ namespace YoutubeMusic {
 		} else if (event.key === '?') {
 			YoutubeMusic.getCurrentSong();
 			return true;
+		} else if (event.key === 'r') {
+			(await YoutubeMusic.getView()).reload();
 		}
 		return false;
 	}
@@ -1508,7 +1511,7 @@ namespace Netflix {
 		return (await Video.getView());
 	}
 
-	export function onKeyPress(event: MappedKeyboardEvent) { 
+	export async function onKeyPress(event: MappedKeyboardEvent) { 
 		return false;
 	}
 }
@@ -2678,8 +2681,8 @@ namespace AppWindow {
 
 	async function showSpinner() {
 		await Helpers.wait(100);
-		// $('#spinner').classList.add('active');
-		// $('#spinnerCont').classList.remove('hidden');
+		$('#spinner').classList.add('active');
+		$('#spinnerCont').classList.remove('hidden');
 	}
 	
 	function hideSpinner() {
@@ -2775,9 +2778,6 @@ namespace AppWindow {
 		]);
 
 		switchToview(startView, true);
-
-		//TODO: remove
-		hideSpinner();
 
 		window.addEventListener('keydown', (e) => {
 			handleKeyboardEvent(e as MappedKeyboardEvent)
@@ -2909,7 +2909,7 @@ namespace AppWindow {
 	}
 }
 
-AppWindow.init('youtubeSubscriptions');
+AppWindow.init('ytmusic');
 window.Helpers = Helpers;
 window.Netflix = Netflix;
 window.AppWindow = AppWindow;
