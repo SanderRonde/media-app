@@ -72,8 +72,6 @@ const intervalId = window.setInterval(() => {
 		loaded = true;
 		window.clearInterval(intervalId);
 
-		console.log('Something has loaded');
-		
 		ipcRenderer.send('toBgPage', {
 			type: 'passAlong',
 			data: {
