@@ -478,9 +478,6 @@ body {
 	transform: translateY(calc(-100vh - 3px));
 }
 
-#youtubeSubsVideoView {
-	margin-top: -3px;
-}
 
 #setupCont {
 	background-color: rgba(0, 0, 0, 0.7);
