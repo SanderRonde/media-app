@@ -297,17 +297,34 @@ class SelectedVideo {
 		return rowWidth;
 	}
 
+	_findInNewContext(video: TransformedVideo): TransformedVideo {
+		const title = video.title;
+		const channel = video.channel;
+		const length = video.length;
+
+		for (let i = 0; i < this.videos.length; i++) {
+			const candidate = this.videos[i];
+			if (candidate.title === title && candidate.channel === channel &&
+				candidate.length === length) {
+					return candidate;
+				}
+		}
+
+		return this.videos[0];
+	}
+
 	goUp() {
 		let width = this._getRowWidth();
 		let toSelect = this.current;
 		for (let i = 0; i < width; i++) {
-			if (this.videos.indexOf(toSelect) === -1) {
-				toSelect = this.videos[toSelect.context.indexOf(toSelect)];
-			} else {
-				do {
-					toSelect = this.videos[this.videos.indexOf(toSelect) - 1];
-				} while (!toSelect || toSelect.isHidden)
+			if (toSelect.list !== this.videos) {
+				toSelect = this._findInNewContext(toSelect);
 			}
+			do {
+				if (toSelect.previous) {
+					toSelect = toSelect.previous;
+				}
+			} while (toSelect.isHidden)
 		}
 		this._updateSelected(toSelect);
 	}
@@ -316,38 +333,41 @@ class SelectedVideo {
 		let width = this._getRowWidth();
 		let toSelect = this.current;
 		for (let i = 0; i < width; i++) {
-			if (this.videos.indexOf(toSelect) === -1) {
-				toSelect = this.videos[toSelect.context.indexOf(toSelect)];
-			} else {
-				do {
-					toSelect = this.videos[this.videos.indexOf(toSelect) + 1];
-				} while (!toSelect || toSelect.isHidden)
+			if (toSelect.list !== this.videos) {
+				toSelect = this._findInNewContext(toSelect);
 			}
+			do {
+				if (toSelect.next) {
+					toSelect = toSelect.next;
+				}
+			} while (toSelect.isHidden)
 		}
 		this._updateSelected(toSelect);
 	}
 
 	goLeft() {
 		let toSelect = this.current;
-		if (this.videos.indexOf(toSelect) === -1) {
-			toSelect = this.videos[toSelect.context.indexOf(toSelect)];
-		} else {
-			do {
-				toSelect = this.videos[this.videos.indexOf(toSelect) - 1];
-			} while (!toSelect || toSelect.isHidden)
+		if (toSelect.list !== this.videos) {
+			toSelect = this._findInNewContext(toSelect);
 		}
+		do {
+			if (toSelect.previous) {
+				toSelect = toSelect.previous;
+			}
+		} while (toSelect.isHidden)
 		this._updateSelected(toSelect);
 	}
 
 	goRight() {
 		let toSelect = this.current;
-		if (this.videos.indexOf(toSelect) === -1) {
-			toSelect = this.videos[toSelect.context.indexOf(toSelect)];
-		} else {
-			do {
-				toSelect = this.videos[this.videos.indexOf(toSelect) + 1];
-			} while (!toSelect || toSelect.isHidden)
+		if (toSelect.list !== this.videos) {
+			toSelect = this._findInNewContext(toSelect);
 		}
+		do {
+			if (toSelect.next) {
+				toSelect = toSelect.next;
+			}
+		} while (toSelect.isHidden)
 		this._updateSelected(toSelect);
 	}
 
@@ -375,7 +395,7 @@ class SelectedVideo {
 		this._updateSelected(this.videos[this.videos.length - 1]);
 	}
 
-	constructor(public videos: TransformedVideo[], previousTitle: string) {
+	constructor(public videos: TransformedVideo[], previousTitle: string, noCursorRefresh: boolean) {
 		if (previousTitle) {
 			for (let i = 0; i < videos.length; i++) {
 				if (videos[i].title === previousTitle) {
@@ -388,7 +408,9 @@ class SelectedVideo {
 			this.selectLatestWatched();
 		}
 
-		this._focusCurrent();
+		if (!noCursorRefresh) {
+			this._focusCurrent();
+		}
 
 		if (!window.signalledCompletion) {
 			localStorage.setItem('loaded', 'youtubeSubscriptions');
@@ -428,19 +450,38 @@ function addVideoToWatchLater(button: HTMLElement) {
 }
 
 interface TransformedVideo {
-    element: HTMLElement;
+    element: Thumbnail;
     watched: boolean;
     title: string;
     channel: string;
-    length: number;
-    context: {
-        element: HTMLElement;
-        watched: boolean;
-    }[];
+	length: number;
+	isLiveStream: boolean;
 	isPodcast: boolean;
 	isHidden: boolean;
 	links: string[];
+
+	index: number;
+	list: TransformedVideo[];
+	next: TransformedVideo;
+	previous: TransformedVideo;
 };
+
+interface Thumbnail extends HTMLElement {
+	data: {
+		title: {
+			simpleText: string;
+		}
+		videoId: string;
+	}
+}
+
+function fnInterval(fn: (done: () => void) => void, interval: number) {
+	const index = window.setInterval(() => {
+		fn(() => {
+			window.clearInterval(index);
+		});
+	}, interval);
+}
 
 class VideoIdentifier {
 	videos: TransformedVideo[];
@@ -450,19 +491,44 @@ class VideoIdentifier {
 		return this.videos.length;
 	}
 
-	_objectify(video: HTMLElement): {
-		element: HTMLElement;
+	_objectify(video: Thumbnail): {
+		element: Thumbnail;
 	} {
 		return {
 			element: video
 		};
 	}
 
+	_waitForReady(video: {
+		element: Thumbnail
+	}): Promise<{
+		element: Thumbnail;
+		isLiveStream: boolean;
+	}> {
+		return new Promise((resolve) => {
+			fnInterval((done) => {
+				if (video.element.querySelector('ytd-thumbnail-overlay-time-status-renderer')) {
+					done();
+					resolve(Object.assign(video, {
+						isLiveStream: false
+					}));
+				} else if (video.element.querySelector('ytd-badge-supported-renderer') && 
+					video.element.querySelector('ytd-badge-supported-renderer .badge-style-type-live-now')) {
+						done();
+						resolve(Object.assign(video, {
+							isLiveStream: true
+						}));
+					}
+			}, 100);
+		});
+	}
+
 	_markWatched(video: {
-		element: HTMLElement;
+		element: Thumbnail;
 	}) {
 		return Object.assign(video, {
-			watched: !!video.element.querySelector('.watched-badge')
+			watched: !!video.element.querySelector('ytd-thumbnail-overlay-resume-playback-renderer') ||
+				video.element.querySelector('ytd-thumbnail-overlay-playback-status-renderer')
 		});
 	}
 
@@ -475,23 +541,19 @@ class VideoIdentifier {
 	}
 
 	_setVideoMetaData(video: {
-		element: HTMLElement;
+		element: Thumbnail;
 		watched: boolean;	
-	}, index: number, videos: {
-		element: HTMLElement;
-		watched: boolean;	
-	}[]) {
+		isLiveStream: boolean;
+	}): Partial<TransformedVideo> {
 		return Object.assign(video, {
-			title: video.element.querySelector('.yt-lockup-title').querySelector('a').innerText,
-			channel: video.element.querySelector('.yt-lockup-byline').querySelector('a').innerText,
-			length: this._parseTime(video.element.querySelector('.video-time') as HTMLElement),
-			context: videos
+			title: video.element.data.title.simpleText,
+			channel: video.element.querySelector('#metadata').querySelector('#byline-container').querySelector('a').innerText,
+			length: video.isLiveStream ? Infinity : this._parseTime(video.element.querySelector('ytd-thumbnail-overlay-time-status-renderer').querySelector('span') as HTMLElement)
 		});
 	}
 
 	_hideVideo(video: TransformedVideo) {
-		video.element.parentElement.style.display = 'none';
-
+		video.element.style.display = 'none';
 		return video;
 	}
 
@@ -525,7 +587,11 @@ class VideoIdentifier {
 		return false;
 	}
 
-	_isPodcast(video: TransformedVideo, title: string, channel: string) {
+	_isPodcast(video: TransformedVideo, title: string, channel: string): boolean {
+		if (video.length === Infinity) {
+			return false;
+		}
+
 		if (this._containsPart(EXCLUDE, title)) {
 			return false;
 		}
@@ -547,7 +613,7 @@ class VideoIdentifier {
 			video.isPodcast = true;
 			this._hideVideo(video);
 			video.isHidden = true;
-			addVideoToWatchLater(video.element.querySelector('.addto-watch-later-button') as HTMLElement);
+			addVideoToWatchLater(video.element.querySelector('ytd-thumbnail-overlay-toggle-button-renderer').querySelector('yt-icon') as HTMLElement);
 			return video;
 		}
 		video.isPodcast = false;
@@ -555,11 +621,13 @@ class VideoIdentifier {
 		return video;
 	}
 
-	_applyArrayTransformation(arr: Array<HTMLElement>, fns: Array<(video: any) => any>): TransformedVideo[] {
-		for (let i = 0; i < fns.length; i++) {
-			arr = arr.map(fns[i]);
-		}
-		return arr as any;
+	async _applyArrayTransformation(arr: Array<Thumbnail>, fns: Array<(video: any) => any>): Promise<TransformedVideo[]> {
+		return await Promise.all(arr.map(async (item) => {
+			for (let i = 0; i < fns.length; i++) {
+				item = await fns[i](item);
+			}
+			return <any>item as TransformedVideo;
+		}));
 	}
 
 	_replaceLinks(videos: TransformedVideo[]) {
@@ -567,10 +635,15 @@ class VideoIdentifier {
 			const anchors = video.element.querySelectorAll('a');
 			video.links = [];
 			Array.from(anchors).forEach((anchor) => {
-				const link = `https://www.youtube.com/watch?v=${video.element.getAttribute('data-context-item-id')}`;
+				const link = `https://www.youtube.com/watch?v=${video.element.data.videoId}`;
 				if (!anchor.hasListener) {
 					anchor.href = '#';
 					anchor.addEventListener('click', (e) => {
+						if (e.defaultPrevented || (e.clientX === 0 && e.clientY === 0)) {
+							return;
+						}
+						e.preventDefault();
+						e.stopPropagation();
 						window.navToLink(link, video);
 					});
 					anchor.hasListener = true;
@@ -580,32 +653,53 @@ class VideoIdentifier {
 		});
 	}
 
-	constructor(videos: NodeListOf<HTMLElement>) {
-		this.videos = this._applyArrayTransformation(Array.from(videos),
-			[
-				this._objectify.bind(this),
-				this._markWatched.bind(this),
-				this._setVideoMetaData.bind(this),
-				this._addPocastToWatchLater.bind(this),
-			]);
+	_setContext(videos: TransformedVideo[]): TransformedVideo[] {
+		for (let i = 0; i < videos.length; i++) {
+			videos[i].next = videos[i + 1] || null;
+			videos[i].previous = videos[i - 1] || null;
+			videos[i].index = i;
+			videos[i].list = videos;
+		}
+		return videos;
+	}
+
+	async init(videos: NodeListOf<Thumbnail>, noCursorRefresh: boolean = false) {
+		this.videos = this._setContext(await this._applyArrayTransformation(Array.from(videos), [
+			this._objectify.bind(this),
+			this._waitForReady.bind(this),
+			this._markWatched.bind(this),
+			this._setVideoMetaData.bind(this),
+			this._addPocastToWatchLater.bind(this)
+		]));
 		this.selected = new SelectedVideo(this.videos, (
 			window.videos && window.videos.selected && 
 			window.videos.selected.current && window.videos.selected.current.title
-		) || null);
+		) || null, noCursorRefresh);
 
 		this._replaceLinks(this.videos);
+
+		return this;
 	}
+
+	async update(videos: NodeListOf<Thumbnail>) {
+		return this.init(videos, true);
+	}
+
+	constructor() { }
 }
 
-function identifyVideos() {
-	const vids = document.querySelectorAll('.yt-lockup-video');
-	if (!window.videos || window.videos.getAmount() !== vids.length) {
-		window.videos = new VideoIdentifier(vids as NodeListOf<HTMLElement>);
+async function identifyVideos() {
+	const vids = document.querySelectorAll('ytd-grid-video-renderer');
+	if (!window.videos) {
+		const videoIndentifier = new VideoIdentifier();
+		window.videos = await videoIndentifier.init(vids as NodeListOf<Thumbnail>);
+	} else if (window.videos.getAmount() !== vids.length) {
+		window.videos = await window.videos.update(vids as NodeListOf<Thumbnail>);
 	}
 }
 
 window.navToLink = (link, video) => {
-	ipcRenderer.send('toBpPage', {
+	ipcRenderer.send('toBgPage', {
 		type: 'passAlong',
 		data: {
 			type: 'changeYoutubeSubsLink',
@@ -619,8 +713,15 @@ window.navToLink = (link, video) => {
 	}
 }
 
-window.setInterval(identifyVideos, 100);
-identifyVideos();
+async function initVideoIdentification() {
+	while (true) {
+		await identifyVideos();
+		await new Promise((resolve) => {
+			window.setTimeout(resolve, 1000);
+		});
+	}
+}
+initVideoIdentification();
 
 window.addEventListener('keydown', (e) => {
 	switch (e.key) {

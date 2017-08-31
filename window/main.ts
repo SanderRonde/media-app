@@ -496,30 +496,50 @@ namespace Helpers {
 		}
 	}
 
+	async function runScripts(url: string, view: Electron.WebviewTag, config: ContentScriptDetails) {
+		if (config.run_at === 'document_start') {
+			await Helpers.wait(150);
+		}
+		
+		if (url.indexOf('example.com') > -1) {
+			//Make background white
+			runCodeType(view, {
+				code: EXAMPLE_STYLES
+			}, false)
+			return;
+		}
+
+		let matches: boolean = false;
+		config.matches = Array.isArray(config.matches) ? config.matches : [config.matches];
+		for (let j = 0; j < config.matches.length; j++) {
+			if (MatchPatterns.urlMatchesPattern(config.matches[j], url)) {
+				matches = true;
+				break;
+			}
+		}
+		
+		if (matches) {
+			config.css && runCodeType(view, config.css, false);
+			config.js && runCodeType(view, config.js, true);
+		}
+	}
+
 	export function addContentScripts(view: Electron.WebviewTag, configArr: Array<ContentScriptDetails>) {
-		view.addEventListener('dom-ready', (e) => {
-			if (view.getURL().indexOf('example.com') > -1) {
-				//Make background white
-				runCodeType(view, {
-					code: EXAMPLE_STYLES
-				}, false)
+		view.addEventListener('load-commit', (e) => {
+			if (!e.isMainFrame) {
 				return;
 			}
-
-			for (let i = 0; i < configArr.length; i++) {
-				const config = configArr[i];
-				let matches: boolean = false;
-				config.matches = Array.isArray(config.matches) ? config.matches : [config.matches];
-				for (let j = 0; j < config.matches.length; j++) {
-					if (MatchPatterns.urlMatchesPattern(config.matches[i], view.getURL())) {
-						matches = true;
-						break;
-					}
+			
+			for (let i = 0 ; i < configArr.length; i++) {
+				if (configArr[i].run_at === 'document_start') {
+					runScripts(e.url, view, configArr[i]);
 				}
-				
-				if (matches) {
-					config.css && runCodeType(view, config.css, false);
-					config.js && runCodeType(view, config.js, true);
+			}
+		});
+		view.addEventListener('dom-ready', (e) => {
+			for (let i = 0 ; i < configArr.length; i++) {
+				if (configArr[i].run_at !== 'document_start') {
+					runScripts(view.getURL(), view, configArr[i]);
 				}
 			}
 		});
@@ -705,7 +725,6 @@ namespace YoutubeMusic {
 				}
 
 				function prepareVideo() {
-					console.log('preparing');
 					let timePassed: number = 0;
 					setTimeout(() => {
 						timePassed += 500;
@@ -1233,7 +1252,10 @@ namespace YoutubeMusic {
 			name: 'css',
 			matches: ['*://www.youtube.com/*'],
 			css: {
-				files: ['youtube/content/content.css']
+				files: [
+					'youtube/content/content.css',
+					'youtube/content/youtubeVideo.css'
+				]
 			},
 			run_at: 'document_start'
 		}]);
@@ -1287,7 +1309,6 @@ namespace YoutubeMusic {
 		const urlRef = db.ref('url');
 		urlRef.once('value', (snapshot) => {
 			const snapshotVal = snapshot.val();
-			console.log(snapshotVal);
 			if (snapshotVal && snapshotVal.url && typeof snapshotVal.url === 'string') {
 				launch(snapshotVal.url);
 			} else {
@@ -1341,7 +1362,6 @@ namespace YoutubeMusic {
 	}
 
 	export function onKeyPress(event: MappedKeyboardEvent): boolean {
-		console.log('Key', event, 'was pressed');
 		if (AppWindow.getActiveViewName() !== 'ytmusic') {
 			return false;
 		}
@@ -1573,7 +1593,6 @@ namespace YoutubeSubscriptions {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.playVideo();
 			});
-			console.log((await Video.getView()).src);
 			if ((await Video.getView()).src.indexOf('example.com') === -1) {
 				showVideo();
 			}
@@ -1620,8 +1639,7 @@ namespace YoutubeSubscriptions {
 					matches: ['*://www.youtube.com/*'],
 					css: {
 						files: [
-							'youtube/content/content.css',
-							'youtubeSubs/video/youtubeVideo.css'
+							'youtube/content/content.css'
 						]
 					},
 					run_at: 'document_start'
@@ -1666,16 +1684,14 @@ namespace YoutubeSubscriptions {
 											if (player.getPlaybackQuality() !== 'hd1080') {
 												player.setPlaybackQuality('hd720');
 											}
-											
-											doTempInterval(() => {
-												player.setSizeStyle(false, true);
-											}, 250, 5000);
-
-											localStorage.setItem('loaded', 'ytmusic');
 										}
 									}
 									reloadIfAd();
 								}, 2500);
+
+								doTempInterval(() => {
+									player.setSizeStyle(false, true);
+								}, 100, 5000);
 							}
 
 							prepareVideo();
@@ -1816,6 +1832,7 @@ namespace YoutubeSubscriptions {
 
 	async function showVideo() {
 		$('#youtubeSubsCont').classList.add('showVideo');
+		await Helpers.wait(500);
 		(await Video.getView()).focus();
 	}
 
@@ -1825,7 +1842,6 @@ namespace YoutubeSubscriptions {
 	}
 
 	export async function setup() {
-		console.log('Starting');
 		await Promise.all([
 			SubBox.setup(),
 			Video.setup()
@@ -1833,7 +1849,6 @@ namespace YoutubeSubscriptions {
 	}
 
 	export async function init() {
-		console.log('Initting');
 		await Helpers.wait(15);
 		(await SubBox.getView()).loadURL('http://www.youtube.com/feed/subscriptions');
 	}
@@ -1867,9 +1882,11 @@ namespace YoutubeSubscriptions {
 		if (event.key === 'h') {
 			if (subsCont.classList.contains('showVideo')) {
 				subsCont.classList.remove('showVideo');
+				await Helpers.wait(500);
 				(await SubBox.getView()).focus();
 			} else {
 				subsCont.classList.add('showVideo');
+				await Helpers.wait(500);
 				(await Video.getView()).focus();
 			}
 			return true;
@@ -2006,8 +2023,7 @@ namespace YoutubeSearch {
 					matches: ['*://www.youtube.com/*'],
 					css: {
 						files: [
-							'youtube/content/content.css',
-							'youtubeSubs/video/youtubeVideo.css'
+							'youtube/content/content.css'
 						]
 					},
 					run_at: 'document_start'
@@ -2063,16 +2079,16 @@ namespace YoutubeSearch {
 											if (player.getPlaybackQuality() !== 'hd1080') {
 												player.setPlaybackQuality('hd720');
 											}
-											
-											doTempInterval(() => {
-												player.setSizeStyle(false, true);
-											}, 250, 5000);
 
 											localStorage.setItem('loaded', 'ytmusic');
 										}
 									}
 									reloadIfAd();
 								}, 2500);
+
+								doTempInterval(() => {
+									player.setSizeStyle(false, true);
+								}, 100, 5000);
 							}
 
 							prepareVideo();
@@ -2325,6 +2341,7 @@ namespace YoutubeSearch {
 		activePage = 'video';
 		$('#youtubeSearchCont').classList.add('showVideo');
 		SearchBar.hide();
+		await Helpers.wait(500);
 		(await Video.getView()).focus();
 	}
 
@@ -2381,10 +2398,12 @@ namespace YoutubeSearch {
 			if (activePage === 'video') {
 				subsCont.classList.remove('showVideo');
 				activePage = 'results';
+				await Helpers.wait(500);
 				(await SearchResultsPage.getView()).focus();
 			} else {
 				subsCont.classList.add('showVideo');
 				activePage = 'video';
+				await Helpers.wait(500);
 				(await Video.getView()).focus();
 			}
 			return true;
@@ -2659,8 +2678,8 @@ namespace AppWindow {
 
 	async function showSpinner() {
 		await Helpers.wait(100);
-		$('#spinner').classList.add('active');
-		$('#spinnerCont').classList.remove('hidden');
+		// $('#spinner').classList.add('active');
+		// $('#spinnerCont').classList.remove('hidden');
 	}
 	
 	function hideSpinner() {
@@ -2756,6 +2775,9 @@ namespace AppWindow {
 		]);
 
 		switchToview(startView, true);
+
+		//TODO: remove
+		hideSpinner();
 
 		window.addEventListener('keydown', (e) => {
 			handleKeyboardEvent(e as MappedKeyboardEvent)
@@ -2887,7 +2909,7 @@ namespace AppWindow {
 	}
 }
 
-AppWindow.init('ytmusic');
+AppWindow.init('youtubeSubscriptions');
 window.Helpers = Helpers;
 window.Netflix = Netflix;
 window.AppWindow = AppWindow;

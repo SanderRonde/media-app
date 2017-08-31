@@ -18,34 +18,26 @@
 	padding-bottom: 0!important;
 }
 
-@media screen and (min-width: 1310px) {
-	#content {
-		width: 1260px;
-	}
+#masthead-container {
+	display: none;
 }
 
-@media screen and (min-width: 1514px) {
-	#content {
-		width: 1464px;
-	}
+#page-manager {
+	margin-top: 0!important;
 }
 
-@media screen and (min-width: 1720) {
-	#content {
-		width: 1670px;
-	}
+ytd-grid-video-renderer.selectedVideo ytd-thumbnail {
+	border-bottom: 8px solid #03A9F4;
 }
 
-@media screen and (min-width: 1919px) {
-	#content {
-		width: 1870px;
-	}
+ytd-grid-video-renderer.selectedVideo #details {
+	margin-top: -8px;
 }
 
-.yt-shelf-grid-item.possiblePodcast .yt-thumb-simple > img {
-	opacity: 0.4;
+ytd-two-column-browse-results-renderer {
+	width: 90%!important;
 }
 
-.yt-lockup-grid.selectedVideo {
-	border-bottom: 5px solid red;
+ytd-page-manager {
+	margin-left: 0!important;
 }
