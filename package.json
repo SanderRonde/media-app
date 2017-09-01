@@ -33,6 +33,7 @@
     "electron-widevinecdm": "^3.0.0",
     "firebase": "^4.2.0",
     "fs": "0.0.1-security",
+    "is-ad": "^0.1.0",
     "md5": "^2.2.1",
     "path": "^0.12.7",
     "url": "^0.11.0"
