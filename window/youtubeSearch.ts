@@ -364,14 +364,16 @@ export namespace YoutubeSearch {
 	}
 
 	namespace SearchBar {
-		let searchBar: HTMLInputElement = document.getElementById('searchInput') as HTMLInputElement;;
+		let searchBar: HTMLInputElement = document.getElementById('searchInput') as HTMLInputElement;
 
-		function getSuggestions<T extends string>(query: T): Promise<string[]> {
-			return fetch(`http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&client=firefox&q=${query}`).then((res) => {
-				return res.json();
-			}).then((suggestions: [T, string[]]) => {
-				return suggestions[1];
-			});
+		async function getSuggestions<T extends string>(query: T): Promise<string[]> {
+			if (query === '') {
+				return [];	
+			}
+
+			const response = await fetch(`http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&client=firefox&q=${query}`);
+			const json: [T, string[]] = await response.json();
+			return json[1];
 		}
 
 		async function doSearch(query: string) {
@@ -424,13 +426,13 @@ export namespace YoutubeSearch {
 				} else if (e.key === ' ' && e.shiftKey) {
 					showSuggestions();
 				} else if (e.key === 'Enter') {
-					window.setImmediate(() => {
+					window.setTimeout(() => {
 						doSearch(searchBar.value);
-					});
+					}, 1);
 				} else {
-					window.setImmediate(() => {
+					window.setTimeout(() => {
 						onKeyPress();
-					});
+					}, 1);
 				}
 			});
 
