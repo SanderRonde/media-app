@@ -242,34 +242,6 @@ export namespace Helpers {
 		})()`;
 	}
 
-	// function readStream(stream: NodeJS.ReadableStream): Promise<string> {
-	// 	return new Promise<string>((resolve) => {
-	// 		let data = '';
-	// 		stream.on('data', (chunk: string) => {
-	// 			data += chunk;
-	// 		});
-	// 		stream.on('end', () => {
-	// 			resolve(data);
-	// 		});
-	// 	});
-	// }
-
-	// async function inlineDependencies(code: string): Promise<string> {
-	// 	const fileStream = new stream.Readable();
-	// 	fileStream.push(code);
-	// 	fileStream.push(null);
-
-	// 	code = code.replace(/require\(['"]electron['"]\)/, `'ELECTRONPLACEHOLDER'`)
-
-	// 	console.log(code);
-	// 	const outputStream = browserify().add(fileStream).bundle();
-	// 	const bundle = (await readStream(outputStream))
-	// 		.replace(/ELECTRONPLACEHOLDER/, `require('electron')`)
-
-	// 	console.log(bundle);
-	// 	return bundle;
-	// }
-
 	function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
 		if (isJS) {
 			view.executeJavaScript('var exports = exports || {}', false);			
@@ -305,7 +277,6 @@ export namespace Helpers {
 	}
 
 	async function runScripts(url: string, view: Electron.WebviewTag, config: ContentScriptDetails) {
-		console.log('Running', config);
 		if (config.run_at === 'document_start') {
 			await Helpers.wait(150);
 		}
