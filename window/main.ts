@@ -19,7 +19,7 @@ if (firebaseConfig === null) {
 	dialog.showMessageBox({
 		message: 'Please export your firebase API config in genericJs/secrets.ts',
 		buttons: [
-			'Relaunch now',
+			'Close now',
 			'Cancel',
 		],
 		defaultId: 0,

@@ -59,7 +59,7 @@ const map = new Map<
 				dialog.showMessageBox({
 					message: 'You need to relaunch the app to use widevineCDM',
 					buttons: [
-						'Relaunch now',
+						'Close now',
 						'Cancel',
 					],
 					defaultId: 0,
