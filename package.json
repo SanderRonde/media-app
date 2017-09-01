@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/SanderRonde/media-app#readme",
   "dependencies": {
+    "electron-context-menu": "^0.9.1",
     "electron-widevinecdm": "^3.0.0",
     "firebase": "^4.2.0",
     "fs": "0.0.1-security",

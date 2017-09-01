@@ -11,6 +11,8 @@ const widevine: {
 
 ///<reference path="window/main.ts"/>
 
+require('electron-context-menu')({});
+
 const widevinePath = path.join(app.getPath('appData'), 'widevine');
 const widevineExists = widevine.load(app, widevinePath);
 
