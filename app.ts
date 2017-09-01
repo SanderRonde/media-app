@@ -184,6 +184,9 @@ const map = new Map<
 				activeWindow && activeWindow.close();
 				app.quit();
 				break;
+			case 'quit':
+				app.quit();
+				break;
 			case 'passAlong':
 				activeWindow && activeWindow.webContents.send('passedAlong', data);
 				break;

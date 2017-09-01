@@ -1,8 +1,32 @@
 import * as fs from 'fs'
 import * as md5 from 'md5'
 import * as firebase from 'firebase'
-import { shell, ipcRenderer, clipboard } from 'electron'
-import { firebaseConfig } from '../genericJs/secrets'
+import { shell, ipcRenderer, clipboard, dialog } from 'electron'
+const firebaseConfig = (require('optional-require') as optionalRequire)(require)<{
+	apiKey: string;
+	authDomain: string;
+	databaseURL: string;
+	projectId: string;
+	storageBucket: string;
+	messagingSenderId: string;	
+}>('./genericJs/secrets') || null;
+if (firebaseConfig === null) {
+	dialog.showMessageBox({
+		message: 'Please export your firebase API config in genericJs/secrets.ts',
+		buttons: [
+			'Relaunch now',
+			'Cancel',
+		],
+		defaultId: 0,
+		cancelId: 1
+	}, (response) => {
+		if (response === 0) {
+			ipcRenderer.send('toBgPage', {
+				type: 'quit'
+			});
+		}
+	});
+}
 
 firebase.initializeApp(firebaseConfig);
 
@@ -2491,6 +2515,8 @@ export interface MessageReasons {
 	focus: void;
 	pause: void;
 	play: void;
+
+	quit: void;
 }
 
 export interface PassedAlongMessages {
