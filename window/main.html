@@ -13,36 +13,32 @@
 			<div class="toastButton dismissToast">DISMISS</div>
 		</div>
 		<div id="titleBar">
-			<div id="titleBarLeft">
+			<div id="fullscreen">
+				<div id="fullscreenImagesCont" class="unFadeOnFocus">
+					<img id="enterFullscreen" src="../images/enterFullscreen.png" alt="Enter fullscreen"/>
+					<img id="exitFullscreen" src="../images/exitFullscreen.png" alt="Exit fullscreen"/>
+				</div>
 			</div>
-			<div id="titleBarRight">
-				<div id="fullscreen">
-					<div id="fullscreenImagesCont" class="unFadeOnFocus">
-						<img id="enterFullscreen" src="../images/enterFullscreen.png" alt="Enter fullscreen"/>
-						<img id="exitFullscreen" src="../images/exitFullscreen.png" alt="Exit fullscreen"/>
+			<div id="minimize">
+				<div id="minimizeLine" class="unFadeOnFocus"></div>
+			</div>
+			<div id="maximize">
+				<div id="maximizeBoxCont">
+					<div id="maximizeBox" class="unFadeOnFocus"></div>
+				</div>
+				<div id="maximizedBoxesCont">
+					<div id="maximizeBoxes" class="unFadeOnFocus">
+						<div id="maximizeBoxesFrontBox" class="maximizeBox"></div>
+						<div id="maximizeBoxesBackBox" class="maximizeBox"></div>
 					</div>
 				</div>
-				<div id="minimize">
-					<div id="minimizeLine" class="unFadeOnFocus"></div>
-				</div>
-				<div id="maximize">
-					<div id="maximizeBoxCont">
-						<div id="maximizeBox" class="unFadeOnFocus"></div>
-					</div>
-					<div id="maximizedBoxesCont">
-						<div id="maximizeBoxes" class="unFadeOnFocus">
-							<div id="maximizeBoxesFrontBox" class="maximizeBox"></div>
-							<div id="maximizeBoxesBackBox" class="maximizeBox"></div>
-						</div>
-					</div>
-				</div>
-				<div id="close">
-					<div id="closeCross">
-						<svg height="10" width="10">
-							<line x1="0" y1="0" x2="10" y2="10" class="closeCrossLine" />
-							<line x1="0" y1="10" x2="10" y2="0" class="closeCrossLine" />
-						</svg>
-					</div>
+			</div>
+			<div id="close">
+				<div id="closeCross">
+					<svg height="10" width="10">
+						<line x1="0" y1="0" x2="10" y2="10" class="closeCrossLine" />
+						<line x1="0" y1="10" x2="10" y2="0" class="closeCrossLine" />
+					</svg>
 				</div>
 			</div>
 		</div>
@@ -132,9 +128,31 @@
 				<webview id="ytmaWebview" partition="persist:youtubeplaylist" nodeintegration src="https://www.example.com"></webview>
 			</div>
 			<div id="youtubeSearchCont">
-				<webview id="youtubeSearchVideoView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
+				<div id="searchBarCenterer">
+					<div id="searchBar">
+						<form id="yt_inputFORM_1" action="/results">
+							<div id="yt_inputDIV_2">
+								<div id="yt_inputDIV_3">
+									<div id="yt_inputDIV_4">
+										<div id="yt_inputDIV_9">
+											<input id="searchInput" name="search_query" tabindex="0" type="text" placeholder="Zoeken" />
+										</div>
+									</div>
+								</div>
+							</div>
+							<button id="yt_inputBUTTON_17">
+								<svg height="20px" width="20px" viewbox="0 0 24 24" preserveaspectratio="xMidYMid meet" class="style-scope yt-icon">
+									<g class="style-scope yt-icon">
+										<path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" class="style-scope yt-icon"></path>
+									</g>
+								</svg>
+							</button>
+						</form>
+						<div id="suggestions"></div>
+					</div>
+				</div>
 				<webview id="youtubeSearchResultsView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
-				<webview id="youtubeSearchBarView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
+				<webview id="youtubeSearchVideoView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
 			</div>
 			<div id="netflixCont">
 				<webview id="netflixWebView" partition="persist:netflix" src="https://www.example.com" plugins></webview>

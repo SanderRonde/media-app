@@ -1,4 +1,4 @@
-
+var ipcRenderer = require('electron').ipcRenderer;
 
 namespace PlaceHolderPage {
 	function generateCoverElement() {
@@ -83,24 +83,28 @@ namespace PlaceHolderPage {
 namespace YoutubeSearchResultsPage {
 	export function init() {
 		const items = Array.from(document.querySelectorAll('.item-section > li'));
-		console.log(items);
-		debugger;
 		items.forEach((item) => {
 			const thumbnail = item.querySelector('.yt-lockup-thumbnail a') as HTMLAnchorElement;
 			const originalLink = thumbnail.href;
 			thumbnail.addEventListener('click', (e) => {
-				chrome.runtime.sendMessage({
-					cmd: 'navToVideo',
-					url: originalLink
+				ipcRenderer.send('toBgPage', {
+					type: 'passAlong',
+					data: {
+						type: 'navToVideo',
+						data: originalLink
+					}
 				});
 			});
 			thumbnail.href = '#';
 
 			const title = item.querySelector('.yt-lockup-title a') as HTMLAnchorElement;
 			title.addEventListener('click', (e) => {
-				chrome.runtime.sendMessage({
-					cmd: 'navToVideo',
-					url: originalLink
+				ipcRenderer.send('toBgPage', {
+					type: 'passAlong',
+					data: {
+						type: 'navToVideo',
+						data: originalLink
+					}
 				});
 			});
 			title.href = '#';

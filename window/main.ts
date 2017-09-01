@@ -2249,57 +2249,78 @@ namespace YoutubeSearch {
 	}
 
 	namespace SearchBar {
-		let searchBarView: Electron.WebviewTag = null;
-		let searchBarPromise: Promise<Electron.WebviewTag> = null;
+		let searchBar: HTMLInputElement = document.getElementById('searchInput') as HTMLInputElement;;
 
-		export async function getView(): Promise<Electron.WebviewTag> {
-			return new Promise<Electron.WebviewTag>((resolve) => {
-				if (searchBarView) {
-					resolve(searchBarView);
-				} else {
-					searchBarPromise.then(resolve);
-				}
+		function getSuggestions<T extends string>(query: T): Promise<string[]> {
+			return fetch(`http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&client=firefox&q=${query}`).then((res) => {
+				return res.json();
+			}).then((suggestions: [T, string[]]) => {
+				return suggestions[1];
 			});
 		}
 
-		export async function setup() {
-			searchBarPromise = initView('youtubeSearchBarView');
-			searchBarView = await searchBarPromise;
+		async function doSearch(query: string) {
+			(await SearchResultsPage.getView()).loadURL(`https://www.youtube.com/results?search_query=${query}`);
+		}
 
-			Helpers.addContentScripts(searchBarView, [{
-				name: 'js',
-				matches: ['*://www.youtube.com/*'],
-				js: {
-					files: [
-						'genericJs/comm.js',
-						'genericJs/keypress.js'
-					]
-				},
-				run_at: 'document_end'
-			}, {
-				name: 'css',
-				matches: ['*://www.youtube.com/*'],
-				css: {
-					files: ['youtubeSearch/searchBar/searchBar.css']
-				},
-				run_at: 'document_start'
-			}]);
+		function genSuggestionElement(suggestion: string): HTMLElement {
+			const container = document.createElement('div');
+			container.classList.add('suggestion');
+			container.setAttribute('tabindex', '-1');
+			container.innerText = suggestion;
 
-			searchBarView.addEventListener('load-commit', (e) => {
-				if (e.isMainFrame) {
-					searchBarView.stop();
-					SearchResultsPage.navTo(e.url);
-					if (activePage === 'video') {
-						$('#youtubeSearchCont').classList.remove('showVideo');
-					}
+			container.addEventListener('click', () => {
+				doSearch(suggestion);
+			});
+			container.addEventListener('keydown', (e) => {
+				if (e.key === ' ') {
+					doSearch(suggestion);
 				}
 			});
 
-			(searchBarView as any).addEventListener('focus', () => {
-				$('#youtubeSearchCont').classList.remove('shortenSearchBarArea');
+			return container;
+		}
+
+		async function onKeyPress() {
+			const value = searchBar.value;
+			const suggestions = await getSuggestions(value);
+			const suggestionsContainer = document.getElementById('suggestions');
+			Array.from(suggestionsContainer.children).forEach((child: HTMLElement) => {
+				child.remove();
 			});
-			(searchBarView as any).addEventListener('blur', () => {
-				$('#youtubeSearchCont').classList.add('shortenSearchBarArea');
+			suggestions.map(genSuggestionElement).forEach((suggestionElement) => {
+				suggestionsContainer.appendChild(suggestionElement);
+			})
+			showSuggestions();
+		}
+
+		export function hideSuggestions() {
+			$('#youtubeSearchCont').classList.add('suggestionsHidden');
+		}
+
+		export function showSuggestions() {
+			$('#youtubeSearchCont').classList.remove('suggestionsHidden');
+		}
+
+		export async function setup() {
+			searchBar.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape') {
+					hideSuggestions();
+				} else if (e.key === ' ' && e.shiftKey) {
+					showSuggestions();
+				} else if (e.key === 'Enter') {
+					window.setImmediate(() => {
+						doSearch(searchBar.value);
+					});
+				} else {
+					window.setImmediate(() => {
+						onKeyPress();
+					});
+				}
+			});
+
+			((await SearchResultsPage.getView()) as any).addEventListener('click', () => {
+				hideSuggestions();
 			});
 		}
 
@@ -2314,6 +2335,7 @@ namespace YoutubeSearch {
 		export function show() {
 			if (activePage === 'video') {
 				$('#youtubeSearchCont').classList.remove('searchHidden');
+				searchBar.focus();
 				return true;
 			}
 			return false;
@@ -2322,6 +2344,7 @@ namespace YoutubeSearch {
 		export function hide() {
 			if (activePage === 'video') {
 				$('#youtubeSearchCont').classList.add('searchHidden');
+				searchBar.blur();
 				return true;
 			}
 			return false;
@@ -2329,14 +2352,8 @@ namespace YoutubeSearch {
 
 		export function focus(key?: string) {
 			show();
-			searchBarView.focus();
-			Helpers.hacksecute(searchBarView, (REPLACE) => {
-				const input = document.getElementById('masthead-search-term') as HTMLInputElement;
-				input.value = input.value + REPLACE.key;
-				input.focus();
-			}, {
-				key: JSON.stringify(key || '')
-			});
+			searchBar.value = searchBar.value + key;
+			searchBar.focus();
 		}
 	}
 
@@ -2355,8 +2372,8 @@ namespace YoutubeSearch {
 
 	export async function setup() {
 		return Promise.all([
-			SearchBar.setup(),
 			SearchResultsPage.setup(),
+			SearchBar.setup(),
 			Video.setup()
 		]);
 	}
@@ -2364,23 +2381,14 @@ namespace YoutubeSearch {
 	export async function init() {
 		await Helpers.wait(15);
 		SearchResultsPage.navTo('https://www.youtube.com/');
-		(await SearchBar.getView()).loadURL('https://www.youtube.com/');
 	}
 
-	export function onClose() {
-		$('#titleBarLeft').style.width = 'calc(50vw)';
-		$('#titleBarRight').style.width = 'calc(50vw)';
-	}
+	export function onClose() { }
 
 	export async function onFocus() {
 		if (activePage === 'video') {
 			(await Video.getView()).focus();
-		} else {
-			(await SearchBar.getView()).focus();
 		}
-
-		$('#titleBarLeft').style.width = 'calc(50vw - 335px)';
-		$('#titleBarRight').style.width = 'calc(50vw - 335px)';
 	}
 
 	export async function getView(): Promise<Electron.WebviewTag> {
@@ -2431,11 +2439,10 @@ namespace YoutubeSearch {
 	}
 
 	export async function onSearchBarFocus() {
-		if (AppWindow.getActiveViewName() === 'youtubesearch' && (await SearchBar.getView())) {
-			(await SearchBar.getView()).focus();
-			Helpers.hacksecute((await SearchBar.getView()), () => {
-				document.getElementById('masthead-search-term').focus();
-			});
+		if (AppWindow.getActiveViewName() === 'youtubesearch') {
+			if (activePage === 'results' || !$('#youtubeSearchCont').classList.contains('searchHidden')) {
+				SearchBar.focus();
+			}
 		}
 	}
 
@@ -2503,6 +2510,7 @@ export interface PassedAlongMessages {
 	changeYoutubeSubsLink: {
 		link: string;
 	}
+	navToVideo: string;
 }
 
 namespace AppWindow {
@@ -2888,6 +2896,10 @@ namespace AppWindow {
 					const youtubeSubsData = data as PassedAlongMessages['changeYoutubeSubsLink'];
 					YoutubeSubscriptions.changeVideo(youtubeSubsData.link);
 					break;
+				case 'navToVideo':
+					const navToVideoData = data as PassedAlongMessages['navToVideo'];
+					YoutubeSearch.changeVideo(navToVideoData);
+					break;
 			}
 		});
 	}
@@ -2909,7 +2921,7 @@ namespace AppWindow {
 	}
 }
 
-AppWindow.init('ytmusic');
+AppWindow.init('youtubesearch');
 window.Helpers = Helpers;
 window.Netflix = Netflix;
 window.AppWindow = AppWindow;
