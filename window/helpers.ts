@@ -7,9 +7,18 @@ export const EXAMPLE_STYLES = `html, body, a {
 	color: white!important;
 }`;
 
+interface ElementTagNameMap {
+	webview: Electron.WebviewTag;
+}
+
 export const $ = <K extends keyof ElementTagNameMap>(selector: K|string,
-	base: HTMLElement|Element|Document = document): HTMLElement => {
+	base: HTMLElement|Element|Document = document): ElementTagNameMap[K]|HTMLElement => {
 		return base.querySelector(selector) as HTMLElement;
+	}
+
+export const $$ = <K extends keyof ElementTagNameMap>(selector: K|string,
+	base: HTMLElement|Element|Document = document): NodeListOf<ElementTagNameMap[K]>|NodeListOf<HTMLElement> => {
+		return base.querySelectorAll(selector) as NodeListOf<HTMLElement>;
 	}
 
 interface ReducedElement {

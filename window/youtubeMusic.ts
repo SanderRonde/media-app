@@ -1,6 +1,6 @@
 import { Helpers, $, MappedKeyboardEvent } from './helpers'
-import { shell } from 'electron'
 import { AppWindow } from './appWindow'
+import { shell } from 'electron'
 
 export interface YoutubeVideoPlayer extends HTMLElement {
 	getVolume(): number;
