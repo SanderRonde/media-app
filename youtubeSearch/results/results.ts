@@ -48,6 +48,7 @@ namespace PlaceHolderPage {
 
 	function generateEmptyImage() {
 		const el = document.createElement('div');
+		el.style.userSelect = 'none';
 
 		el.appendChild(generateSearchSvg());
 
@@ -122,3 +123,12 @@ if (!window.signalledCompletion) {
 	localStorage.setItem('loaded', 'youtubesearch');
 	window.signalledCompletion = true;
 }
+
+document.body.addEventListener('click', () => {
+	ipcRenderer.send('toBgPage', {
+		type: 'passAlong',
+		data: {
+			type: 'youtubeSearchClick'	
+		}
+	})
+});

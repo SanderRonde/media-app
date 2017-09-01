@@ -363,8 +363,34 @@ export namespace YoutubeSearch {
 		}
 	}
 
-	namespace SearchBar {
+	export namespace SearchBar {
 		let searchBar: HTMLInputElement = document.getElementById('searchInput') as HTMLInputElement;
+		let currentSuggestions: Array<string> = [];
+		let selectedSuggestion: number = -1;
+		let originalInput: string = '';
+
+		function updateInputValue(): string {
+			if (selectedSuggestion === -1) {
+				if (searchBar.value !== originalInput) {
+					searchBar.value = originalInput;
+				}
+				return originalInput;
+			} else {
+				searchBar.value = currentSuggestions[selectedSuggestion];
+				return currentSuggestions[selectedSuggestion];
+			}
+		}
+
+		function updateSelectedSuggestion(index: number): string {
+			selectedSuggestion = index;
+			Array.from($('#suggestions').children).forEach((child) => {
+				child.classList.remove('selected');
+			});
+			if (index !== -1) {
+				$('#suggestions').children.item(index).classList.add('selected');
+			}
+			return updateInputValue();
+		}
 
 		async function getSuggestions<T extends string>(query: T): Promise<string[]> {
 			if (query === '') {
@@ -384,7 +410,20 @@ export namespace YoutubeSearch {
 			const container = document.createElement('div');
 			container.classList.add('suggestion');
 			container.setAttribute('tabindex', '-1');
-			container.innerText = suggestion;
+
+			const currentPart = document.createElement('span');
+			const suggestionPart = document.createElement('span');
+			suggestionPart.classList.add('suggestionPart');
+			if (suggestion.indexOf(originalInput) === 0) {
+				currentPart.innerText = originalInput;
+				suggestionPart.innerText = suggestion.slice(originalInput.length);
+			} else {
+				currentPart.innerText = '';
+				suggestionPart.innerText = suggestion;
+			}
+			
+			container.appendChild(currentPart);
+			container.appendChild(suggestionPart);
 
 			container.addEventListener('click', () => {
 				doSearch(suggestion);
@@ -400,6 +439,8 @@ export namespace YoutubeSearch {
 
 		async function onKeyPress() {
 			const value = searchBar.value;
+			originalInput = value;
+
 			const suggestions = await getSuggestions(value);
 			const suggestionsContainer = document.getElementById('suggestions');
 			Array.from(suggestionsContainer.children).forEach((child: HTMLElement) => {
@@ -407,8 +448,16 @@ export namespace YoutubeSearch {
 			});
 			suggestions.map(genSuggestionElement).forEach((suggestionElement) => {
 				suggestionsContainer.appendChild(suggestionElement);
-			})
+			});
+
+			currentSuggestions = suggestions;
 			showSuggestions();
+
+			updateSelectedSuggestion(-1);
+
+			if (currentSuggestions.length === 0) {
+				hideSuggestions();
+			}
 		}
 
 		export function hideSuggestions() {
@@ -425,10 +474,32 @@ export namespace YoutubeSearch {
 					hideSuggestions();
 				} else if (e.key === ' ' && e.shiftKey) {
 					showSuggestions();
+					e.preventDefault();
+					e.stopPropagation();
 				} else if (e.key === 'Enter') {
 					window.setTimeout(() => {
-						doSearch(searchBar.value);
+						doSearch(updateInputValue());
 					}, 1);
+				} else if (e.key === 'ArrowDown') {
+					if (selectedSuggestion === currentSuggestions.length - 1) {
+						updateSelectedSuggestion(-1);
+					} else {
+						updateSelectedSuggestion(selectedSuggestion + 1);
+					}
+					updateInputValue();
+					e.preventDefault();
+					e.stopPropagation();
+				} else if (e.key === 'ArrowUp') {
+					if (selectedSuggestion > -1) {
+						updateSelectedSuggestion(selectedSuggestion - 1);
+					} else {
+						updateSelectedSuggestion(currentSuggestions.length - 1);
+					}
+					updateInputValue();
+					e.preventDefault();
+					e.stopPropagation();
+				} else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+					//Don't update input
 				} else {
 					window.setTimeout(() => {
 						onKeyPress();
@@ -436,9 +507,15 @@ export namespace YoutubeSearch {
 				}
 			});
 
-			((await SearchResultsPage.getView()) as any).addEventListener('click', () => {
-				hideSuggestions();
+			$('#searchButton').addEventListener('click', () => {
+				doSearch(updateInputValue());
 			});
+
+			hideSuggestions();
+		}
+
+		export function onPageClick() {
+			hideSuggestions();
 		}
 
 		export function toggle() {

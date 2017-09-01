@@ -54,6 +54,7 @@ export interface PassedAlongMessages {
 		link: string;
 	}
 	navToVideo: string;
+	youtubeSearchClick: void;
 }
 
 const KeyListeningViews: ViewNames[] = [
@@ -249,12 +250,6 @@ export namespace AppWindow {
 
 	function handleKeyboardEvent(event: MappedKeyboardEvent) {
 		if (event.key === 'Escape') {
-			const youtubeSearchPageView = $('#youtubeSearchPageView');
-			if (youtubeSearchPageView.style.display === 'block') {
-				youtubeSearchPageView.style.display = 'none';
-				return;
-			}
-
 			Exiting.handleEscapePress();
 		} else if (event.key === 'F11') {
 			sendBackgroundPageMessage('isFullscreen').then((isFullscreen) => {
@@ -455,6 +450,8 @@ export namespace AppWindow {
 					const navToVideoData = data as PassedAlongMessages['navToVideo'];
 					YoutubeSearch.changeVideo(navToVideoData);
 					break;
+				case 'youtubeSearchClick':
+					YoutubeSearch.SearchBar.onPageClick();
 			}
 		});
 	}
