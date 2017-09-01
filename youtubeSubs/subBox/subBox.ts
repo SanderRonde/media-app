@@ -419,7 +419,7 @@ class SelectedVideo {
 	}
 }
 
-const toWatchLater: Array<HTMLElement> = [];
+const toWatchLater: HTMLElement[] = [];
 let isHandlingWatchLater = false;
 function clickWatchLater(deadline: {
 	timeRemaining(): number;
@@ -621,7 +621,7 @@ class VideoIdentifier {
 		return video;
 	}
 
-	async _applyArrayTransformation(arr: Array<Thumbnail>, fns: Array<(video: any) => any>): Promise<TransformedVideo[]> {
+	async _applyArrayTransformation(arr: Thumbnail[], fns: ((video: any) => any)[]): Promise<TransformedVideo[]> {
 		return await Promise.all(arr.map(async (item) => {
 			for (let i = 0; i < fns.length; i++) {
 				item = await fns[i](item);

@@ -56,7 +56,7 @@ export interface PassedAlongMessages {
 	navToVideo: string;
 }
 
-const KeyListeningViews: Array<ViewNames> = [
+const KeyListeningViews: ViewNames[] = [
 	'ytmusic',
 	'youtubeSubscriptions',
 	'youtubesearch'
@@ -68,10 +68,10 @@ export namespace AppWindow {
 	
 	type AppEvent = 'onFullscreened'|'onMaximized'|'onRestored'|'onMinimized';
 	
-	const listeners: Array<{
+	const listeners: {
 		event: AppEvent;
 		callback: () => void;
-	}> = [];
+	}[] = [];
 	export function listen(event: AppEvent, callback: () => void) {
 		listeners.push({
 			event: event,
@@ -137,7 +137,7 @@ export namespace AppWindow {
 	}
 
 	function prepareEventListeners() {
-		const events: Array<AppEvent> = ['onFullscreened', 'onMaximized', 'onRestored', 'onMinimized'];
+		const events: AppEvent[] = ['onFullscreened', 'onMaximized', 'onRestored', 'onMinimized'];
 		events.forEach((eventName) => {
 			sendBackgroundPageMessage(eventName).then(() => {
 				createEventLoop(eventName, () => {
@@ -271,7 +271,7 @@ export namespace AppWindow {
 		}
 	}
 
-	export const loadedViews: Array<ViewNames> = [];
+	export const loadedViews: ViewNames[] = [];
 	export function onLoadingComplete(view: ViewNames) {
 		loadedViews.push(view);
 		if (activeView === view) {
@@ -367,10 +367,10 @@ export namespace AppWindow {
 		getActiveViewClass().onKeyPress(event);
 	}
 
-	const channels: Array<{
+	const channels: {
 		identifier: string;
 		fn: (data: MessageReasons[keyof MessageReasons]) => void
-	}> = [];
+	}[] = [];
 
 	function genRandomString(): string {
 		const possibleLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

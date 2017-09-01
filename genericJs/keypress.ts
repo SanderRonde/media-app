@@ -12,7 +12,7 @@ function mapElement(el: HTMLElement): Partial<HTMLElement> {
 }
 
 function mapKeyEvent(e: KeyboardEvent): KeyboardEvent & {
-	path: Array<HTMLElement> 
+	path: HTMLElement[];
 } {
 	return {
 		altKey: e.altKey,

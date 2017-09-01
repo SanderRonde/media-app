@@ -63,7 +63,7 @@ export namespace YoutubeMusic {
 				volumeBar.appendChild(volumeBarBar);
 				document.body.appendChild(volumeBar);
 				
-				function cleanupData(dataArray: Float32Array): Array<number> {
+				function cleanupData(dataArray: Float32Array): number[] {
 					for (let i in dataArray) {
 						if (dataArray[i] <= -100 || dataArray[i] === -80 || dataArray[i] === -50) {
 							dataArray[i] = 0;
@@ -109,8 +109,8 @@ export namespace YoutubeMusic {
 					analyser: AnalyserNode;
 					vidSrc: MediaElementAudioSourceNode;
 					dataArray: Float32Array;
-					bars: Array<HTMLElement>;
-					parsedArray?: Array<number>;
+					bars: HTMLElement[];
+					parsedArray?: number[];
 				}
 
 				function checkForVisualizer(data: AudioVisualizerSettings) {
@@ -432,7 +432,7 @@ export namespace YoutubeMusic {
 			return seconds;
 		}
 
-		function getSongIndex(timestamps: Array<number|null>, time: number): number {
+		function getSongIndex(timestamps: (number|null)[], time: number): number {
 			for (let i = 0; i < timestamps.length; i++) {
 				if (timestamps[i] <= time && timestamps[i + 1] >= time) {
 					return i;
@@ -549,7 +549,7 @@ export namespace YoutubeMusic {
 		export function getCurrentSong() {
 			Helpers.sendTaskToPage('getTimestamps', 'youtube', (timestamps: {
 				found: true;
-				data: Array<number>|string
+				data: number[]|string
 			}|{
 				found: false;
 				data: {
@@ -661,25 +661,7 @@ export namespace YoutubeMusic {
 		}
 	}
 
-	function blockViewAds() {
-		//TODO: this
-		// const CANCEL = {
-		// 	cancel: true
-		// };
-		// view.request.onBeforeRequest.addListener((request) => {
-		// 	if (AdBlocking.BlockAd(request.url)) {
-		// 		return CANCEL;
-		// 	}
-		// 	return {
-		// 		cancel: false
-		// 	};
-		// }, {
-		// 	urls: ['*://*/*']
-		// }, ['blocking']);
-	}
-
 	function addViewListeners() {
-		blockViewAds();
 		Helpers.addContentScripts(view, [{
 			name: 'js',
 			matches: ['*://www.youtube.com/*'],

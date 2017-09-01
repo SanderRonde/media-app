@@ -3,7 +3,7 @@ import { YoutubeVideoPlayer } from './youtubeMusic'
 import { AppWindow } from './appWindow'
 import { shell } from 'electron'
 
-function arr(first: number, last: number): Array<number> {
+function arr(first: number, last: number): number[] {
 	return Array.from(new Array(1 + last - first)).map((_, index) => {
 		return first + index;
 	});

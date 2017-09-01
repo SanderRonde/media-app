@@ -24,7 +24,7 @@ type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
 	'Up', 'MediaNextTrack', 'MediaPreviousTrack', 'MediaStop',
 	'MediaPlayPause', 'Space', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const map = new Map<
-	Array<keys[keyof keys]|Array<keys[keyof keys]|Array<keys[keyof keys]>>>,
+	(keys[keyof keys]|(keys[keyof keys]|keys[keyof keys][])[])[],
 	keyof MessageReasons>([
 		[[['Shift', 'Alt', 'F']], 'focus'],
 		[[['Shift', 'Alt', 'Left']], 'lowerVolume'],

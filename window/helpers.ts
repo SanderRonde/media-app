@@ -23,13 +23,13 @@ export const $$ = <K extends keyof ElementTagNameMap>(selector: K|string,
 
 interface ReducedElement {
 	id: string;
-	classList: Array<string>;
+	classList: string[];
 	tagName: string;
 }
 
 export type MappedKeyboardEvent = KeyboardEvent & {
 	currentTarget: ReducedElement;
-	path: Array<ReducedElement>;
+	path: ReducedElement[];
 	srcElement: ReducedElement;
 	target: ReducedElement;
 }
@@ -43,20 +43,20 @@ interface MatchPattern {
 
 interface InjectionItems {
 	code?: string;
-	files?: Array<string>;
+	files?: string[];
 }
 
 interface ContentScriptDetails {
 	name: string;
-	matches: Array<string>|string;
-	exclude_matches?: Array<string>|string;
+	matches: string[]|string;
+	exclude_matches?: string[]|string;
 	match_about_blank?: boolean;
 	css?: InjectionItems;
 	js?: InjectionItems;
 	run_at?: 'document_start'|'document_end'|'document_idle';
 	all_frames?: boolean;
-	include_globs?: Array<string>;
-	exclude_globs?: Array<string>; 
+	include_globs?: string[];
+	exclude_globs?: string[]; 
 }
 
 export namespace Helpers {
@@ -67,7 +67,7 @@ export namespace Helpers {
 	export function toQueryString(obj: {
 		[key: string]: any;
 	}): string {
-		const parts: Array<string> = [];
+		const parts: string[] = [];
 		for (let key in obj) {
 			parts.push(`${key}=${obj[key]}`);
 		}
@@ -131,7 +131,7 @@ export namespace Helpers {
 		taskListeners[taskIds] = callback;
 	}
 
-	export function toArr(iterable: any): Array<any> {
+	export function toArr(iterable: any): any[] {
 		const arr = [];
 		for (let i = 0; i < iterable.length; i++) {
 			arr[i] = iterable[i];
@@ -333,7 +333,7 @@ export namespace Helpers {
 		}
 	}
 
-	export function addContentScripts(view: Electron.WebviewTag, configArr: Array<ContentScriptDetails>) {
+	export function addContentScripts(view: Electron.WebviewTag, configArr: ContentScriptDetails[]) {
 		view.addEventListener('load-commit', (e) => {
 			if (!e.isMainFrame) {
 				return;
