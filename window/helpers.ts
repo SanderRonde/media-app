@@ -12,12 +12,12 @@ interface ElementTagNameMap {
 }
 
 export const $ = <K extends keyof ElementTagNameMap>(selector: K|string,
-	base: HTMLElement|Element|Document = document): ElementTagNameMap[K]|HTMLElement => {
+	base: HTMLElement|Element|Document = document): HTMLElement => {
 		return base.querySelector(selector) as HTMLElement;
 	}
 
 export const $$ = <K extends keyof ElementTagNameMap>(selector: K|string,
-	base: HTMLElement|Element|Document = document): NodeListOf<ElementTagNameMap[K]>|NodeListOf<HTMLElement> => {
+	base: HTMLElement|Element|Document = document): NodeListOf<HTMLElement> => {
 		return base.querySelectorAll(selector) as NodeListOf<HTMLElement>;
 	}
 
@@ -369,7 +369,7 @@ export namespace Helpers {
 	}
 
 	export function wait(duration: number): Promise<void> {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			window.setTimeout(() => {
 				resolve();
 			}, duration);
@@ -377,7 +377,7 @@ export namespace Helpers {
 	}
 
 	export function delay(fn: () => Promise<any>|void, duration: number): Promise<void> {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			window.setTimeout(async () => {
 				await fn();
 				resolve();
