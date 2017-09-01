@@ -5,7 +5,6 @@ import { YoutubeMusic } from './youtubeMusic'
 import * as firebase from 'firebase'
 import { Helpers } from './helpers'
 import { Netflix } from './netflix'
-import { dialog } from 'electron'
 
 const firebaseConfig = (require('optional-require') as optionalRequire)(require)<{
 	apiKey: string;
@@ -14,23 +13,9 @@ const firebaseConfig = (require('optional-require') as optionalRequire)(require)
 	projectId: string;
 	storageBucket: string;
 	messagingSenderId: string;	
-}>('./genericJs/secrets') || null;
+}>('../genericJs/secrets') || null;
 if (firebaseConfig === null) {
-	dialog.showMessageBox({
-		message: 'Please export your firebase API config in genericJs/secrets.ts',
-		buttons: [
-			'Close now',
-			'Cancel',
-		],
-		defaultId: 0,
-		cancelId: 1
-	}, (response) => {
-		if (response === 0) {
-			ipcRenderer.send('toBgPage', {
-				type: 'quit'
-			});
-		}
-	});
+	alert('Please export your firebase API config in genericJs/secrets.ts');
 }
 
 firebase.initializeApp(firebaseConfig);
