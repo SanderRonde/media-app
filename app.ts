@@ -3,7 +3,7 @@ import {
 } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
-import { MessageReasons, PassedAlongMessages } from './window/main'
+import { MessageReasons, PassedAlongMessages } from './window/appWindow'
 const widevine: {
 	load(app: Electron.App, dest: string): boolean;
 	downloadAsync(app: Electron.App, dest: string): Promise<void>;
