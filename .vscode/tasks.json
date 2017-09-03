@@ -1,18 +1,16 @@
 {
 	// See https://go.microsoft.com/fwlink/?LinkId=733558
 	// for the documentation about the tasks.json format
-	"version": "0.1.0",
-	"command": "grunt",
-	"isShellCommand": true,
-	"args": ["--no-color"],
-	"showOutput": "always",
-	"tasks": [
-		{
-			"taskName": "build",
-            "args": [],
-            "isBuildCommand": true,
-            "isWatching": false,
-            "problemMatcher": []
-		}
-	]
+	"version": "2.0.0",
+    "tasks": [
+        {
+            "label": "tsc",
+            "type": "typescript",
+            "tsconfig": "tsconfig.json",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
 }

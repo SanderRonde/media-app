@@ -8,7 +8,8 @@
 		  "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
 			"program": "${workspaceRoot}/app.ts",
 			"sourceMaps": true,
-			"protocol": "legacy"
+			"protocol": "legacy",
+			"preLaunchTask": "tsc"
 	  }
   ]
 }
