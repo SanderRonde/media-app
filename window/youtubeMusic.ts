@@ -442,9 +442,14 @@ export namespace YoutubeMusic {
 		}
 
 		function findOn1001Tracklists(name: string, url: string): Promise<boolean> {
-			return new Promise((resolve) => {
-				const websiteWebview = $('#1001TracklistsView') as Electron.WebviewTag;
-				let currentPage: 'main'|'results'|'none' = 'none';
+			return new Promise(async (resolve) => {
+				const websiteWebview = await Helpers.createWebview({
+					id: '1001TracklistsView',
+					parentId: '1001tracklistsContainer',
+					partition: 'tracklists'
+				});
+				let currentPage: 'main'|'results' = 'main';
+
 				Helpers.addContentScripts(websiteWebview, [{
 					name: 'comm',
 					matches: ['*://*/*'],
@@ -456,34 +461,28 @@ export namespace YoutubeMusic {
 						]
 					}
 				}]);
-				Helpers.once(websiteWebview	, 'did-finish-load', () => {
-					if (currentPage === 'none') {
-						currentPage = 'main';
-					} else if (currentPage === 'main') {
-						currentPage = 'results';
-					}
 
-					if (currentPage === 'main') {
-						Helpers.sendTaskToPage(JSON.stringify([
-							'searchFor', name
-						]), '1001tracklists', () => {
-
-						});
-					} else if (currentPage === 'results') {
-						Helpers.sendTaskToPage(JSON.stringify([
-							'findItem', url
-						]), '1001tracklists', (result: false|string) => {
-							if (result !== 'null' && result !== 'false' && result) {
-								getTrackFrom1001TracklistsUrl(result);
-							} else {
-								resolve(false);
-							}
-							websiteWebview.style.display = 'none';
-						});
-					}
-				});
 				websiteWebview.loadURL('https://www.1001tracklists.com');
-				websiteWebview.style.display = 'block';
+
+				//TODO: this
+				if (currentPage === 'main') {
+					Helpers.sendTaskToPage(JSON.stringify([
+						'searchFor', name
+					]), '1001tracklists', () => {
+						console.log('Searching 1001 tracklists');
+					});
+				} else if (currentPage === 'results') {
+					Helpers.sendTaskToPage(JSON.stringify([
+						'findItem', url
+					]), '1001tracklists', (result: false|string) => {
+						if (result !== 'null' && result !== 'false' && result) {
+							getTrackFrom1001TracklistsUrl(result);
+						} else {
+							resolve(false);
+						}
+						websiteWebview.style.display = 'none';
+					});
+				}
 			});
 		}
 
@@ -729,7 +728,16 @@ export namespace YoutubeMusic {
 		});
 	}
 
-	export function init() {
+	export async function setup() {
+		const webview = await Helpers.createWebview({
+			id: 'ytmaWebview',
+			partition: 'youtubeplaylist',
+			parentId: 'youtubePlaylistCont'
+		});
+		view = webview;
+		addViewListeners();
+		addListeners();
+
 		const db = firebase.database();
 		const urlRef = db.ref('url');
 		urlRef.once('value', (snapshot) => {
@@ -739,18 +747,6 @@ export namespace YoutubeMusic {
 			} else {
 				alert('Could not find valid url');
 			}
-		});
-	}
-
-	export function setup() {
-		return new Promise((resolve) => {
-			const webview = document.getElementById('ytmaWebview') as Electron.WebviewTag;
-			webview.addEventListener('dom-ready', () => {
-				view = webview;
-				addViewListeners();
-				addListeners();
-				resolve(webview);
-			})
 		});
 	}
 

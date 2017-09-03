@@ -120,13 +120,8 @@
 			</div>
 		</div>
 		<div id="views">
-			<div id="youtubeSubsCont">
-				<webview id="youtubeSubsSubBoxView" partition="persist:youtubeSubscriptions" nodeintegration src="https://www.example.com"></webview>
-				<webview id="youtubeSubsVideoView" src="https://www.example.com" partition="persist:youtubeSubscriptions" nodeintegration></webview>
-			</div>
-			<div id="youtubePlaylistCont">
-				<webview id="ytmaWebview" partition="persist:youtubeplaylist" nodeintegration src="https://www.example.com"></webview>
-			</div>
+			<div id="youtubeSubsCont"></div>
+			<div id="youtubePlaylistCont"></div>
 			<div id="youtubeSearchCont">
 				<div id="searchBarCenterer">
 					<div id="searchBar">
@@ -151,14 +146,10 @@
 						<div id="suggestions"></div>
 					</div>
 				</div>
-				<webview id="youtubeSearchResultsView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
-				<webview id="youtubeSearchVideoView" partition="persist:youtubeSearch" nodeintegration src="https://www.example.com"></webview>
 			</div>
-			<div id="netflixCont">
-				<webview id="netflixWebView" partition="persist:netflix" src="https://www.example.com" plugins></webview>
-			</div>
+			<div id="netflixCont"></div>
 		</div>
-		<webview id="1001TracklistsView" style="display:none;" partition="persist:tracklists" nodeintegration src="https://www.example.com"></webview>
+		<div id="1001tracklistsContainer"></div>
 		<script>const exports = {};</script>
 		<script src="main.js"></script>
 	</body>

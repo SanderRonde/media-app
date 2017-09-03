@@ -298,7 +298,7 @@ export namespace AppWindow {
 		const isLoaded = loadedViews.indexOf(view) === -1;
 		if (isLoaded) {
 			await showSpinner();
-			await getViewByName(view).init();
+			await getViewByName(view).setup();
 		} else {
 			hideSpinner();
 			getActiveViewClass().Commands.play();
@@ -321,12 +321,6 @@ export namespace AppWindow {
 		listenForMessages();
 		prepareEventListeners();
 		setupListeners();
-		await Promise.all([
-			YoutubeMusic.setup(),
-			Netflix.setup(),
-			YoutubeSubscriptions.setup(),
-			YoutubeSearch.setup()
-		]);
 
 		switchToview(startView, true);
 

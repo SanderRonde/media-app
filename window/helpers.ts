@@ -355,4 +355,45 @@ export namespace Helpers {
 			}, duration);
 		});
 	}
+
+	export function createWebview(settings: {
+		id: string;
+		partition: string;
+		parentId: string;
+		nodeIntegration?: boolean;
+		plugins?: boolean;
+	}): Promise<Electron.WebviewTag> {
+		return new Promise((resolve) => {
+			const { id, partition, parentId, nodeIntegration, plugins } = settings;
+
+			const view = document.createElement('webview');
+			let hasListener = false;
+			view.addEventListener('did-finish-load' as any, () => {
+				if (view.getURL().indexOf('example.com') > -1) {
+					view.insertCSS(EXAMPLE_STYLES);
+				}
+
+				if (!hasListener) {
+					view.addEventListener('new-window', (e) => {
+						shell.openExternal(e.url);
+					});
+					hasListener = true;
+				}
+
+				console.log('Done loading', view);
+				resolve(view);
+			});
+
+			view.setAttribute('partition', `persist:${partition}`);
+			if (nodeIntegration !== false) {
+				view.setAttribute('nodeintegration', '');
+			}
+			if (plugins) {
+				view.setAttribute('plugins', '');
+			}
+			view.id = id;
+			view.src = 'about:blank';
+			$(`#${parentId}`).appendChild(view);
+		});
+	}
 }

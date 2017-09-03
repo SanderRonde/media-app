@@ -1,30 +1,8 @@
-import { Helpers, EXAMPLE_STYLES, $, MappedKeyboardEvent } from './helpers'
+import { Helpers, $, MappedKeyboardEvent } from './helpers'
 import { YoutubeVideoPlayer } from './youtubeMusic'
 import { AppWindow } from './appWindow'
-import { shell } from 'electron'
 
 export namespace YoutubeSubscriptions {
-	function initView(id: string): Promise<Electron.WebviewTag> {
-		return new Promise<Electron.WebviewTag>((resolve) => {
-			const view = $(`#${id}`) as Electron.WebviewTag;
-			let hasListener = false;
-			view.addEventListener('dom-ready', () => {
-				if (view.getURL().indexOf('example.com') > -1) {
-					view.insertCSS(EXAMPLE_STYLES);
-				}
-
-				if (!hasListener) {
-					view.addEventListener('new-window', (e) => {
-						shell.openExternal(e.url);
-					});
-					hasListener = true;
-				}
-				
-				resolve(view);
-			});
-		});
-	}
-
 	export namespace Commands {
 		export async function lowerVolume() {
 			Helpers.hacksecute((await Video.getView()), () => {
@@ -111,7 +89,11 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function setup() {
-			videoPromise = initView('youtubeSubsVideoView');
+			videoPromise = Helpers.createWebview({
+				id: 'youtubeSubsVideoView',
+				partition: 'youtubeSubscriptions',
+				parentId: 'youtubeSubsCont'
+			});
 			videoView = await videoPromise;
 
 			window.setTimeout(() => {
@@ -293,7 +275,11 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function setup() {
-			subBoxPromise = initView('youtubeSubsSubBoxView');
+			subBoxPromise = Helpers.createWebview({
+				id: 'youtubeSubsSubBoxView',
+				partition: 'youtubeSubsVideoView', 
+				parentId: 'youtubeSubsCont'
+			});
 			subBoxView = await subBoxPromise;
 
 			window.setTimeout(() => {
@@ -336,9 +322,6 @@ export namespace YoutubeSubscriptions {
 			SubBox.setup(),
 			Video.setup()
 		]);
-	}
-
-	export async function init() {
 		await Helpers.wait(15);
 		(await SubBox.getView()).loadURL('http://www.youtube.com/feed/subscriptions');
 	}

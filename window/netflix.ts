@@ -1,19 +1,7 @@
-import { Helpers, EXAMPLE_STYLES, MappedKeyboardEvent } from './helpers'
+import { Helpers, MappedKeyboardEvent } from './helpers'
 import { AppWindow } from './appWindow'
 
 export namespace Netflix {
-	function initView(): Promise<Electron.WebviewTag> {
-		return new Promise((resolve) => {
-			const view = document.getElementById('netflixWebView') as Electron.WebviewTag;
-			view.addEventListener('dom-ready', () => {
-				if (view.getURL().indexOf('example.com') > -1) {
-					view.insertCSS(EXAMPLE_STYLES);
-				}
-				resolve(view);
-			});
-		});
-	}
-
 	namespace Video {
 		let videoView: Electron.WebviewTag = null;
 		let videoPromise: Promise<Electron.WebviewTag> = null;
@@ -29,9 +17,14 @@ export namespace Netflix {
 		}
 
 		export async function setup() {
-			videoPromise = initView();
+			videoPromise = Helpers.createWebview({
+				id: 'netflixWebView',
+				partition: 'netflix',
+				parentId: 'netflixCont',
+				nodeIntegration: false,
+				plugins: true
+			});
 			videoView = await videoPromise;
-			videoView.id = 'netflixWebView';
 
 			window.setTimeout(() => {
 				Helpers.addContentScripts(videoView, [{
@@ -101,17 +94,13 @@ export namespace Netflix {
 
 	export async function setup() {
 		await Video.setup();
+		(await Video.getView()).loadURL('https://www.netflix.com/browse');
+		await Helpers.wait(5000);
+		AppWindow.onLoadingComplete('netflix');
 	}
 
 	interface ClickableElement extends Element {
 		click: () => void;
-	}
-
-	export async function init() {
-		await Helpers.wait(15);
-		(await Video.getView()).loadURL('https://www.netflix.com/browse');
-		await Helpers.wait(5000);
-		AppWindow.onLoadingComplete('netflix');
 	}
 
 	export async function onClose() {
