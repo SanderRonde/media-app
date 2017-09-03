@@ -15,8 +15,7 @@ const map = new Map<
 		[[['Shift', 'Alt', 'Down'], 'MediaPlayPause'], 'pausePlay'],
 		[[['Shift', 'Alt', 'Up'], 'MediaNextTrack'], 'magicButton'],
 
-		[['MediaStop'], 'pause'],
-		[['MediaPlayPause'], 'pausePlay'],
+		[['MediaStop'], 'pause']
 	]);
 
 function sendMessage(activeWindow: Electron.BrowserWindow, data: keyof MessageReasons) {
