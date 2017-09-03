@@ -37,4 +37,5 @@ window.Helpers = Helpers;
 window.Netflix = Netflix;
 window.AppWindow = AppWindow;
 window.YoutubeMusic = YoutubeMusic;
+window.YoutubeSearch = YoutubeSearch;
 window.YoutubeSubscriptions = YoutubeSubscriptions;

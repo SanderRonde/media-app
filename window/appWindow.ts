@@ -1,9 +1,8 @@
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
-import { MappedKeyboardEvent, Helpers, $, $$ } from './helpers'
+import { MappedKeyboardEvent, Helpers, $ } from './helpers'
 import { ipcRenderer, clipboard } from 'electron'
 import { YoutubeSearch } from './youtubeSearch'
 import { YoutubeMusic } from './youtubeMusic'
-import { AdBlocking } from './adblocking'
 import { Netflix } from './netflix'
 
 export type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions'|'youtubesearch';
@@ -333,12 +332,6 @@ export namespace AppWindow {
 
 		window.addEventListener('keydown', (e) => {
 			handleKeyboardEvent(e as MappedKeyboardEvent)
-		});
-
-		Array.from($$('webview')).forEach((webviewElement: Electron.WebviewTag) => {
-			Helpers.once(webviewElement, 'dom-ready', () => {
-				AdBlocking.handleBlocking(webviewElement);
-			});
 		});
 	}
 

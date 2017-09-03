@@ -1,54 +1,24 @@
+///<reference path="window/main.ts"/>
 import {
-	app, BrowserWindow, ipcMain, globalShortcut, dialog
+	app, BrowserWindow, ipcMain, dialog
 } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
+import { AdBlocking } from './appLibs/adblocking/adblocking'
+import { registerShortcuts } from './appLibs/shortcuts/shortcuts'
 import { MessageReasons, PassedAlongMessages } from './window/appWindow'
+require('electron-context-menu')({});
+
 const widevine: {
 	load(app: Electron.App, dest: string): boolean;
 	downloadAsync(app: Electron.App, dest: string): Promise<void>;
 } = require('electron-widevinecdm')
-
-///<reference path="window/main.ts"/>
-
-require('electron-context-menu')({});
-
 const widevinePath = path.join(app.getPath('appData'), 'widevine');
 const widevineExists = widevine.load(app, widevinePath);
 
 let activeWindow: Electron.BrowserWindow = null;
 
-type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
-	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-	'W', 'X', 'Y', 'Z', 'Shift', 'Alt', 'Left', 'Right', 'Down',
-	'Up', 'MediaNextTrack', 'MediaPreviousTrack', 'MediaStop',
-	'MediaPlayPause', 'Space', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const map = new Map<
-	(keys[keyof keys]|(keys[keyof keys]|keys[keyof keys][])[])[],
-	keyof MessageReasons>([
-		[[['Shift', 'Alt', 'F']], 'focus'],
-		[[['Shift', 'Alt', 'Left']], 'lowerVolume'],
-		[[['Shift', 'Alt', 'Right']], 'raiseVolume'],
-		[[['Shift', 'Alt', 'Down'], 'MediaPlayPause'], 'pausePlay'],
-		[[['Shift', 'Alt', 'Up'], 'MediaNextTrack'], 'magicButton'],
-
-		[['MediaStop'], 'pause'],
-		[['MediaPlayPause'], 'pausePlay'],
-	]);
-
 (() => {
-	function registerShortcuts() {
-		for (let [keys, command] of map.entries()) {
-			for (let key of keys) {
-				const keyCommand = Array.isArray(key) ? key.join('+') : key;
-
-				globalShortcut.register(keyCommand as any, () => {
-					sendMessage(command);
-				});
-			}
-		}
-	}
-
 	async function loadWidevine() {
 		return new Promise(async (resolve) => {
 			if (widevineExists) {
@@ -73,10 +43,11 @@ const map = new Map<
 		});
 	}
 
-	async function createWindow () {
+	async function onReady () {
 		await loadWidevine();
 
-		registerShortcuts();
+		AdBlocking.blockAds();
+		registerShortcuts(activeWindow);
 
 		activeWindow = new BrowserWindow({
 			width: 1024,
@@ -104,7 +75,7 @@ const map = new Map<
 		activeWindow.webContents.openDevTools();
 	}
 
-	app.on('ready', createWindow);
+	app.on('ready', onReady);
 	app.on('window-all-closed', () => {
 		if (process.platform !== 'darwin') {
 			app.quit();
@@ -116,13 +87,6 @@ const map = new Map<
 			identifier: identifier,
 			data: response,
 			type: 'response'
-		});
-	}
-
-	function sendMessage(data: keyof MessageReasons) {
-		activeWindow && activeWindow.webContents.send('fromBgPage', {
-			cmd: data,
-			type: 'event'
 		});
 	}
 

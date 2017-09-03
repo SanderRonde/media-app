@@ -1,5 +1,18 @@
 import * as fs from 'fs';
+import { session, dialog } from 'electron'
 import * as filterParser from 'abp-filter-parser'
+
+const FILTER_ALL = {
+	urls: ['*://*./*', '*://*/*']
+};
+
+const PARTITION_MAP = {
+	youtubeSubscriptions: 'www.youtube.com',
+	youtubeplaylist: 'www.youtube.com',
+	youtubeSearch: 'www.youtube.com',
+	netflix: 'www.netflix.com',
+	tracklists: 'www.1001tracklists.com'
+}
 
 export namespace AdBlocking {
 	export let done: boolean = false;
@@ -41,16 +54,22 @@ export namespace AdBlocking {
 		});
 	}
 
-	export async function handleBlocking(view: Electron.WebviewTag) {
+	async function blockForPartition(partition: string, baseUrl: string) {
 		await initialization;
-		view.getWebContents().session.webRequest.onBeforeRequest({
-			urls: ['*://*./*', '*://*/*']
-		}, async (details, callback) => {
-			const shouldBeBlocked = await shouldBlock(details, view.getURL());
+		session.fromPartition(partition, {
+			cache: true
+		}).webRequest.onBeforeRequest(FILTER_ALL, async (details, callback) => {
+			const shouldBeBlocked = await shouldBlock(details, baseUrl);
 			callback({
 				cancel: shouldBeBlocked
 			});
 		});
+	}
+
+	export function blockAds() {
+		for (let key in PARTITION_MAP) {
+			blockForPartition(key, PARTITION_MAP[key as keyof typeof PARTITION_MAP]);
+		}
 	}
 
 	export async function addRule(rule: string) {
@@ -60,9 +79,12 @@ export namespace AdBlocking {
 
 	function init(): Promise<void> {
 		return new Promise<void>((resolve) => {
-			fs.readFile('./adblocking/easylist.txt', 'utf8', (err, easylistTxt) => {
+			fs.readFile('./appLibs/adblocking/easylist.txt', 'utf8', (err, easylistTxt) => {
 				if (err) {
-					alert('Failed to find ad blocking list');
+					dialog.showMessageBox({
+						message: 'Failed to find ad blocking list',
+						type: 'info',
+					});
 				} else {
 					filterParser.parse(easylistTxt, rules);
 				}
