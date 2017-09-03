@@ -1,7 +1,6 @@
-import { Helpers, EXAMPLE_STYLES, MappedKeyboardEvent, $ } from './helpers'
+import { Helpers, MappedKeyboardEvent, $ } from './helpers'
 import { YoutubeVideoPlayer } from './youtubeMusic'
 import { AppWindow } from './appWindow'
-import { shell } from 'electron'
 
 function arr(first: number, last: number): number[] {
 	return Array.from(new Array(1 + last - first)).map((_, index) => {
@@ -20,27 +19,6 @@ const VALID_INPUT = arr(65, 90).map((charCode) => {
 
 export namespace YoutubeSearch {
 	let activePage: 'video'|'results' = 'results';
-
-	function initView(id: string): Promise<Electron.WebviewTag> {
-		return new Promise<Electron.WebviewTag>((resolve) => {
-			const view = $(`#${id}`) as Electron.WebviewTag;
-			let hasListener = false;
-			view.addEventListener('dom-ready', () => {
-				if (view.getURL().indexOf('example.com') > -1) {
-					view.insertCSS(EXAMPLE_STYLES);
-				}
-
-				if (!hasListener) {
-					view.addEventListener('new-window', (e) => {
-						shell.openExternal(e.url);
-					});
-					hasListener = true;
-				}
-				
-				resolve(view);
-			});
-		});
-	}
 
 	export namespace Commands {
 		export async function lowerVolume() {
@@ -123,7 +101,11 @@ export namespace YoutubeSearch {
 		}
 
 		export async function setup() {
-			videoPromise = initView('youtubeSearchVideoView');
+			videoPromise = Helpers.createWebview({
+				id: 'youtubeSearchVideoView',
+				partition: 'youtubeSearch',
+				parentId: 'youtubeSearchCont'
+			});
 			videoView = await videoPromise;
 
 			window.setTimeout(() => {
@@ -323,7 +305,11 @@ export namespace YoutubeSearch {
 		}
 
 		export async function setup() {
-			searchResultsPromise = initView('youtubeSearchResultsView');
+			searchResultsPromise = Helpers.createWebview({
+				id: 'youtubeSearchResultsView',
+				partition: 'youtubeSearch',
+				parentId: 'youtubeSearchCont'
+			});
 			searchResultsView = await searchResultsPromise;
 			searchResultsView.id = 'youtubeSearchResultsView';
 
@@ -403,7 +389,8 @@ export namespace YoutubeSearch {
 		}
 
 		async function doSearch(query: string) {
-			(await SearchResultsPage.getView()).loadURL(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
+			const searchResultsView = await SearchResultsPage.getView();
+			searchResultsView.loadURL(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
 		}
 
 		function genSuggestionElement(suggestion: string): HTMLElement {
@@ -476,10 +463,6 @@ export namespace YoutubeSearch {
 					showSuggestions();
 					e.preventDefault();
 					e.stopPropagation();
-				} else if (e.key === 'Enter') {
-					window.setTimeout(() => {
-						doSearch(updateInputValue());
-					}, 1);
 				} else if (e.key === 'ArrowDown') {
 					if (selectedSuggestion === currentSuggestions.length - 1) {
 						updateSelectedSuggestion(-1);
@@ -498,7 +481,7 @@ export namespace YoutubeSearch {
 					updateInputValue();
 					e.preventDefault();
 					e.stopPropagation();
-				} else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+				} else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Enter') {
 					//Don't update input
 				} else {
 					window.setTimeout(() => {
@@ -565,14 +548,11 @@ export namespace YoutubeSearch {
 	}
 
 	export async function setup() {
-		return Promise.all([
+		await Promise.all([
 			SearchResultsPage.setup(),
 			SearchBar.setup(),
 			Video.setup()
 		]);
-	}
-
-	export async function init() {
 		await Helpers.wait(15);
 		SearchResultsPage.navTo('https://www.youtube.com/');
 	}
