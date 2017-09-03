@@ -193,8 +193,6 @@ ModelManifest.xml
 
 build/
 
-typings/
-
 app/window/**/*.js
 **/**/main.js
 **/**/subBox.js
