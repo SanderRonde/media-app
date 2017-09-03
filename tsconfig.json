@@ -20,5 +20,8 @@
     "compileOnSave": true,
     "include": [
         "."
+    ],
+    "exclude": [
+        "node_modules"
     ]
 }
