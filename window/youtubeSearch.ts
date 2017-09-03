@@ -403,7 +403,7 @@ export namespace YoutubeSearch {
 		}
 
 		async function doSearch(query: string) {
-			(await SearchResultsPage.getView()).loadURL(`https://www.youtube.com/results?search_query=${query}`);
+			(await SearchResultsPage.getView()).loadURL(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
 		}
 
 		function genSuggestionElement(suggestion: string): HTMLElement {
