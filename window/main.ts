@@ -2,23 +2,8 @@ import { YoutubeSubscriptions } from './youtubeSubscriptions'
 import { AppWindow, ViewNames } from './appWindow'
 import { YoutubeSearch } from './youtubeSearch'
 import { YoutubeMusic } from './youtubeMusic'
-import * as firebase from 'firebase'
 import { Helpers } from './helpers'
 import { Netflix } from './netflix'
-
-const firebaseConfig = (require('optional-require') as optionalRequire)(require)<{
-	apiKey: string;
-	authDomain: string;
-	databaseURL: string;
-	projectId: string;
-	storageBucket: string;
-	messagingSenderId: string;	
-}>('../genericJs/secrets') || null;
-if (firebaseConfig === null) {
-	alert('Please export your firebase API config in genericJs/secrets.ts');
-}
-
-firebase.initializeApp(firebaseConfig);
 
 declare let window: CustomWindow;
 

@@ -375,14 +375,6 @@ export namespace AppWindow {
 		return str;
 	}
 
-	function saveURL(url: string) {
-		const db = firebase.database()
-		const ref = db.ref('url');
-		ref.update({
-			url: url
-		});
-	}
-
 	function listenForMessages() {
 		ipcRenderer.on('fromBgPage', (event: Event, message: {
 			identifier: string;
@@ -419,7 +411,7 @@ export namespace AppWindow {
 					break;
 				case 'saveUrl':
 					const saveUrlRes = data as PassedAlongMessages['saveUrl'];
-					saveURL(saveUrlRes.url);
+					YoutubeMusic.saveURL(saveUrlRes.url);
 					break;
 				case 'keyPress':
 					const keyPressRes = data as PassedAlongMessages['keyPress'];

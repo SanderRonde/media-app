@@ -1,6 +1,24 @@
 import { Helpers, $, MappedKeyboardEvent } from './helpers'
 import { AppWindow } from './appWindow'
+import firebase = require('firebase');
 import { shell } from 'electron'
+
+const firebaseConfig = ((require('optional-require') as optionalRequire)(require)<{
+	firebaseConfig: {
+		apiKey: string;
+		authDomain: string;
+		databaseURL: string;
+		projectId: string;
+		storageBucket: string;
+		messagingSenderId: string;	
+	}
+}>('../genericJs/secrets') || {
+	firebaseConfig: null
+}).firebaseConfig;
+if (firebaseConfig === null) {
+	alert('Please export your firebase API config in genericJs/secrets.ts');
+}
+firebase.initializeApp(firebaseConfig);
 
 export interface YoutubeVideoPlayer extends HTMLElement {
 	getVolume(): number;
@@ -802,5 +820,13 @@ export namespace YoutubeMusic {
 			(await YoutubeMusic.getView()).reload();
 		}
 		return false;
+	}
+
+	export function saveURL(url: string) {
+		const db = firebase.database()
+		const ref = db.ref('url');
+		ref.update({
+			url: url
+		});
 	}
 }
