@@ -45,7 +45,7 @@ body {
 
 #views > * {
 	background-color: black;
-	width: 100vw;
+	min-width: 100vw;
 	height: calc(100vh + 15px);
 	margin-top: -26px;
 }
