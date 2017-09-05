@@ -1,3 +1,4 @@
+import { EXTERNAL_EVENT } from '../appLibs/constants/constants'
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
 import { MappedKeyboardEvent, Helpers, $ } from './helpers'
 import { ipcRenderer, clipboard } from 'electron'
@@ -196,7 +197,7 @@ export namespace AppWindow {
 		});
 
 		document.addEventListener('keydown', (e) => {
-			if (KeyListeningViews.indexOf(getActiveViewName()) === -1) {
+			if (getActiveViewName() in KeyListeningViews) {
 				if (e.key === 'v' && e.ctrlKey) {
 					//It's a paste
 					const pasteData = clipboard.readText();
@@ -209,7 +210,7 @@ export namespace AppWindow {
 		});
 	}
 
-	function onShortcut(command: keyof MessageReasons) {
+	async function onShortcut(command: keyof MessageReasons | EXTERNAL_EVENT) {
 		const activeViewView = getActiveViewClass().Commands;
 		switch (command) {
 			case 'lowerVolume':
@@ -232,6 +233,53 @@ export namespace AppWindow {
 				break;
 			case 'magicButton':
 				onMagicButton();
+				break;
+			case 'youtubeSubscriptions':
+				switchToview('youtubeSubscriptions');
+				break;
+			case 'youtubeMusic':
+				switchToview('ytmusic');
+				break;
+			case 'youtubeSearch':
+				switchToview('youtubesearch');
+				break;
+			case 'netflix':
+				switchToview('netflix');
+				break;
+			case 'up':
+				if (activeView === 'youtubeSubscriptions') {
+					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
+						window.videos.selected.goUp();
+					});
+				}
+				break;
+			case 'down':
+				if (activeView === 'youtubeSubscriptions') {
+					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
+						window.videos.selected.goDown();
+					});
+				}
+				break;
+			case 'left':
+				if (activeView === 'youtubeSubscriptions') {
+					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
+						window.videos.selected.goLeft();
+					});
+				}
+				break;
+			case 'right':
+				if (activeView === 'youtubeSubscriptions') {
+					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
+						window.videos.selected.goRight();
+					});
+				}
+				break;
+			case 'toggleVideo':
+				if (activeView === 'youtubeSubscriptions') {
+					YoutubeSubscriptions.toggleVideoVisibility();
+				} else if (activeView === 'youtubesearch') {
+					YoutubeSearch.toggleVideoVisibility();
+				}
 				break;
 		}
 	}
@@ -295,7 +343,7 @@ export namespace AppWindow {
 		}
 
 		activeView = view;
-		const isLoaded = loadedViews.indexOf(view) === -1;
+		const isLoaded = view in loadedViews;
 		if (isLoaded) {
 			await showSpinner();
 			await getViewByName(view).setup();
@@ -381,7 +429,7 @@ export namespace AppWindow {
 			data: MessageReasons[keyof MessageReasons];
 			type: 'response';
 		}|{
-			cmd: keyof MessageReasons
+			cmd: keyof MessageReasons | EXTERNAL_EVENT
 			type: 'event';
 		}) => {
 			if (message.type === 'response') {
