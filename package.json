@@ -36,6 +36,7 @@
     "fs": "0.0.1-security",
     "md5": "^2.2.1",
     "optional-require": "^1.0.0",
+    "paper-ripple": "^0.3.0",
     "path": "^0.12.7",
     "url": "^0.11.0"
   },
