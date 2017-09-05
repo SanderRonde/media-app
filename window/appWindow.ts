@@ -345,18 +345,18 @@ export namespace AppWindow {
 		activeView = view;
 		const isLoaded = view in loadedViews;
 		if (isLoaded) {
-			await showSpinner();
-			await getViewByName(view).setup();
-		} else {
 			hideSpinner();
 			getActiveViewClass().Commands.play();
+		} else {
+			await showSpinner();
+			await getViewByName(view).setup();
 		}
 
 		const viewsEl = $('#views');
 		viewsEl.classList.remove('ytmusic', 'netflix', 'youtubeSubscriptions', 'youtubesearch');
 		viewsEl.classList.add(view);
 
-		if (!isLoaded) {
+		if (isLoaded) {
 			await Helpers.wait(500);
 			getActiveViewClass().onFocus();
 		}
