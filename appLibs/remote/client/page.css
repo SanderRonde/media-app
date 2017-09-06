@@ -1,0 +1,88 @@
+body {
+	margin: 0;
+	user-select: none;
+	font-family: 'Roboto';
+}
+
+#main {
+	height: 95vh;
+	width: 100vw;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+#switchTypeRow {
+	height: 10vh;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	fill: #F44336;
+}
+
+#playPauseRow {
+	height: 20vh;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+}
+
+#navigationRow {
+	height: 50vh;
+}
+
+#switchTypeRow > * {
+	width: 25vw;
+}
+
+svg {
+	height: 100%;
+	width: 100%;
+}
+
+.rippleTarget {
+	position: relative;
+	cursor: pointer;
+}
+
+#volumeDown, #volumeUp {
+	width: 20vw;
+	padding-left: 5vw;
+	padding-right: 5vw;
+}
+
+#playPause {
+	width: 50vw;
+}
+
+#navigationRow > * {
+	height: calc(50vh / 3);
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+#navigationRow > * > * {
+	width: 33vw;
+}
+
+#magicButton, #focusButton {
+	width: 20vw;
+	padding: 0 6.5vw;
+}
+
+html {
+	overflow: hidden;
+}
+
+#statusContainer {
+	height: 5vh;
+	background-color: #9E9E9E;
+	position: fixed;
+	color: white;
+	bottom: 0;
+	position: relative;
+	font-weight: bold;
+	line-height: 5vh;
+	padding: 0 2vw;
+}
