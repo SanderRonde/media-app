@@ -100,6 +100,12 @@ export namespace YoutubeSearch {
 			});
 		}
 
+		export async function getTitle(): Promise<string> {
+			return await Helpers.hacksecute(await getView(), () => {
+				document.querySelector('.title').innerHTML;
+			});
+		}
+
 		export async function setup() {
 			videoPromise = Helpers.createWebview({
 				id: 'youtubeSearchVideoView',
@@ -354,6 +360,7 @@ export namespace YoutubeSearch {
 		let currentSuggestions: Array<string> = [];
 		let selectedSuggestion: number = -1;
 		let originalInput: string = '';
+		export let lastSearch: string = '';
 
 		function updateInputValue(): string {
 			if (selectedSuggestion === -1) {
@@ -389,6 +396,7 @@ export namespace YoutubeSearch {
 		}
 
 		async function doSearch(query: string) {
+			lastSearch = query;
 			const searchResultsView = await SearchResultsPage.getView();
 			searchResultsView.loadURL(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
 		}
@@ -555,6 +563,7 @@ export namespace YoutubeSearch {
 		]);
 		await Helpers.wait(15);
 		SearchResultsPage.navTo('https://www.youtube.com/');
+		AppWindow.updateStatus('Looking at search page');
 	}
 
 	export function onClose() { }
@@ -562,6 +571,9 @@ export namespace YoutubeSearch {
 	export async function onFocus() {
 		if (activePage === 'video') {
 			(await Video.getView()).focus();
+			AppWindow.updateStatus(await Video.getTitle());
+		} else {
+			AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch}`)
 		}
 	}
 
@@ -580,11 +592,13 @@ export namespace YoutubeSearch {
 			activePage = 'results';
 			await Helpers.wait(500);
 			(await SearchResultsPage.getView()).focus();
+			AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch}`)
 		} else {
 			subsCont.classList.add('showVideo');
 			activePage = 'video';
 			await Helpers.wait(500);
 			(await Video.getView()).focus();
+			AppWindow.updateStatus(await Video.getTitle());
 		}
 	}
 

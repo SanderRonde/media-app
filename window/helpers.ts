@@ -105,9 +105,15 @@ export namespace Helpers {
 		[key: string]: number|string|boolean;
 	}>(view: Electron.WebviewTag, fn: (REPLACE: T) => void, parameters?: T) {
 		if (!view.src) {
-			return;
+			return new Promise<any>((resolve) => {
+				resolve(undefined);
+			});
 		}
-		view.executeJavaScript(replaceParameters(`(${createTag(fn).toString()})();`, parameters || {}), false);
+		return new Promise<any>((resolve) => {
+			view.executeJavaScript(replaceParameters(`(${createTag(fn).toString()})();`, parameters || {}), false, (result) => {
+				resolve(result);
+			});
+		});
 	}
 
 	let taskIds = 0;

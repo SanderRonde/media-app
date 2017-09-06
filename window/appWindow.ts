@@ -34,6 +34,8 @@ export interface MessageReasons {
 	play: void;
 
 	quit: void;
+
+	messageServer: void;
 }
 
 export interface PassedAlongMessages {
@@ -483,7 +485,13 @@ export namespace AppWindow {
 		});
 	}
 
-	export async function sendBackgroundPageMessage<T extends keyof MessageReasons>(reason: T): Promise<MessageReasons[T]> {
+	export async function sendBackgroundPageMessage<T extends keyof MessageReasons>(reason: T, data?: {
+		type: string;
+		data: {
+			app: string;
+			status: string;
+		};
+	}): Promise<MessageReasons[T]> {
 		const identifier = genIdentifier();
 		return new Promise<MessageReasons[T]>((resolve) => {
 			channels.push({
@@ -495,7 +503,31 @@ export namespace AppWindow {
 			ipcRenderer.send('toBgPage', {
 				identifier: identifier,
 				type: reason,
+				data: data
 			});
+		});
+	}
+
+	function mapViewName(viewName: ViewNames): string {
+		switch (viewName) {
+			case 'netflix':
+				return 'Netflix';
+			case 'youtubesearch': 
+				return 'YTs';
+			case 'youtubeSubscriptions':
+				return 'Subs';
+			case 'ytmusic':
+				return 'music';
+		}
+	}
+
+	export function updateStatus(status: string) {
+		sendBackgroundPageMessage('messageServer', {
+			type: 'statusUpdate',
+			data: {
+				app: mapViewName(getActiveViewName()),
+				status: status
+			}
 		});
 	}
 }

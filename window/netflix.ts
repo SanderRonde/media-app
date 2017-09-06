@@ -97,6 +97,7 @@ export namespace Netflix {
 		(await Video.getView()).loadURL('https://www.netflix.com/browse');
 		await Helpers.wait(5000);
 		AppWindow.onLoadingComplete('netflix');
+		AppWindow.updateStatus('Watching netflix');
 	}
 
 	interface ClickableElement extends Element {
@@ -110,6 +111,7 @@ export namespace Netflix {
 
 	export async function onFocus() {
 		(await Video.getView()).focus();
+		AppWindow.updateStatus('Watching netflix');
 	}
 
 	export async function getView(): Promise<Electron.WebviewTag> {

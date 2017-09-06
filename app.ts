@@ -4,9 +4,10 @@ import {
 } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
-import { AdBlocking } from './appLibs/adblocking/adblocking'
-import { registerShortcuts } from './appLibs/shortcuts/shortcuts'
-import { MessageReasons, PassedAlongMessages } from './window/appWindow'
+import { RemoteServer }  from './appLibs/remote/remote';
+import { AdBlocking } from './appLibs/adblocking/adblocking';
+import { registerShortcuts } from './appLibs/shortcuts/shortcuts';
+import { MessageReasons, PassedAlongMessages } from './window/appWindow';
 require('electron-context-menu')({});
 
 const widevine: {
@@ -17,6 +18,7 @@ const widevinePath = path.join(app.getPath('appData'), 'widevine');
 const widevineExists = widevine.load(app, widevinePath);
 
 let activeWindow: Electron.BrowserWindow = null;
+let activeServer: RemoteServer = null;
 
 (() => {
 	async function loadWidevine() {
@@ -47,6 +49,7 @@ let activeWindow: Electron.BrowserWindow = null;
 		await loadWidevine();
 
 		AdBlocking.blockAds();
+		activeServer = new RemoteServer(activeWindow);
 		registerShortcuts(activeWindow);
 
 		activeWindow = new BrowserWindow({
@@ -96,10 +99,25 @@ let activeWindow: Electron.BrowserWindow = null;
 		respond: boolean;
 		data?: {
 			type: keyof PassedAlongMessages;
-		} & PassedAlongMessages[keyof PassedAlongMessages]
+		} | PassedAlongMessages[keyof PassedAlongMessages] | {
+			type: string;
+			data: {
+				app: string;
+				status: string;
+			};
+		}
 	}) => {
 		const { identifier, type, data } = msg;
 		switch (type) {
+			case 'messageServer':
+				activeServer.sendMessage(data as {
+					type: string;
+					data: {
+						app: string;
+						status: string;
+					};
+				});
+				break;
 			case 'isMinimized':
 				respondToMessage(identifier, activeWindow && activeWindow.isMinimized());
 				break;

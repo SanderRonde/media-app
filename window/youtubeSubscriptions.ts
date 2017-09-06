@@ -88,6 +88,12 @@ export namespace YoutubeSubscriptions {
 			});
 		}
 
+		export async function getTitle(): Promise<string> {
+			return await Helpers.hacksecute(await getView(), () => {
+				document.querySelector('.title').innerHTML;
+			});
+		}
+
 		export async function setup() {
 			videoPromise = Helpers.createWebview({
 				id: 'youtubeSubsVideoView',
@@ -310,6 +316,7 @@ export namespace YoutubeSubscriptions {
 		$('#youtubeSubsCont').classList.add('showVideo');
 		await Helpers.wait(500);
 		(await Video.getView()).focus();
+		AppWindow.updateStatus(await Video.getTitle());
 	}
 
 	export async function changeVideo(url: string) {
@@ -333,8 +340,10 @@ export namespace YoutubeSubscriptions {
 	export async function onFocus() {
 		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
 			(await Video.getView()).focus();
+			AppWindow.updateStatus(await Video.getTitle());
 		} else {
 			(await SubBox.getView()).focus();
+			AppWindow.updateStatus('Browsing subscriptions');
 		}
 	}
 
@@ -352,10 +361,12 @@ export namespace YoutubeSubscriptions {
 			subsCont.classList.remove('showVideo');
 			await Helpers.wait(500);
 			(await SubBox.getView()).focus();
+			AppWindow.updateStatus('Browsing subscriptions');
 		} else {
 			subsCont.classList.add('showVideo');
 			await Helpers.wait(500);
 			(await Video.getView()).focus();
+			AppWindow.updateStatus(await Video.getTitle());
 		}
 	}
 

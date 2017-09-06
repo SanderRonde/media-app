@@ -678,6 +678,12 @@ export namespace YoutubeMusic {
 		}
 	}
 
+	export async function getTitle(): Promise<string> {
+		return await Helpers.hacksecute(await getView(), () => {
+			document.querySelector('.title').innerHTML;
+		});
+	}
+
 	function addViewListeners() {
 		Helpers.addContentScripts(view, [{
 			name: 'js',
@@ -716,6 +722,10 @@ export namespace YoutubeMusic {
 
 		view.addEventListener('new-window', (e) => {
 			shell.openExternal(e.url);
+		});
+
+		view.addEventListener('dom-ready', async (e) => {
+			AppWindow.updateStatus(await getTitle());
 		});
 	}
 
@@ -792,8 +802,9 @@ export namespace YoutubeMusic {
 		}).toString()})()`, false);
 	}
 
-	export function onFocus() {
+	export async function onFocus() {
 		view && view.focus();
+		AppWindow.updateStatus(await getTitle());
 	}
 
 	export function getView(): Electron.WebviewTag {
