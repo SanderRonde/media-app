@@ -36,6 +36,7 @@ export interface MessageReasons {
 	quit: void;
 
 	messageServer: void;
+	playStatus: void;
 }
 
 export interface PassedAlongMessages {
@@ -433,6 +434,11 @@ export namespace AppWindow {
 		}|{
 			cmd: keyof MessageReasons | EXTERNAL_EVENT
 			type: 'event';
+		}|{
+			type: 'onPause'|'onPlay';
+			data: {
+				view: ViewNames;
+			}
 		}) => {
 			if (message.type === 'response') {
 				const identifier = message.identifier;
@@ -442,8 +448,18 @@ export namespace AppWindow {
 					val.fn(message.data);
 					channels.splice(channels.indexOf(val), 1);
 				});
+			} else if (message.type === 'onPause' || message.type === 'onPlay') {
+				if (message.data.view === getActiveViewName()) {
+					ipcRenderer.send('toBgPage', {
+						type: 'playStatus',
+						data: message.type === 'onPause' ? 'pause' : 'play'
+					});
+				}
 			} else {
-				onShortcut(message.cmd);
+				onShortcut((message as {
+					cmd: keyof MessageReasons | EXTERNAL_EVENT
+					type: 'event';
+				}).cmd);
 			}
 		});
 		ipcRenderer.on('passedAlong', <T extends keyof PassedAlongMessages>(event: Event, message: {
@@ -481,6 +497,7 @@ export namespace AppWindow {
 					break;
 				case 'youtubeSearchClick':
 					YoutubeSearch.SearchBar.onPageClick();
+					break;
 			}
 		});
 	}

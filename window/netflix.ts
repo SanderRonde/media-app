@@ -16,6 +16,26 @@ export namespace Netflix {
 			});
 		}
 
+		export async function getPlayStatus(): Promise<boolean> {
+			return Helpers.hacksecute(await getView(), () => {
+				if (document.querySelector('.button-nfplayerPause')) {
+					true;
+				} else {
+					false;
+				}
+			});
+		}
+
+		export async function getVideoTitle(): Promise<string> {
+			return Helpers.hacksecute(await getView(), () => {
+				if (document.querySelector('.video-title')) {
+					document.querySelector('.video-title').children[0].children[0].innerHTML;
+				} else {
+					'nothing';
+				}
+			});
+		}
+
 		export async function setup() {
 			videoPromise = Helpers.createWebview({
 				id: 'netflixWebView',
@@ -92,12 +112,42 @@ export namespace Netflix {
 		}
 	}
 
+	const state = {
+		playing: false,
+		title: 'nothing'
+	}
+
+	function initStateListener() {
+		window.setInterval(async () => {
+			const [ playing, title ] = await Promise.all([
+				Video.getPlayStatus(),
+				Video.getVideoTitle()
+			]);
+			if (state.playing !== playing || state.title !== title) {
+				AppWindow.updateStatus(state.title);
+				ipcRenderer.send('toBgPage', {
+					type: 'passAlong',
+					data: {
+						type: playing ? 'onPlay' : 'onPause',
+						data: {
+							view: 'netflix'
+						}
+					}
+				});
+
+				state.playing = playing;
+				state.title = title;
+			}
+		}, 500);
+	}
+
 	export async function setup() {
 		await Video.setup();
 		(await Video.getView()).loadURL('https://www.netflix.com/browse');
 		await Helpers.wait(5000);
 		AppWindow.onLoadingComplete('netflix');
 		AppWindow.updateStatus('Watching netflix');
+		initStateListener();
 	}
 
 	interface ClickableElement extends Element {

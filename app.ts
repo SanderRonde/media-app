@@ -111,11 +111,16 @@ let activeServer: RemoteServer = null;
 		switch (type) {
 			case 'messageServer':
 				activeServer.sendMessage(data as {
-					type: string;
+					type: 'statusUpdate';
 					data: {
 						app: string;
 						status: string;
 					};
+				}|{
+					type: 'playUpdate';
+					data: {
+						playing: boolean;
+					}
 				});
 				break;
 			case 'isMinimized':
@@ -171,6 +176,15 @@ let activeServer: RemoteServer = null;
 				break;
 			case 'passAlong':
 				activeWindow && activeWindow.webContents.send('passedAlong', data);
+				break;
+			case 'playStatus':
+				const isPlaying = data === 'play';
+				activeServer.sendMessage({
+					type: 'playUpdate',
+					data: {
+						playing: isPlaying
+					}
+				})
 				break;
 		}
 	});

@@ -61,12 +61,15 @@ export namespace YoutubeMusic {
 				}
 				(window as any).executedYTCA = location.href;
 
+				var ipcRenderer = require('electron').ipcRenderer;
+
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				const playerApi = document.getElementById('player-api');
 				const volumeBar = document.createElement('div');
 				const volumeBarBar = document.createElement('div');
 				const volumeBarNumber = document.createElement('div');
 				const visualizer = document.createElement('div');
+				const video = document.getElementsByTagName('video')[0];
 				visualizer.classList.add('ytma_visualization_cont');
 				document.body.insertBefore(visualizer, document.body.children[0]);
 
@@ -308,6 +311,28 @@ export namespace YoutubeMusic {
 					window.onwheel = (e) => {
 						onScroll(e.deltaY > 0);
 					};
+					video.onplay = () => {
+						ipcRenderer.send('toBgPage', {
+							type: 'passAlong',
+							data: {
+								type: 'onPause',
+								data: {
+									view: 'ytmusic'
+								}
+							}
+						});
+					}
+					video.onpause = () => {
+						ipcRenderer.send('toBgPage', {
+							type: 'passAlong',
+							data: {
+								type: 'onPlay',
+								data: {
+									view: 'ytmusic'
+								}
+							}
+						});
+					}
 				}
 
 				addListeners();

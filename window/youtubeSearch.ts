@@ -149,11 +149,14 @@ export namespace YoutubeSearch {
 						}
 
 						(async () => {
+							var ipcRenderer = require('electron').ipcRenderer;
+
 							const player: YoutubeVideoPlayer = await getPlayer();
 							const playerApi = document.getElementById('player-api');
 							const volumeBar = document.createElement('div');
 							const volumeBarBar = document.createElement('div');
 							const volumeBarNumber = document.createElement('div');
+							const video = document.getElementsByTagName('video')[0];
 							let volumeBarTimeout: number = null;
 
 							volumeBar.id = 'yt-ca-volumeBar';
@@ -281,6 +284,28 @@ export namespace YoutubeSearch {
 								window.onwheel = (e) => {
 									onScroll(e.deltaY > 0);
 								};
+								video.onplay = () => {
+									ipcRenderer.send('toBgPage', {
+										type: 'passAlong',
+										data: {
+											type: 'onPause',
+											data: {
+												view: 'youtubesearch'
+											}
+										}
+									});
+								}
+								video.onpause = () => {
+									ipcRenderer.send('toBgPage', {
+										type: 'passAlong',
+										data: {
+											type: 'onPlay',
+											data: {
+												view: 'youtubesearch'
+											}
+										}
+									});
+								}
 							}
 
 							addListeners();

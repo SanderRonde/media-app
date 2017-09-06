@@ -118,11 +118,16 @@ class WSHandler {
 	}
 
 	sendMessage(message: {
-		type: string;
+		type: 'statusUpdate';
 		data: {
 			app: string;
 			status: string;
 		};
+	}|{
+		type: 'playUpdate';
+		data: {
+			playing: boolean;
+		}
 	}) {
 		this.connections.forEach((connection) => {
 			connection.sendUTF(JSON.stringify(message));
@@ -151,11 +156,16 @@ export class RemoteServer {
 	}
 
 	sendMessage(message: {
-		type: string;
+		type: 'statusUpdate';
 		data: {
 			app: string;
 			status: string;
 		};
+	}|{
+		type: 'playUpdate';
+		data: {
+			playing: boolean;
+		}
 	}) {
 		this.wsHandler.sendMessage(message);
 	}
