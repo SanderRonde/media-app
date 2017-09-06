@@ -573,24 +573,28 @@ export namespace YoutubeSearch {
 		}
 	}
 
+	export async function toggleVideoVisibility() {
+		const subsCont = $('#youtubeSearchCont');
+		if (activePage === 'video') {
+			subsCont.classList.remove('showVideo');
+			activePage = 'results';
+			await Helpers.wait(500);
+			(await SearchResultsPage.getView()).focus();
+		} else {
+			subsCont.classList.add('showVideo');
+			activePage = 'video';
+			await Helpers.wait(500);
+			(await Video.getView()).focus();
+		}
+	}
+
 	export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
 		if (AppWindow.getActiveViewName() !== 'youtubesearch') {
 			return false;
 		}
 
 		if (event.key === 'h') {
-			const subsCont = $('#youtubeSearchCont');
-			if (activePage === 'video') {
-				subsCont.classList.remove('showVideo');
-				activePage = 'results';
-				await Helpers.wait(500);
-				(await SearchResultsPage.getView()).focus();
-			} else {
-				subsCont.classList.add('showVideo');
-				activePage = 'video';
-				await Helpers.wait(500);
-				(await Video.getView()).focus();
-			}
+			toggleVideoVisibility();
 			return true;
 		}
 		if (event.key === 's' && SearchBar.toggle()) {
@@ -601,7 +605,7 @@ export namespace YoutubeSearch {
 			Helpers.downloadVideo((await Video.getView()).src)
 			return true;
 		}
-		if (VALID_INPUT.indexOf(event.key) > -1 && 
+		if (event.key in VALID_INPUT && 
 			!event.altKey && !event.ctrlKey) {
 				SearchBar.focus(event.key);
 				return true;
@@ -629,7 +633,7 @@ export namespace YoutubeSearch {
 				//Go to that view and focus the video
 				await AppWindow.switchToview('youtubesearch');
 				const interval = window.setInterval(async () => {
-					if (AppWindow.loadedViews.indexOf('youtubesearch') > -1 && (await Video.getView())) {
+					if ('youtubesearch' in AppWindow.loadedViews && (await Video.getView())) {
 						//It's loaded
 						window.clearInterval(interval);
 

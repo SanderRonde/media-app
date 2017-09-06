@@ -260,7 +260,7 @@ export namespace YoutubeSubscriptions {
 		}
 	}
 
-	namespace SubBox {
+	export namespace SubBox {
 		let subBoxView: Electron.WebviewTag = null;
 		let subBoxPromise: Promise<Electron.WebviewTag> = null;
 
@@ -346,25 +346,29 @@ export namespace YoutubeSubscriptions {
 		}
 	}
 
+	export async function toggleVideoVisibility() {
+		const subsCont = $('#youtubeSubsCont');
+		if (subsCont.classList.contains('showVideo')) {
+			subsCont.classList.remove('showVideo');
+			await Helpers.wait(500);
+			(await SubBox.getView()).focus();
+		} else {
+			subsCont.classList.add('showVideo');
+			await Helpers.wait(500);
+			(await Video.getView()).focus();
+		}
+	}
+
 	export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
 		if (AppWindow.getActiveViewName() !== 'youtubeSubscriptions') {
 			return false;
 		}
 
-		const subsCont = $('#youtubeSubsCont');
 		if (event.key === 'h') {
-			if (subsCont.classList.contains('showVideo')) {
-				subsCont.classList.remove('showVideo');
-				await Helpers.wait(500);
-				(await SubBox.getView()).focus();
-			} else {
-				subsCont.classList.add('showVideo');
-				await Helpers.wait(500);
-				(await Video.getView()).focus();
-			}
+			toggleVideoVisibility();
 			return true;
 		} else if (event.key === 'd') {
-			if (subsCont.classList.contains('showVideo')) {
+			if ($('#youtubeSubsCont').classList.contains('showVideo')) {
 				Helpers.downloadVideo((await Video.getView()).src)
 				return true;
 			}
