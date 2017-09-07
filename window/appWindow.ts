@@ -537,7 +537,7 @@ export namespace AppWindow {
 			case 'youtubeSubscriptions':
 				return 'Subs';
 			case 'ytmusic':
-				return 'music';
+				return 'Music';
 		}
 	}
 
