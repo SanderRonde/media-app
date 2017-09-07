@@ -68,6 +68,7 @@ const KeyListeningViews: ViewNames[] = [
 
 export namespace AppWindow {
 	const titleBar = document.querySelector('#titleBar');
+	let debug: boolean = false;
 	let activeView: ViewNames = null;
 	
 	type AppEvent = 'onFullscreened'|'onMaximized'|'onRestored'|'onMinimized';
@@ -365,7 +366,9 @@ export namespace AppWindow {
 		}
 	}
 
-	export async function init(startView: ViewNames) {
+	export async function init(startView: ViewNames, isDebug: boolean) {
+		debug = isDebug;
+
 		activeView = startView;
 		$('#views').classList.add(startView);
 
@@ -546,5 +549,9 @@ export namespace AppWindow {
 				status: status
 			}
 		});
+	}
+
+	export function isDebug(): boolean {
+		return debug;
 	}
 }

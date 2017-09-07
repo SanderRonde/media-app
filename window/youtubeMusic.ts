@@ -758,8 +758,11 @@ export namespace YoutubeMusic {
 	}
 
 	function launch(url: string) {
-		//TODO: change this lol
-		view.loadURL('https://www.youtube.com/watch?v=ih-NNLjTCPs&list=WL&index=804&t=1260');
+		if (AppWindow.isDebug()) {
+			view.loadURL('https://www.youtube.com/watch?v=ih-NNLjTCPs&list=WL&index=804&t=1260');
+		} else {
+			view.loadURL(url);
+		}
 	}
 
 	function addListeners() {

@@ -20,6 +20,13 @@ const widevineExists = widevine.load(app, widevinePath);
 let activeWindow: Electron.BrowserWindow = null;
 let activeServer: RemoteServer = null;
 
+const DEBUG = process.argv.filter((arg) => {
+	if (arg.indexOf('--debug-brk=') > -1) {
+		return true;
+	}
+	return false;
+}).length > 0;
+
 (() => {
 	async function loadWidevine() {
 		return new Promise(async (resolve) => {
@@ -68,14 +75,17 @@ let activeServer: RemoteServer = null;
 		activeWindow.loadURL(url.format({
 			pathname: path.join(__dirname, 'window/main.html'),
 			protocol: 'file:',
-			slashes: true
+			slashes: true,
+			hash: DEBUG ? 'DEBUG' : ''
 		}));
 
 		activeWindow.on('closed', () => {
 			activeWindow = null;
 		});
 
-		activeWindow.webContents.openDevTools();
+		if (DEBUG) {
+			activeWindow.webContents.openDevTools();
+		}
 	}
 
 	app.on('ready', onReady);

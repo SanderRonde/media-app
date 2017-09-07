@@ -7,6 +7,8 @@ import { Netflix } from './netflix'
 
 declare let window: CustomWindow;
 
+const DEBUG = location.hash === '#DEBUG';
+
 interface CustomWindow extends Window {
 	baseView: ViewNames;
 	Helpers: typeof Helpers;
@@ -17,7 +19,7 @@ interface CustomWindow extends Window {
 	YoutubeSubscriptions: typeof YoutubeSubscriptions;
 }
 
-AppWindow.init('youtubesearch');
+AppWindow.init('youtubesearch', DEBUG);
 window.Helpers = Helpers;
 window.Netflix = Netflix;
 window.AppWindow = AppWindow;
