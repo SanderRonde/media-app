@@ -1,5 +1,3 @@
-import { EXTERNAL_EVENTS } from '../../constants/constants'
-
 declare class PaperRipple {
 	constructor(config?: {
 		initialOpacity?: number;
@@ -60,7 +58,21 @@ ws.onmessage = (event) => {
 	}
 }
 
-EXTERNAL_EVENTS.forEach((externalEvent) => {
+([
+	'focus',
+	'lowerVolume',
+	'raiseVolume',
+	'pausePlay',
+	'magicButton',
+	'pause',
+	'pausePlay',
+	'youtubeSubscriptions',
+	'youtubeMusic',
+	'youtubeSearch',
+	'netflix',
+	'up', 'down', 'left', 'right',
+	'toggleVideo'
+]).forEach((externalEvent) => {
 	document.getElementById(externalEvent).addEventListener('tap', () => {
 		fetch(`/api/${externalEvent}`);
 	});
