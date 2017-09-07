@@ -1,6 +1,7 @@
 import { 
 	REMOTE_PORT, INDEX_PATH, EXTERNAL_EVENTS,
-	PAPER_RIPPLE_DIR, EXTERNAL_EVENT, ICONS_DIR
+	PAPER_RIPPLE_DIR, EXTERNAL_EVENT, ICONS_DIR,
+	SW_TOOLBOX_DIR
 } from '../constants/constants'
 
 import ws = require('websocket');
@@ -29,12 +30,21 @@ const PATH_MAPS = {
 	'/paper-ripple.css.map': PAPER_RIPPLE_DIR + 'paper-ripple.css.min.map',
 	'/PaperRipple.js': PAPER_RIPPLE_DIR + 'PaperRipple.min.js',
 	'/PaperRipple.js.map': PAPER_RIPPLE_DIR + 'PaperRipple.js.min.map',
+	'/sw-toolbox.js': SW_TOOLBOX_DIR + 'sw-toolbox.js',
+	'/sw-toolbox.js.map': SW_TOOLBOX_DIR + 'sw-toolbox.js.map',
 	'/images/48.png': ICONS_DIR + '48.png',
 	'/images/72.png': ICONS_DIR + '72.png',
 	'/images/96.png': ICONS_DIR + '96.png',
 	'/images/144.png': ICONS_DIR + '144.png',
 	'/images/168.png': ICONS_DIR + '168.png',
 	'/images/192.png': ICONS_DIR + '192.png'
+}
+
+const STATUS_CODES = {
+	200: 'OK',
+	404: 'Not Found',
+	403: 'Unauthorized',
+	500: 'Server error'
 }
 
 class WSHandler {
@@ -75,8 +85,41 @@ export class RemoteServer {
 		playing: true
 	}
 
-	private OPTIONS_MAPS = {
-		[INDEX_PATH]: this.lastState
+	private OPTIONS_MAPS: {
+		[key: string]: {
+			path: string;
+			options: {
+				app: string;
+				status: string;
+				playing: boolean;
+				offline: boolean;
+			}
+		}
+	} = {
+		[INDEX_PATH]: {
+			path: INDEX_PATH,
+			options: Object.assign(this.lastState, {
+				offline: false
+			})
+		},
+		'/base.html': {
+			path: INDEX_PATH,
+			options: {
+				app: '?',
+				status: '?',
+				playing: false,
+				offline: false
+			}
+		},
+		'/offline.html': {
+			path: INDEX_PATH,
+			options: {
+				app: '?',
+				status: '?',
+				playing: false,
+				offline: true
+			}
+		}
 	}
 
 	constructor(activeWindow: Electron.BrowserWindow) {
@@ -107,25 +150,9 @@ export class RemoteServer {
 		});
 	}
 	
-	private getStatusCode(url: string): Promise<[number, string]> {
-		return new Promise((resolve, reject) => {
-			fs.stat(path.join(__dirname, 'client/', url), (err, stats) => {
-				if (err) {
-					console.log(url, err);
-					resolve([404, 'Not found']);
-				} else {
-					if (stats.isFile()) {
-						resolve([200, 'OK']);
-					} else {
-						resolve([403, 'Unauthorized']);
-					}
-				}
-			});
-		});
-	}
-	
-	private respondError(res: http.ServerResponse, statusCode: number, statusMessage: string) {
-		res.writeHead(statusCode, statusMessage);
+	private respondError(res: http.ServerResponse, url: string, statusCode: keyof typeof STATUS_CODES) {
+		console.log(`[${statusCode}] - ${url}`)
+		res.writeHead(~~statusCode, STATUS_CODES[statusCode]);
 		res.end();
 	}
 
@@ -134,48 +161,126 @@ export class RemoteServer {
 	}
 
 	private getJadeOptionsForFile(fileName: string): {
-		[key: string]: any;
+		path: string;
+		options: {
+			[key: string]: any;
+		}
 	} {
 		if (fileName in this.OPTIONS_MAPS) {
 			const OPTIONS_MAPS = this.OPTIONS_MAPS;
 			return this.OPTIONS_MAPS[fileName as keyof typeof OPTIONS_MAPS];
 		}
-		return {};
+		return {
+			path: fileName,
+			options: {}
+		};
 	}
 
-	private renderJade(fileName: string, fileContents: string): string {
-		const options = this.getJadeOptionsForFile(fileName);
-		return jade.compile(fileContents)(options);
+	private getRelativeFile(fileName: string): string {
+		return path.join(__dirname, 'client/', fileName)
 	}
 
-	private renderData(fileName: string, fileContents: string): string {
+	private getFileInfo(fileName: string): Promise<{
+		exists: boolean;
+		isDir: boolean;
+	}> {
+		return new Promise((resolve) => {
+			fs.stat(fileName, (err, stats) => {
+				if (err) {
+					resolve({
+						exists: false,
+						isDir: false
+					});
+				} else {
+					if (stats.isFile()) {
+						resolve({
+							exists: true, 
+							isDir: false
+						});
+					} else {
+						resolve({
+							exists: true, 
+							isDir: true
+						});
+					}
+				}
+			});
+		});
+	}
+
+	private async renderJade(fileName: string, res: http.ServerResponse): Promise<string> {
+		const { path, options } = this.getJadeOptionsForFile(fileName);
+		const relativePath = this.getRelativeFile(path);
+		const fileInfo = await this.getFileInfo(relativePath);
+		if (!fileInfo.exists) {
+			this.respondError(res, fileName, '404');
+			return null;
+		} else if (fileInfo.isDir) {
+			this.respondError(res, fileName, '403');
+			return null;
+		}
+		try {
+			return jade.compileFile(relativePath)(options);
+		} catch(e) {
+			console.log('Jade error', e);
+			this.respondError(res, fileName, '500');
+			return null;
+		}
+	}
+
+	private readFile(fileName: string, res: http.ServerResponse, utf8: true): Promise<string>;
+	private readFile(fileName: string, res: http.ServerResponse): Promise<Buffer>;
+	private readFile(fileName: string, res: http.ServerResponse, utf8?: boolean): Promise<string|Buffer> {
+		return new Promise<string|Buffer>((resolve, reject) => {
+			fs.readFile(this.getRelativeFile(fileName), (err, data) => {
+				if (err) {
+					reject(err);
+				} else {			
+					resolve(utf8 ? data.toString() : data);
+				}
+			});
+		});
+	}
+
+	private async awaitPromise<T>(promise: Promise<T>, onReject: (err: Error) => void): Promise<T> {
+		return new Promise<T>((resolve) => {
+			promise.then((result) => {
+				resolve(result);
+			}, (err) => {
+				onReject(err);
+				resolve(null);
+			});
+		});
+	}
+
+	private async renderData(fileName: string, res: http.ServerResponse): Promise<Buffer|string> {
 		const fileType = this.getFileType(fileName);
 		switch (fileType) {
 			case 'jade':
-				return this.renderJade(fileName, fileContents);
+			case 'html':
+				return await this.renderJade(fileName, res);
 		}
-		return fileContents;
-	}
-	
-	private serveFile(url: string, res: http.ServerResponse) {
-		fs.readFile(path.join(__dirname, 'client/', url), {
-			encoding: 'utf8'
-		}, (err, data) => {
-			if (err) {
-				this.respondError(res, 500, 'Server error');
-			} else {			
-				res.write(this.renderData(url, data));
-				res.end();
+		return await this.awaitPromise(this.readFile(fileName, res), async () => {
+			const fileInfo = await this.getFileInfo(fileName);
+			if (!fileInfo.exists) {
+				this.respondError(res, fileName, '404');
+			} else if (fileInfo.isDir) {
+				this.respondError(res, fileName, '403');
+			} else {
+				this.respondError(res, fileName, '500');
 			}
 		});
 	}
 	
-	private async handleFileRequest(url: string, res: http.ServerResponse) {
-		const [ statusCode, statusMessage ] = await this.getStatusCode(url);
-		if (statusCode !== 200) {
-			this.respondError(res, statusCode, statusMessage);
+	private async serveFile(url: string, res: http.ServerResponse) {
+		const data = await this.renderData(url, res);
+		if (data !== null) {
+			res.write(data);
+			res.end();
 		}
+	}
 	
+	private async handleFileRequest(url: string, res: http.ServerResponse) {
 		this.serveFile(url, res);
 	}
 	
@@ -195,7 +300,7 @@ export class RemoteServer {
 				success: true
 			}));
 		} else {
-			this.respondError(res, 500, 'Server error');
+			this.respondError(res, url, '500');
 		}
 	}
 	
