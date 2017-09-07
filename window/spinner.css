@@ -18,11 +18,21 @@
 #spinner.active #spinnerContainer {
 	/* duration: 360 * ARCTIME / (ARCSTARTROT + (360-ARCSIZE)) */
 	-webkit-animation: container-rotate 1568ms linear infinite;
+	-moz-animation: container-rotate 1568ms linear infinite;
+	-o-animation: container-rotate 1568ms linear infinite;
 	animation: container-rotate 1568ms linear infinite;
 }
 
 @-webkit-keyframes container-rotate {
 	to { -webkit-transform: rotate(360deg) }
+}
+
+@-moz-keyframes container-rotate {
+	to { -moz-transform: rotate(360deg) }
+}
+
+@-o-keyframes container-rotate {
+	to { -p-transform: rotate(360deg) }
 }
 
 @keyframes container-rotate {
@@ -68,24 +78,32 @@
 #spinner.active .spinner-layer.layer-1 {
 	/* durations: 4 * ARCTIME */
 	-webkit-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-1-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-moz-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-1-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-o-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-1-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 	animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-1-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 }
 
 #spinner.active .spinner-layer.layer-2 {
 	/* durations: 4 * ARCTIME */
 	-webkit-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-2-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-moz-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-2-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-o-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-2-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 	animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-2-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 }
 
 #spinner.active .spinner-layer.layer-3 {
 	/* durations: 4 * ARCTIME */
 	-webkit-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-3-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-moz-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-3-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-o-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-3-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 	animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-3-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 }
 
 #spinner.active .spinner-layer.layer-4 {
 	/* durations: 4 * ARCTIME */
 	-webkit-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-4-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-moz-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-4-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-o-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-4-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 	animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-4-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 }
 
@@ -98,6 +116,28 @@
 	75% { -webkit-transform: rotate(810deg); } /* 3   * ARCSIZE */
 	87.5% { -webkit-transform: rotate(945deg); } /* 3.5 * ARCSIZE */
 	to { -webkit-transform: rotate(1080deg); } /* 4   * ARCSIZE */
+}
+
+@-moz-keyframes fill-unfill-rotate {
+	12.5% { -moz-transform: rotate(135deg); } /* 0.5 * ARCSIZE */
+	25% { -moz-transform: rotate(270deg); } /* 1   * ARCSIZE */
+	37.5% { -moz-transform: rotate(405deg); } /* 1.5 * ARCSIZE */
+	50% { -moz-transform: rotate(540deg); } /* 2   * ARCSIZE */
+	62.5% { -moz-transform: rotate(675deg); } /* 2.5 * ARCSIZE */
+	75% { -moz-transform: rotate(810deg); } /* 3   * ARCSIZE */
+	87.5% { -moz-transform: rotate(945deg); } /* 3.5 * ARCSIZE */
+	to { -moz-transform: rotate(1080deg); } /* 4   * ARCSIZE */
+}
+
+@-o-keyframes fill-unfill-rotate {
+	12.5% { -o-transform: rotate(135deg); } /* 0.5 * ARCSIZE */
+	25% { -o-transform: rotate(270deg); } /* 1   * ARCSIZE */
+	37.5% { -o-transform: rotate(405deg); } /* 1.5 * ARCSIZE */
+	50% { -o-transform: rotate(540deg); } /* 2   * ARCSIZE */
+	62.5% { -o-transform: rotate(675deg); } /* 2.5 * ARCSIZE */
+	75% { -o-transform: rotate(810deg); } /* 3   * ARCSIZE */
+	87.5% { -o-transform: rotate(945deg); } /* 3.5 * ARCSIZE */
+	to { -o-transform: rotate(1080deg); } /* 4   * ARCSIZE */
 }
 
 @keyframes fill-unfill-rotate {
@@ -129,6 +169,24 @@
 	100% { opacity: 0.99; }
 }
 
+@-moz-keyframes layer-1-fade-in-out {
+	from { opacity: 0.99; }
+	25% { opacity: 0.99; }
+	26% { opacity: 0; }
+	89% { opacity: 0; }
+	90% { opacity: 0.99; }
+	100% { opacity: 0.99; }
+}
+
+@-o-keyframes layer-1-fade-in-out {
+	from { opacity: 0.99; }
+	25% { opacity: 0.99; }
+	26% { opacity: 0; }
+	89% { opacity: 0; }
+	90% { opacity: 0.99; }
+	100% { opacity: 0.99; }
+}
+
 @keyframes layer-1-fade-in-out {
 	from { opacity: 0.99; }
 	25% { opacity: 0.99; }
@@ -139,6 +197,22 @@
 }
 
 @-webkit-keyframes layer-2-fade-in-out {
+	from { opacity: 0; }
+	15% { opacity: 0; }
+	25% { opacity: 0.99; }
+	50% { opacity: 0.99; }
+	51% { opacity: 0; }
+}
+
+@-moz-keyframes layer-2-fade-in-out {
+	from { opacity: 0; }
+	15% { opacity: 0; }
+	25% { opacity: 0.99; }
+	50% { opacity: 0.99; }
+	51% { opacity: 0; }
+}
+
+@-o-keyframes layer-2-fade-in-out {
 	from { opacity: 0; }
 	15% { opacity: 0; }
 	25% { opacity: 0.99; }
@@ -162,6 +236,22 @@
 	76% { opacity: 0; }
 }
 
+@-moz-keyframes layer-3-fade-in-out {
+	from { opacity: 0; }
+	40% { opacity: 0; }
+	50% { opacity: 0.99; }
+	75% { opacity: 0.99; }
+	76% { opacity: 0; }
+}
+
+@-o-keyframes layer-3-fade-in-out {
+	from { opacity: 0; }
+	40% { opacity: 0; }
+	50% { opacity: 0.99; }
+	75% { opacity: 0.99; }
+	76% { opacity: 0; }
+}
+
 @keyframes layer-3-fade-in-out {
 	from { opacity: 0; }
 	40% { opacity: 0; }
@@ -171,6 +261,22 @@
 }
 
 @-webkit-keyframes layer-4-fade-in-out {
+	from { opacity: 0; }
+	65% { opacity: 0; }
+	75% { opacity: 0.99; }
+	90% { opacity: 0.99; }
+	100% { opacity: 0; }
+}
+
+@-moz-keyframes layer-4-fade-in-out {
+	from { opacity: 0; }
+	65% { opacity: 0; }
+	75% { opacity: 0.99; }
+	90% { opacity: 0.99; }
+	100% { opacity: 0; }
+}
+
+@-o-keyframes layer-4-fade-in-out {
 	from { opacity: 0; }
 	65% { opacity: 0; }
 	75% { opacity: 0.99; }
@@ -231,6 +337,8 @@
 	border-bottom-color: transparent !important;
 	border-radius: 50%;
 	-webkit-animation: none;
+	-moz-animation: none;
+	-o-animation: none;
 	animation: none;
 	position: absolute;
 	top: 0;
@@ -242,25 +350,35 @@
 #spinner .circle-clipper.left .circle {
 	border-right-color: transparent !important;
 	-webkit-transform: rotate(129deg);
+	-moz-transform: rotate(129deg);
+	-ms-transform: rotate(129deg);
+	-o-transform: rotate(129deg);
 	transform: rotate(129deg);
 }
 
 #spinner .circle-clipper.right .circle {
 	left: -100%;
 	border-left-color: transparent !important;
-	-webkit-transform: rotate(-129deg);
+	-webkit-transform: rotate(129deg);
+	-moz-transform: rotate(129deg);
+	-ms-transform: rotate(129deg);
+	-o-transform: rotate(129deg);
 	transform: rotate(-129deg);
 }
 
 #spinner.active .circle-clipper.left .circle {
 	/* duration: ARCTIME */
 	-webkit-animation: left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-moz-animation: left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-o-animation: left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 	animation: left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 }
 
 #spinner.active .circle-clipper.right .circle {
 	/* duration: ARCTIME */
 	-webkit-animation: right-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-moz-animation: left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+	-o-animation: left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 	animation: right-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
 }
 
@@ -268,6 +386,18 @@
 	from { -webkit-transform: rotate(130deg); }
 	50% { -webkit-transform: rotate(-5deg); }
 	to { -webkit-transform: rotate(130deg); }
+}
+
+@-moz-keyframes left-spin {
+	from { -moz-transform: rotate(130deg); }
+	50% { -moz-transform: rotate(-5deg); }
+	to { -moz-transform: rotate(130deg); }
+}
+
+@-o-keyframes left-spin {
+	from { -o-transform: rotate(130deg); }
+	50% { -o-transform: rotate(-5deg); }
+	to { -o-transform: rotate(130deg); }
 }
 
 @keyframes left-spin {
@@ -282,6 +412,18 @@
 	to { -webkit-transform: rotate(-130deg); }
 }
 
+@-moz-keyframes right-spin {
+	from { -moz-transform: rotate(-130deg); }
+	50% { -moz-transform: rotate(5deg); }
+	to { -moz-transform: rotate(-130deg); }
+}
+
+@-o-keyframes right-spin {
+	from { -o-transform: rotate(-130deg); }
+	50% { -o-transform: rotate(5deg); }
+	to { -o-transform: rotate(-130deg); }
+}
+
 @keyframes right-spin {
 	from { transform: rotate(-130deg); }
 	50% { transform: rotate(5deg); }
@@ -291,10 +433,22 @@
 #spinner #spinnerContainer.cooldown {
 	/* duration: SHRINK_TIME */
 	-webkit-animation: container-rotate 1568ms linear infinite, fade-out 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
+	-moz-animation: container-rotate 1568ms linear infinite, fade-out 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
+	-o-animation: container-rotate 1568ms linear infinite, fade-out 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
 	animation: container-rotate 1568ms linear infinite, fade-out 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 @-webkit-keyframes fade-out {
+	from { opacity: 0.99; }
+	to { opacity: 0; }
+}
+
+@-moz-keyframes fade-out {
+	from { opacity: 0.99; }
+	to { opacity: 0; }
+}
+
+@-o-keyframes fade-out {
 	from { opacity: 0.99; }
 	to { opacity: 0; }
 }
