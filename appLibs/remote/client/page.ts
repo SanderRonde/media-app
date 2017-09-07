@@ -1,3 +1,5 @@
+import { EXTERNAL_EVENTS } from '../../constants/constants'
+
 declare class PaperRipple {
 	constructor(config?: {
 		initialOpacity?: number;
@@ -57,3 +59,9 @@ ws.onmessage = (event) => {
 			break;
 	}
 }
+
+EXTERNAL_EVENTS.forEach((externalEvent) => {
+	document.getElementById(externalEvent).addEventListener('tap', () => {
+		fetch(`/api/${externalEvent}`);
+	});
+});
