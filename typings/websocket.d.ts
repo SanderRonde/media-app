@@ -84,10 +84,10 @@ declare module 'websocket' {
 		httpServer: http.Server;
 	}
 
-	export class WebSocketServer {
+	export class server {
 		constructor(config: ServerConfig);
 
-		static mount(serverConfig: ServerConfig): WebSocketServer;
+		static mount(serverConfig: ServerConfig): server;
 		static unmount(): void;
 		static closeAllConnections(): void;
 		static shutDown(): void;
@@ -115,7 +115,7 @@ declare module 'websocket' {
 		}
 	}
 
-	export class WebSocketClient {
+	export class client {
 		constructor(config?: ClientConfig);
 
 		connect(requestUrl: string, requestedProtocols: string[]|null, origin?: string|null, headers?: null|{
@@ -137,6 +137,6 @@ declare module 'websocket' {
 
 		on(event: 'connect', listener: (connection: WebSocketConnection) => void): void;
 		on(event: 'connectFailed', listener: (errorDescription: string) => void): void;
-		on(event: 'httpResponse', listener: (response: http.IncomingMessage, webSocketClient: WebSocketClient) => void): void;
+		on(event: 'httpResponse', listener: (response: http.IncomingMessage, webSocketClient: client) => void): void;
 	}
 }

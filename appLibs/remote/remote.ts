@@ -100,11 +100,11 @@ function getURL(req: http.IncomingMessage): string {
 }
 
 class WSHandler {
-	private wsServer: ws.WebSocketServer;
+	private wsServer: ws.server;
 	private connections: ws.WebSocketConnection[] = [];
 
 	constructor(server: http.Server) {
-		this.wsServer = new ws.WebSocketServer({
+		this.wsServer = new ws.server({
 			httpServer: server,
 			autoAcceptConnections: true
 		});
