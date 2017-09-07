@@ -94,8 +94,6 @@ function initListeners() {
 		'raiseVolume',
 		'pausePlay',
 		'magicButton',
-		'pause',
-		'pausePlay',
 		'youtubeSubscriptions',
 		'youtubeMusic',
 		'youtubeSearch',
