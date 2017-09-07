@@ -83,9 +83,9 @@ namespace PlaceHolderPage {
 
 namespace YoutubeSearchResultsPage {
 	export function init() {
-		const items = Array.from(document.querySelectorAll('.item-section > li'));
+		const items = Array.from(document.querySelectorAll('ytd-video-renderer'));
 		items.forEach((item) => {
-			const thumbnail = item.querySelector('.yt-lockup-thumbnail a') as HTMLAnchorElement;
+			const thumbnail = item.querySelector('#thumbnail') as HTMLAnchorElement;
 			const originalLink = thumbnail.href;
 			thumbnail.addEventListener('click', (e) => {
 				ipcRenderer.send('toBgPage', {
@@ -98,7 +98,7 @@ namespace YoutubeSearchResultsPage {
 			});
 			thumbnail.href = '#';
 
-			const title = item.querySelector('.yt-lockup-title a') as HTMLAnchorElement;
+			const title = item.querySelector('#video-title') as HTMLAnchorElement;
 			title.addEventListener('click', (e) => {
 				ipcRenderer.send('toBgPage', {
 					type: 'passAlong',
