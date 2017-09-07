@@ -1,66 +1,22 @@
-html {
-	overflow: hidden;
-}
-
 body {
 	overflow: hidden;
-	overflow-y: scroll;
 }
 
-#masthead-positioner,
-#masthead-positioner-height-offset,
-.branded-page-v2-subnav-container.branded-page-gutter-padding,
-#guide, .branded-page-v2-secondary-col {
+#masthead-container {
+	display: none;
+}
+
+#page-manager {
+	margin-top: 64px;
+}
+
+ytd-search-sub-menu-renderer > #container, 
+ytd-search-pyv-renderer, #masthead-container {
 	display: none!important;
 }
 
-#page {
-	padding-left: 0!important;
-}
-
-#yt-masthead::before, #yt-masthead::after {
-	display:none!important;
-}
-
-@media screen and (min-width: 1310px) {
-	#content {
-		width: 1260px;
-	}
-}
-
-@media screen and (min-width: 1514px) {
-	#content {
-		width: 1464px;
-	}
-}
-
-@media screen and (min-width: 1720) {
-	#content {
-		width: 1670px;
-	}
-}
-
-@media screen and (min-width: 1919px) {
-	#content {
-		width: 1870px;
-	}
-}
-
-.yt-shelf-grid-item.possiblePodcast .yt-thumb-simple > img {
-	opacity: 0.4;
-}
-
-.yt-lockup-grid.selectedVideo {
-	border-bottom: 5px solid red;
-}
-
-.item-section {
-	display: grid;
-	grid-template-columns: repeat(2, 50%);
-}
-
-.branded-page-v2-col-container-inner {
-	display: flex!important;
-	flex-direction: row;
-	justify-content: center;
+ytd-app {
+	overflow-y: scroll;
+	max-height: 100vh;
+	
 }
