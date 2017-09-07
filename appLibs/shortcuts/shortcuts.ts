@@ -25,13 +25,15 @@ function sendMessage(activeWindow: Electron.BrowserWindow, data: keyof MessageRe
 	});
 }
 
-export function registerShortcuts(activeWindow: Electron.BrowserWindow) {
+export function registerShortcuts(activeWindowContainer: {
+	activeWindow: Electron.BrowserWindow
+}) {
 	for (let [keys, command] of map.entries()) {
 		for (let key of keys) {
 			const keyCommand = Array.isArray(key) ? key.join('+') : key;
 
 			globalShortcut.register(keyCommand as any, () => {
-				sendMessage(activeWindow, command);
+				sendMessage(activeWindowContainer.activeWindow, command);
 			});
 		}
 	}

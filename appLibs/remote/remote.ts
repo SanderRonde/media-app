@@ -122,12 +122,14 @@ export class RemoteServer {
 		}
 	}
 
-	constructor(activeWindow: Electron.BrowserWindow) {
+	constructor(activeWindowContainer: {
+		activeWindow: Electron.BrowserWindow
+	}) {
 		this.httpServer = http.createServer(async (req, res) => {
 			const url = this.getURL(req);
 
 			if (url.startsWith('/api/')) {
-				this.handleAPIRequest(url, res, activeWindow);
+				this.handleAPIRequest(url, res, activeWindowContainer.activeWindow);
 			} else {
 				this.handleFileRequest(url, res);
 			}
@@ -308,6 +310,7 @@ export class RemoteServer {
 			res.write(JSON.stringify({
 				success: true
 			}));
+			res.end();
 		} else {
 			this.respondError(res, url, '500');
 		}

@@ -17,7 +17,11 @@ const widevine: {
 const widevinePath = path.join(app.getPath('appData'), 'widevine');
 const widevineExists = widevine.load(app, widevinePath);
 
-let activeWindow: Electron.BrowserWindow = null;
+const activeWindowContainer: {
+	activeWindow: Electron.BrowserWindow;
+} = {
+	activeWindow: null
+}
 let activeServer: RemoteServer = null;
 
 const DEBUG = process.argv.filter((arg) => {
@@ -56,10 +60,8 @@ const DEBUG = process.argv.filter((arg) => {
 		await loadWidevine();
 
 		AdBlocking.blockAds();
-		activeServer = new RemoteServer(activeWindow);
-		registerShortcuts(activeWindow);
-
-		activeWindow = new BrowserWindow({
+		
+		activeWindowContainer.activeWindow = new BrowserWindow({
 			width: 1024,
 			height: 740,
 			icon: path.join(__dirname, 'icons/48.png'),
@@ -71,20 +73,23 @@ const DEBUG = process.argv.filter((arg) => {
 				plugins: true
 			}
 		});
+		
+		activeServer = new RemoteServer(activeWindowContainer);
+		registerShortcuts(activeWindowContainer);
 
-		activeWindow.loadURL(url.format({
+		activeWindowContainer.activeWindow.loadURL(url.format({
 			pathname: path.join(__dirname, 'window/main.html'),
 			protocol: 'file:',
 			slashes: true,
 			hash: DEBUG ? 'DEBUG' : ''
 		}));
 
-		activeWindow.on('closed', () => {
-			activeWindow = null;
+		activeWindowContainer.activeWindow.on('closed', () => {
+			activeWindowContainer.activeWindow = null;
 		});
 
 		if (DEBUG) {
-			activeWindow.webContents.openDevTools();
+			activeWindowContainer.activeWindow.webContents.openDevTools();
 		}
 	}
 
@@ -96,7 +101,8 @@ const DEBUG = process.argv.filter((arg) => {
 	});
 
 	function respondToMessage<T extends keyof MessageReasons>(identifier: string, response: MessageReasons[T]) {
-		activeWindow && activeWindow.webContents.send('fromBgPage', {
+		activeWindowContainer.activeWindow && 
+		activeWindowContainer.activeWindow.webContents.send('fromBgPage', {
 			identifier: identifier,
 			data: response,
 			type: 'response'
@@ -134,58 +140,75 @@ const DEBUG = process.argv.filter((arg) => {
 				});
 				break;
 			case 'isMinimized':
-				respondToMessage(identifier, activeWindow && activeWindow.isMinimized());
+				respondToMessage(identifier, 
+					activeWindowContainer.activeWindow && 
+					activeWindowContainer.activeWindow.isMinimized());
 				break;
 			case 'onFullscreened':
-				activeWindow && activeWindow.addListener('enter-full-screen', () => {
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.addListener('enter-full-screen', () => {
 					respondToMessage(identifier, null);
 				});
 				break;
 			case 'onMaximized':
-				activeWindow && activeWindow.addListener('maximize', () => {
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.addListener('maximize', () => {
 					respondToMessage(identifier, null);
 				});
 				break;
 			case 'onMinimized':
-				activeWindow && activeWindow.addListener('minimize', () => {
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.addListener('minimize', () => {
 					respondToMessage(identifier, null);
 				});
 				break;
 			case 'onRestored':
-				activeWindow && activeWindow.addListener('restore', () => {
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.addListener('restore', () => {
 					respondToMessage(identifier, null);
 				});
 				break;
 			case 'isMaximized':
-				respondToMessage(identifier, activeWindow && activeWindow.isMaximized());
+				respondToMessage(identifier,
+					activeWindowContainer.activeWindow && 
+					activeWindowContainer.activeWindow.isMaximized());
 				break;
 			case 'isFullscreen':
-				respondToMessage(identifier, activeWindow && activeWindow.isFullScreen());
+				respondToMessage(identifier,
+					activeWindowContainer.activeWindow && 
+					activeWindowContainer.activeWindow.isFullScreen());
 				break;
 			case 'restore':
-				activeWindow && activeWindow.restore();
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.restore();
 				break;
 			case 'enterFullscreen':
-				activeWindow && activeWindow.setFullScreen(true);
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.setFullScreen(true);
 				break;
 			case 'exitFullscreen':
-				activeWindow && activeWindow.setFullScreen(false);
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.setFullScreen(false);
 				break;
 			case 'minimize':
-				activeWindow && activeWindow.minimize();
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.minimize();
 				break;
 			case 'maximize':
-				activeWindow && activeWindow.maximize();
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.maximize();
 				break;
 			case 'close':
-				activeWindow && activeWindow.close();
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.close();
 				app.quit();
 				break;
 			case 'quit':
 				app.quit();
 				break;
 			case 'passAlong':
-				activeWindow && activeWindow.webContents.send('passedAlong', data);
+				activeWindowContainer.activeWindow && 
+				activeWindowContainer.activeWindow.webContents.send('passedAlong', data);
 				break;
 			case 'playStatus':
 				const isPlaying = data === 'play';
