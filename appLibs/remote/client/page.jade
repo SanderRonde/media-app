@@ -1,0 +1,80 @@
+doctype html
+html
+	head
+		meta(charset='utf-8')
+		title Youtube Music App remote control
+		link(rel='stylesheet', href='./paper-ripple.css')
+		link(rel='stylesheet', href='./page.css')
+		link(rel='manifest', href='./manifest.json')
+		link(rel='icon', href='./favicon.ico')
+		meta(name='viewport', content='width=device-width, initial-scale=1, maximum-scale=1')
+	body
+		#main
+			#switchTypeRow
+				#youtubeSubscriptions.rippleTarget(class={"selected": app === 'Subs'})
+					svg(xmlns='http://www.w3.org/2000/svg', xmlns:xlink='http://www.w3.org/1999/xlink', version='1.1', width='24', height='24', viewbox='0 0 24 24')
+						path(d='M10,16.5V7.5L16,12M20,4.4C19.4,4.2 15.7,4 12,4C8.3,4 4.6,4.19 4,4.38C2.44,4.9 2,8.4 2,12C2,15.59 2.44,19.1 4,19.61C4.6,19.81 8.3,20 12,20C15.7,20 19.4,19.81 20,19.61C21.56,19.1 22,15.59 22,12C22,8.4 21.56,4.91 20,4.4Z')
+				#youtubeMusic.rippleTarget(class={"selected": app === 'Music'})
+					svg(xmlns='http://www.w3.org/2000/svg', xmlns:xlink='http://www.w3.org/1999/xlink', version='1.1', width='24', height='24', viewbox='0 0 24 24')
+						path(d='M16,9V7H12V12.5C11.58,12.19 11.07,12 10.5,12A2.5,2.5 0 0,0 8,14.5A2.5,2.5 0 0,0 10.5,17A2.5,2.5 0 0,0 13,14.5V9H16M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2Z')
+				#youtubeSearch.rippleTarget(class={"selected": app === 'YTs'})
+					svg(xmlns='http://www.w3.org/2000/svg', xmlns:xlink='http://www.w3.org/1999/xlink', version='1.1', width='24', height='24', viewbox='0 0 24 24')
+						path(d='M10,16.5V7.5L16,12M20,4.4C19.4,4.2 15.7,4 12,4C8.3,4 4.6,4.19 4,4.38C2.44,4.9 2,8.4 2,12C2,15.59 2.44,19.1 4,19.61C4.6,19.81 8.3,20 12,20C15.7,20 19.4,19.81 20,19.61C21.56,19.1 22,15.59 22,12C22,8.4 21.56,4.91 20,4.4Z')
+				#netflix.rippleTarget(class={"selected": app === 'Netflix'})
+					svg(xmlns='http://www.w3.org/2000/svg', xmlns:xlink='http://www.w3.org/1999/xlink', version='1.1', width='24', height='24', viewbox='0 0 24 24')
+						path(d='M6.5,2H10.5L13.44,10.83L13.5,2H17.5V22C16.25,21.78 14.87,21.64 13.41,21.58L10.5,13L10.43,21.59C9.03,21.65 7.7,21.79 6.5,22V2Z')
+			#navigationRow
+				#topNavRow
+					#magicButton.rippleTarget
+						svg(xmlns='http://www.w3.org/2000/svg', xmlns:xlink='http://www.w3.org/1999/xlink', version='1.1', width='24', height='24', viewbox='0 0 24 24')
+							path(d='M7.5,5.6L5,7L6.4,4.5L5,2L7.5,3.4L10,2L8.6,4.5L10,7L7.5,5.6M19.5,15.4L22,14L20.6,16.5L22,19L19.5,17.6L17,19L18.4,16.5L17,14L19.5,15.4M22,2L20.6,4.5L22,7L19.5,5.6L17,7L18.4,4.5L17,2L19.5,3.4L22,2M13.34,12.78L15.78,10.34L13.66,8.22L11.22,10.66L13.34,12.78M14.37,7.29L16.71,9.63C17.1,10 17.1,10.65 16.71,11.04L5.04,22.71C4.65,23.1 4,23.1 3.63,22.71L1.29,20.37C0.9,20 0.9,19.35 1.29,18.96L12.96,7.29C13.35,6.9 14,6.9 14.37,7.29Z')
+					#up.rippleTarget
+						svg(fill='#000000', height='24', viewbox='0 0 24 24', width='24', xmlns='http://www.w3.org/2000/svg')
+							path(d='M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z')
+							path(d='M0 0h24v24H0z', fill='none')
+					#focus.rippleTarget
+						svg(xmlns='http://www.w3.org/2000/svg', xmlns:xlink='http://www.w3.org/1999/xlink', version='1.1', width='24', height='24', viewbox='0 0 24 24')
+							path(d='M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M19,19H15V21H19A2,2 0 0,0 21,19V15H19M19,3H15V5H19V9H21V5A2,2 0 0,0 19,3M5,5H9V3H5A2,2 0 0,0 3,5V9H5M5,15H3V19A2,2 0 0,0 5,21H9V19H5V15Z')
+				#centerNavRow
+					#left.rippleTarget
+						svg(fill='#000000', height='24', viewbox='0 0 24 24', width='24', xmlns='http://www.w3.org/2000/svg')
+							path(d='M15.41 16.09l-4.58-4.59 4.58-4.59L14 5.5l-6 6 6 6z')
+							path(d='M0-.5h24v24H0z', fill='none')
+					#toggleVideo.rippleTarget
+						svg(fill='#000000', height='24', viewbox='0 0 24 24', width='24', xmlns='http://www.w3.org/2000/svg')
+							path(d='M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z')
+							path(d='M0 0h24v24H0z', fill='none')
+					#right.rippleTarget
+						svg(fill='#000000', height='24', viewbox='0 0 24 24', width='24', xmlns='http://www.w3.org/2000/svg')
+							path(d='M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z')
+							path(d='M0-.25h24v24H0z', fill='none')
+				#bottomNavRow
+					.navFiller
+					#down.rippleTarget
+						svg(fill='#000000', height='24', viewbox='0 0 24 24', width='24', xmlns='http://www.w3.org/2000/svg')
+							path(d='M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z')
+							path(d='M0-.75h24v24H0z', fill='none')
+					.navFiller
+			#playPauseRow
+				#lowerVolume.rippleTarget
+					svg(xmlns='http://www.w3.org/2000/svg', xmlns:xlink='http://www.w3.org/1999/xlink', version='1.1', width='24', height='24', viewbox='0 0 24 24')
+						path(d='M7,9V15H11L16,20V4L11,9H7Z')
+				#pausePlay.rippleTarget(class={'pause': playing === false})
+					#play
+						svg(fill='#000000', height='24', viewbox='0 0 24 24', width='24', xmlns='http://www.w3.org/2000/svg')
+							path(d='M8 5v14l11-7z')
+							path(d='M0 0h24v24H0z', fill='none')
+					#pause
+						svg(fill='#000000', height='24', viewbox='0 0 24 24', width='24', xmlns='http://www.w3.org/2000/svg')
+							path(d='M6 19h4V5H6v14zm8-14v14h4V5h-4z')
+							path(d='M0 0h24v24H0z', fill='none')
+				#raiseVolume.rippleTarget
+					svg(xmlns='http://www.w3.org/2000/svg', xmlns:xlink='http://www.w3.org/1999/xlink', version='1.1', width='24', height='24', viewbox='0 0 24 24')
+						path(d='M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z')
+		#statusContainer
+			#statusType
+				= app
+			#status
+				= status
+		script(src='./PaperRipple.js')
+	script(src='./page.js')
