@@ -17,21 +17,21 @@ export namespace Netflix {
 		}
 
 		export async function getPlayStatus(): Promise<boolean> {
-			return Helpers.hacksecute(await getView(), () => {
+			return Helpers.execute(await getView(), () => {
 				if (document.querySelector('.button-nfplayerPause')) {
-					true;
+					return true;
 				} else {
-					false;
+					return false;
 				}
 			});
 		}
 
 		export async function getVideoTitle(): Promise<string> {
-			return Helpers.hacksecute(await getView(), () => {
+			return Helpers.execute(await getView(), () => {
 				if (document.querySelector('.video-title')) {
-					document.querySelector('.video-title').children[0].children[0].innerHTML;
+					return document.querySelector('.video-title').children[0].children[0].innerHTML;
 				} else {
-					'nothing';
+					return 'nothing';
 				}
 			});
 		}

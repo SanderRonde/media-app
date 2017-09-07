@@ -102,7 +102,7 @@ export namespace YoutubeSearch {
 
 		export async function getTitle(): Promise<string> {
 			return await Helpers.hacksecute(await getView(), () => {
-				document.querySelector('.title').innerHTML;
+				return document.querySelector('.title').innerHTML;
 			});
 		}
 
@@ -620,7 +620,7 @@ export namespace YoutubeSearch {
 			(await Video.getView()).focus();
 			AppWindow.updateStatus(await Video.getTitle());
 		} else {
-			AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch}`)
+			AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch || 'nothing'}`)
 		}
 	}
 
@@ -640,7 +640,7 @@ export namespace YoutubeSearch {
 			await Helpers.wait(500);
 			(await SearchResultsPage.getView()).focus();
 			SearchBar.tempShow();
-			AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch}`)
+			AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch || 'nothing'}`)
 		} else {
 			subsCont.classList.add('showVideo');
 			activePage = 'video';

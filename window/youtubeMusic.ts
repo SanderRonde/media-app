@@ -698,7 +698,6 @@ export namespace YoutubeMusic {
 		}
 
 		export function play() {
-			console.trace();
 			Helpers.hacksecute(view, () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player && player.playVideo();
@@ -707,8 +706,8 @@ export namespace YoutubeMusic {
 	}
 
 	export async function getTitle(): Promise<string> {
-		return await Helpers.hacksecute(await getView(), () => {
-			document.querySelector('.title').innerHTML;
+		return await Helpers.execute(await getView(), () => {
+			return document.querySelector('h1.title').innerHTML;
 		});
 	}
 

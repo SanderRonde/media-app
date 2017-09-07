@@ -89,8 +89,8 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function getTitle(): Promise<string> {
-			return await Helpers.hacksecute(await getView(), () => {
-				document.querySelector('.title').innerHTML;
+			return await Helpers.execute(await getView(), () => {
+				return document.querySelector('.title').innerHTML;
 			});
 		}
 

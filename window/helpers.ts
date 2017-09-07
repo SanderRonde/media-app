@@ -116,6 +116,21 @@ export namespace Helpers {
 		});
 	}
 
+	export function execute<T extends {
+		[key: string]: number|string|boolean;
+	}>(view: Electron.WebviewTag, fn: (REPLACE: T) => void, parameters?: T) {
+		if (!view.src) {
+			return new Promise<any>((resolve) => {
+				resolve(undefined);
+			});
+		}
+		return new Promise<any>((resolve) => {
+			view.executeJavaScript(replaceParameters(`(${fn.toString()})();`, parameters || {}), false, (result) => {
+				resolve(result);
+			});
+		});
+	}
+
 	let taskIds = 0;
 	const taskListeners: {
 		[id: number]: (result: any) => void;
