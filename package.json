@@ -53,6 +53,6 @@
     "grunt": "^1.0.1",
     "grunt-exec": "^3.0.0",
     "grunt-zip": "^0.17.1",
-    "typescript": "^2.4.2"
+    "typescript": "2.5.2"
   }
 }
