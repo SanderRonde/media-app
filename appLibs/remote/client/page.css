@@ -87,18 +87,30 @@ html {
 	padding: 0 2vw;
 }
 
-#playPause #playButton {
+#pausePlay #play {
 	display: block;
 }
 
-#playPause #pauseButton {
+#pausePlay #pause {
 	display: none;
 }
 
-#playPause.pause #playButton {
+#pausePlay.pause #play {
 	display: none;
 }
 
-#playPause.pause #pauseButton {
+#pausePlay.pause #pause {
 	display: block;
+}
+
+#switchTypeRow > *.selected {
+	background-color: rgba(244, 67, 54, 0.23);
+}
+
+#lowerVolume, #raiseVolume {
+	width: 20vw;
+}
+
+#pausePlay {
+	width: 35vw;
 }
