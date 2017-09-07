@@ -415,7 +415,7 @@ export namespace YoutubeSearch {
 				return [];	
 			}
 
-			const response = await fetch(`http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&client=firefox&q=${query}`);
+			const response = await fetch(`http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&client=firefox&q=${encodeURIComponent(query)}`);
 			const json: [T, string[]] = await response.json();
 			return json[1];
 		}
@@ -446,10 +446,12 @@ export namespace YoutubeSearch {
 			container.appendChild(suggestionPart);
 
 			container.addEventListener('click', () => {
+				console.log('Calling this way');
 				doSearch(suggestion);
 			});
 			container.addEventListener('keydown', (e) => {
 				if (e.key === ' ') {
+					console.log('Calling other way');
 					doSearch(suggestion);
 				}
 			});
@@ -523,7 +525,10 @@ export namespace YoutubeSearch {
 				}
 			});
 
-			$('#searchButton').addEventListener('click', () => {
+			$('#searchButton').addEventListener('click', (e) => {
+				console.log('Woob woob');
+				e.preventDefault();
+				e.stopPropagation();
 				doSearch(updateInputValue());
 			});
 
