@@ -64,7 +64,7 @@ function initWs() {
 		switch (data.type) {
 			case 'playUpdate':
 				const playCont = document.getElementById('pausePlay');
-				if (!data.data.playing) {
+				if (data.data.playing) {
 					playCont.classList.add('pause');
 				} else {
 					playCont.classList.remove('pause');
