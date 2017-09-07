@@ -131,3 +131,7 @@ html {
 #status {
 	flex-grow: 100;
 }
+
+#statusDivider {
+	margin: 0 7px;
+}
