@@ -302,7 +302,9 @@ export class RemoteServer {
 	
 		if (EXTERNAL_EVENTS.indexOf(command as EXTERNAL_EVENT) > -1) {
 			this.sendCommand(command, activeWindow);
-			console.log(`👌 - [200] - ${url}`);
+			if (LOG_REQUESTS) {
+				console.log(`👌 - [200] - ${url}`);
+			}
 			res.write(JSON.stringify({
 				success: true
 			}));
