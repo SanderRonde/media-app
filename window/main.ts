@@ -19,7 +19,7 @@ interface CustomWindow extends Window {
 	YoutubeSubscriptions: typeof YoutubeSubscriptions;
 }
 
-AppWindow.init('youtubesearch', DEBUG);
+AppWindow.init('ytmusic', DEBUG);
 window.Helpers = Helpers;
 window.Netflix = Netflix;
 window.AppWindow = AppWindow;
