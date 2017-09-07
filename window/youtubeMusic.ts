@@ -490,42 +490,45 @@ export namespace YoutubeMusic {
 					id: '1001TracklistsView',
 					parentId: '1001tracklistsContainer',
 					partition: 'tracklists'
-				});
-				let currentPage: 'main'|'results' = 'main';
-
+				});;
+				let currentPage: 'main'|'results'|'none' = 'none';
 				Helpers.addContentScripts(websiteWebview, [{
 					name: 'comm',
 					matches: ['*://*/*'],
 					js: {
 						files: [
-							'genericJs/comm.js',
-							'genericJs/keypress.js',
-							'youtube/1001tracklists/content.js'
+							'/genericJs/comm.js',
+							'/genericJs/keypress.js',
+							'/youtube/1001tracklists/content.js'
 						]
 					}
 				}]);
+				websiteWebview.addEventListener('dom-ready', () => {
+					if (currentPage === 'none') {
+						currentPage = 'main';
+					} else if (currentPage === 'main') {
+						currentPage = 'results';
+					}
 
-				websiteWebview.loadURL('https://www.1001tracklists.com');
-
-				//TODO: this
-				if (currentPage === 'main') {
-					Helpers.sendTaskToPage(JSON.stringify([
-						'searchFor', name
-					]), '1001tracklists', () => {
-						console.log('Searching 1001 tracklists');
-					});
-				} else if (currentPage === 'results') {
-					Helpers.sendTaskToPage(JSON.stringify([
-						'findItem', url
-					]), '1001tracklists', (result: false|string) => {
-						if (result !== 'null' && result !== 'false' && result) {
-							getTrackFrom1001TracklistsUrl(result);
-						} else {
-							resolve(false);
-						}
-						websiteWebview.style.display = 'none';
-					});
-				}
+					if (currentPage === 'main') {
+						Helpers.sendTaskToPage(JSON.stringify([
+							'searchFor', name
+						]), '1001tracklists', () => { });
+					} else if (currentPage === 'results') {
+						Helpers.sendTaskToPage(JSON.stringify([
+							'findItem', url
+						]), '1001tracklists', (result: false|string) => {
+							if (result !== 'null' && result !== 'false' && result) {
+								getTrackFrom1001TracklistsUrl(result);
+							} else {
+								resolve(false);
+							}
+							websiteWebview.remove();
+						});
+					}
+				});
+				websiteWebview.src = 'https://www.1001tracklists.com';
+				document.body.appendChild(websiteWebview);
 			});
 		}
 
