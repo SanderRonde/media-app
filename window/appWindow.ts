@@ -335,6 +335,8 @@ export namespace AppWindow {
 		} else {
 			getViewByName(view).Commands.pause();
 		}
+
+		getViewByName(view).updateStatus();
 	}
 
 	export function onMagicButton() {
@@ -367,8 +369,10 @@ export namespace AppWindow {
 		viewsEl.classList.remove('ytmusic', 'netflix', 'youtubeSubscriptions', 'youtubesearch');
 		viewsEl.classList.add(view);
 
-		await Helpers.wait(500);
-		getActiveViewClass().onFocus();
+		if (isLoaded) {
+			await Helpers.wait(500);
+			getActiveViewClass().onFocus();
+		}
 	}
 
 	export async function init(startView: ViewNames, isDebug: boolean) {

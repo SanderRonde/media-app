@@ -362,14 +362,21 @@ export namespace YoutubeSubscriptions {
 		//Nothing really
 	}
 
+	export async function updateStatus() {
+		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
+			AppWindow.updateStatus(await Video.getTitle());
+		} else {
+			AppWindow.updateStatus('Browsing subscriptions');
+		}
+	}
+
 	export async function onFocus() {
 		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
 			(await Video.getView()).focus();
-			AppWindow.updateStatus(await Video.getTitle());
 		} else {
 			(await SubBox.getView()).focus();
-			AppWindow.updateStatus('Browsing subscriptions');
 		}
+		updateStatus();
 	}
 
 	export async function getView(): Promise<Electron.WebviewTag> {

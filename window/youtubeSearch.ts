@@ -615,9 +615,8 @@ export namespace YoutubeSearch {
 
 	export function onClose() { }
 
-	export async function onFocus() {
+	export async function updateStatus() {
 		if (activePage === 'video') {
-			(await Video.getView()).focus();
 			AppWindow.updateStatus(await Video.getTitle());
 		} else {
 			if (SearchBar.lastSearch) {
@@ -626,6 +625,13 @@ export namespace YoutubeSearch {
 				AppWindow.updateStatus('Looking at search page');
 			}
 		}
+	}
+
+	export async function onFocus() {
+		if (activePage === 'video') {
+			(await Video.getView()).focus();
+		}
+		updateStatus();
 	}
 
 	export async function getView(): Promise<Electron.WebviewTag> {

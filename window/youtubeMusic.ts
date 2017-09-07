@@ -832,9 +832,13 @@ export namespace YoutubeMusic {
 		}).toString()})()`, false);
 	}
 
+	export async function updateStatus() {
+		AppWindow.updateStatus(await getTitle());
+	}
+
 	export async function onFocus() {
 		view && view.focus();
-		AppWindow.updateStatus(await getTitle());
+		updateStatus();
 	}
 
 	export function getView(): Electron.WebviewTag {

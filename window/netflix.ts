@@ -159,6 +159,8 @@ export namespace Netflix {
 		(await Video.getView()).src && (await Video.getView()).canGoBack() && (await Video.getView()).goBack();
 	}
 
+	export function updateStatus() { }
+
 	export async function onFocus() {
 		(await Video.getView()).focus();
 		AppWindow.updateStatus('Watching netflix');
