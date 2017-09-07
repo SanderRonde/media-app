@@ -151,7 +151,7 @@ export class RemoteServer {
 	}
 	
 	private respondError(res: http.ServerResponse, url: string, statusCode: keyof typeof STATUS_CODES) {
-		console.log(`[${statusCode}] - ${url}`)
+		console.log(`👎 - [${statusCode}] - ${url}`)
 		res.writeHead(~~statusCode, STATUS_CODES[statusCode]);
 		res.end();
 	}
@@ -297,7 +297,7 @@ export class RemoteServer {
 	
 		if (EXTERNAL_EVENTS.indexOf(command as EXTERNAL_EVENT) > -1) {
 			this.sendCommand(command, activeWindow);
-			console.log(`[200] - ${url}`);
+			console.log(`👌 - [200] - ${url}`);
 			res.write(JSON.stringify({
 				success: true
 			}));
