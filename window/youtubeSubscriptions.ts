@@ -125,165 +125,20 @@ export namespace YoutubeSubscriptions {
 
 				videoView.addEventListener('did-finish-load', () => {
 					window.setTimeout(() => {
-						Helpers.hacksecute(videoView, () => {
-							var ipcRenderer = require('electron').ipcRenderer;
-
+						Helpers.hacksecute(videoView, (REPLACE) => {
 							const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
-							const playerApi = document.getElementById('player-api');
-							const volumeBar = document.createElement('div');
-							const volumeBarBar = document.createElement('div');
-							const volumeBarNumber = document.createElement('div');
-							const video = document.getElementsByTagName('video')[0];
-							let volumeBarTimeout: number = null;
 
-							volumeBar.id = 'yt-ca-volumeBar';
-							volumeBarBar.id = 'yt-ca-volumeBarBar';
-							volumeBarNumber.id = 'yt-ca-volumeBarNumber';
-
-							volumeBar.appendChild(volumeBarNumber);
-							volumeBar.appendChild(volumeBarBar);
-							document.body.appendChild(volumeBar);
-
-							function doTempInterval(fn: () => void, interval: number, max: number) {
-								const intervalId = window.setInterval(fn, interval);
-								window.setTimeout(() => {
-									window.clearInterval(intervalId);
-								}, max);
-							}
-
-							function prepareVideo() {
-								setTimeout(() => {							
-									function reloadIfAd() {
-										if (player.getAdState() === 1) {
-											window.location.reload();
-										}
-
-										if (player.getPlayerState() === 3) {
-											window.setTimeout(reloadIfAd, 250);
-										} else {
-											player.setPlaybackQuality('hd1080');
-											if (player.getPlaybackQuality() !== 'hd1080') {
-												player.setPlaybackQuality('hd720');
-											}
-										}
-									}
-									reloadIfAd();
-								}, 2500);
-
-								doTempInterval(() => {
-									player.setSizeStyle(false, true);
-								}, 100, 5000);
-							}
-
-							prepareVideo();
-
-							document.body.addEventListener('keydown', (e) => {
-								if (e.key === 'k') {
-									//Hide or show video
-									document.body.classList.toggle('showHiddens');
-								}
-							});
-
-							function updateSizes() {
-								playerApi.style.width = window.innerWidth + 'px';
-								playerApi.style.height = (window.innerHeight - 15) + 'px';
-
-								player.setSize();
-							}
-
-							updateSizes();
-							window.addEventListener('resize', updateSizes);
-
-							function setPlayerVolume(volume: number) {
-								player.setVolume(volume);
-
-								localStorage.setItem('yt-player-volume', JSON.stringify({
-									data: JSON.stringify({
-										volume: volume,
-										muted: (volume === 0)
-									}),
-									creation: Date.now(),
-									expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
-								}));
-							}
-
-							//Code that has to be executed "inline"
-							function increaseVolume() {
-								let vol = player.getVolume();
-								if (player.isMuted()) {
-									//Treat volume as 0
-									vol = 0;
-									player.unMute();
-								}
-
-								vol += 5;
-								vol = (vol > 100 ? 100 : vol);
-								setPlayerVolume(vol);
-							}
-
-							function lowerVolume() {
-								let vol = player.getVolume();
-								if (!player.isMuted()) {
-									vol -= 5;
-									
-									vol = (vol < 0 ? 0 : vol);
-									setPlayerVolume(vol);
-								}
-							}
-
-							function showVolumeBar() {
-								const volume = player.getVolume();
-								localStorage.setItem('volume', volume + '');
-								volumeBarNumber.innerHTML = volume + '';
-								volumeBarBar.style.transform = `scaleX(${volume / 100})`;
-								volumeBar.classList.add('visible');
-								if (volumeBarTimeout !== null) {
-									window.clearTimeout(volumeBarTimeout);
-								}
-								volumeBarTimeout = window.setTimeout(() => {
-									volumeBar.classList.remove('visible');
-									volumeBarTimeout = null;
-								}, 2000);
-							}
-
-							function onScroll(isDown: boolean) {
-								if (isDown) {
-									lowerVolume();
-								} else {
-									increaseVolume();
-								}
-								showVolumeBar();
-							}
-
-							function addListeners() {
-								window.onwheel = (e) => {
-									onScroll(e.deltaY > 0);
-								};
-								video.onplay = () => {
-									ipcRenderer.send('toBgPage', {
-										type: 'passAlong',
-										data: {
-											type: 'onPlay',
-											data: {
-												view: 'youtubeSubscriptions'
-											}
-										}
-									});
-								}
-								video.onpause = () => {
-									ipcRenderer.send('toBgPage', {
-										type: 'passAlong',
-										data: {
-											type: 'onPause',
-											data: {
-												view: 'youtubeSubscriptions'
-											}
-										}
-									});
-								}
-							}
-
-							addListeners();
+							REPLACE.playPauseListeners();
+							REPLACE.volumeManager(player);
+							REPLACE.initialSizing(player, null);
+							REPLACE.handleResize(player);
+							REPLACE.handleToggleHiddens('k');
+						}, {
+							volumeManager: Helpers.YoutubeVideoFunctions.volumeManager,
+							playPauseListeners: Helpers.YoutubeVideoFunctions.playPauseListeners,
+							initialSizing: Helpers.YoutubeVideoFunctions.initialSizing,
+							handleResize: Helpers.YoutubeVideoFunctions.handleResize,
+							handleToggleHiddens: Helpers.YoutubeVideoFunctions.handleToggleHiddens
 						});
 					}, 2500);
 				});

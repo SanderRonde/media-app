@@ -1,6 +1,8 @@
 import * as fs from 'fs'
 import * as md5 from 'md5'
 import { shell, ipcRenderer } from 'electron'
+import { YoutubeVideoPlayer } from '../window/youtubeMusic'
+import { ViewNames } from '../window/appWindow'
 
 export const EXAMPLE_STYLES = `html, body, a {
 	background-color: white!important;
@@ -85,13 +87,16 @@ export namespace Helpers {
 	}
 
 	function replaceParameters(code: string, parameters: {
-		[key: string]: number|string|boolean;
+		[key: string]: number|string|boolean|((...args: any[]) => void);
 	}): string {
 		Object.getOwnPropertyNames(parameters).forEach((key) => {
 			const arg = parameters[key];
 			if (typeof arg === 'string' && arg.split('\n').length > 1) {
 				code = code.replace(new RegExp(`REPLACE\.${key}`, 'g'), 
 					`' + ${JSON.stringify(arg.split('\n'))}.join('\\n') + '`);
+			} else if (typeof arg === 'function') {
+				code = code.replace(new RegExp(`REPLACE\.${key}`, 'g'),
+					`(${arg.toString()})`);
 			} else {
 				code = code.replace(new RegExp(`REPLACE\.${key}`, 'g'), 
 					arg !== undefined && arg !== null && typeof arg === 'string' ?
@@ -102,7 +107,7 @@ export namespace Helpers {
 	}
 
 	export function hacksecute<T extends {
-		[key: string]: number|string|boolean;
+		[key: string]: number|string|boolean|((...args: any[]) => void);
 	}>(view: Electron.WebviewTag, fn: (REPLACE: T) => void, parameters?: T) {
 		if (!view.src) {
 			return new Promise<any>((resolve) => {
@@ -415,5 +420,366 @@ export namespace Helpers {
 			view.src = 'about:blank';
 			$(`#${parentId}`).appendChild(view);
 		});
+	}
+
+	export namespace YoutubeVideoFunctions {
+		export function volumeManager(player: YoutubeVideoPlayer) {
+			const volumeBar = document.createElement('div');
+			const volumeBarBar = document.createElement('div');
+			const volumeBarNumber = document.createElement('div');
+
+			volumeBar.id = 'yt-ca-volumeBar';
+			volumeBarBar.id = 'yt-ca-volumeBarBar';
+			volumeBarNumber.id = 'yt-ca-volumeBarNumber';
+
+			volumeBar.appendChild(volumeBarNumber);
+			volumeBar.appendChild(volumeBarBar);
+			document.body.appendChild(volumeBar);
+
+			let volumeBarTimeout: number = null;
+
+			function setPlayerVolume(volume: number) {
+				player.setVolume(volume);
+
+				localStorage.setItem('yt-player-volume', JSON.stringify({
+					data: JSON.stringify({
+						volume: volume,
+						muted: (volume === 0)
+					}),
+					creation: Date.now(),
+					expiration: Date.now() + (30 * 24 * 60 * 60 * 1000) //30 days
+				}));
+			}
+
+			//Code that has to be executed "inline"
+			function increaseVolume() {
+				let vol = player.getVolume();
+				if (player.isMuted()) {
+					//Treat volume as 0
+					vol = 0;
+					player.unMute();
+				}
+
+				vol += 5;
+				vol = (vol > 100 ? 100 : vol);
+				setPlayerVolume(vol);
+			}
+
+			function lowerVolume() {
+				let vol = player.getVolume();
+				if (!player.isMuted()) {
+					vol -= 5;
+					
+					vol = (vol < 0 ? 0 : vol);
+					setPlayerVolume(vol);
+				}
+			}
+
+			function showVolumeBar() {
+				const volume = player.getVolume();
+				localStorage.setItem('volume', volume + '');
+				volumeBarNumber.innerHTML = volume + '';
+				volumeBarBar.style.transform = `scaleX(${volume / 100})`;
+				volumeBar.classList.add('visible');
+				if (volumeBarTimeout !== null) {
+					window.clearTimeout(volumeBarTimeout);
+				}
+				volumeBarTimeout = window.setTimeout(() => {
+					volumeBar.classList.remove('visible');
+					volumeBarTimeout = null;
+				}, 2000);
+			}
+
+			function onScroll(isDown: boolean) {
+				if (isDown) {
+					lowerVolume();
+				} else {
+					increaseVolume();
+				}
+				showVolumeBar();
+			}
+
+			window.onwheel = (e) => {
+				onScroll(e.deltaY > 0);
+			};
+		}
+		
+		export function playPauseListeners() {
+			var ipcRenderer = require('electron').ipcRenderer;			
+
+			const video = document.getElementsByTagName('video')[0];			
+			video.onplay = () => {
+				ipcRenderer.send('toBgPage', {
+					type: 'passAlong',
+					data: {
+						type: 'onPlay',
+						data: {
+							view: 'youtubeSubscriptions'
+						}
+					}
+				});
+			}
+			video.onpause = () => {
+				ipcRenderer.send('toBgPage', {
+					type: 'passAlong',
+					data: {
+						type: 'onPause',
+						data: {
+							view: 'youtubeSubscriptions'
+						}
+					}
+				});
+			}
+		}
+
+		export function initialSizing(player: YoutubeVideoPlayer, loaded: ViewNames|null, onload?: () => void) {
+			function doTempInterval(fn: () => void, interval: number, max: number) {
+				const intervalId = window.setInterval(fn, interval);
+				window.setTimeout(() => {
+					window.clearInterval(intervalId);
+				}, max);
+			}
+
+			function prepareVideo() {
+				setTimeout(() => {							
+					function reloadIfAd() {
+						if (player.getAdState() === 1) {
+							window.location.reload();
+						}
+
+						if (player.getPlayerState() === 3) {
+							window.setTimeout(reloadIfAd, 250);
+						} else {
+							player.setPlaybackQuality('hd1080');
+							if (player.getPlaybackQuality() !== 'hd1080') {
+								player.setPlaybackQuality('hd720');
+							}
+
+							if (loaded !== null) {
+								localStorage.setItem('loaded', loaded);
+							}
+							
+							onload && onload();
+						}
+					}
+					reloadIfAd();
+				}, 2500);
+
+				doTempInterval(() => {
+					player.setSizeStyle(false, true);
+				}, 100, 5000);
+			}
+
+			prepareVideo();
+		}
+
+		export function handleResize(player: YoutubeVideoPlayer) {
+			const playerApi = document.getElementById('player-api');
+
+			function updateSizes() {
+				playerApi.style.width = window.innerWidth + 'px';
+				playerApi.style.height = (window.innerHeight - 15) + 'px';
+
+				player.setSize();
+			}
+
+			updateSizes();
+			window.addEventListener('resize', updateSizes);
+		}
+
+		export function handleToggleHiddens(key: string) {
+			document.body.addEventListener('keydown', (e) => {
+				if (e.key === key) {
+					//Hide or show video
+					document.body.classList.toggle('showHiddens');
+				}
+			});
+		}
+
+		export function handleVisualizer() {
+			const visualizer = document.createElement('div');
+			visualizer.classList.add('ytma_visualization_cont');
+			document.body.insertBefore(visualizer, document.body.children[0]);
+			let visualizing = false;
+			
+			function cleanupData(dataArray: Float32Array): number[] {
+				for (let i in dataArray) {
+					if (dataArray[i] <= -100 || dataArray[i] === -80 || dataArray[i] === -50) {
+						dataArray[i] = 0;
+						continue;
+					}
+					dataArray[i] = (dataArray[i] + 100) / 100;
+				}
+
+				const newArray = [];
+
+				//Compress it into a max of 120 bars
+				const delta = (dataArray.length / 120);
+				for (let i = 0; i < dataArray.length; i += delta) {
+					let average = dataArray.slice(i, i + delta).reduce((a, b) => {
+						return a + b;
+					}) / delta;
+					newArray.push(average);
+				}
+
+				return newArray;
+			}
+
+			function renderBars(data: AudioVisualizerSettings) {
+				data.bars.forEach((element, index) => {
+					element.style.transform = `scaleY(${data.parsedArray[index] * 1.5})`;
+				});
+			}
+
+			function visualize(this: AudioVisualizerSettings) { 
+				this.analyser.getFloatFrequencyData(this.dataArray);
+				this.parsedArray = cleanupData(this.dataArray);
+
+				renderBars(this);
+
+				if (visualizing) {
+					window.requestAnimationFrame(visualize.bind(this));
+				}
+			}
+
+			interface AudioVisualizerSettings {
+				video: HTMLVideoElement;
+				ctx: AudioContext;
+				analyser: AnalyserNode;
+				vidSrc: MediaElementAudioSourceNode;
+				dataArray: Float32Array;
+				bars: HTMLElement[];
+				parsedArray?: number[];
+			}
+
+			function checkForVisualizer(data: AudioVisualizerSettings) {
+				const shouldVisualize = document.body.classList.contains('showVisualizer');
+				if (visualizing === shouldVisualize) {
+					return;
+				}
+				if (shouldVisualize) {
+					visualizing = true;
+					localStorage.setItem('visualizing', JSON.stringify(true));
+					document.body.classList.add('showVisualizer');
+					window.requestAnimationFrame(visualize.bind(data));
+				} else {
+					document.body.classList.remove('showVisualizer');
+					localStorage.setItem('visualizing', JSON.stringify(false));
+					visualizing = false;
+				}
+			}
+
+			function setupVisualizer() {
+				const data: AudioVisualizerSettings = {} as any;
+				data.video = document.querySelector('video') as HTMLVideoElement;
+				data.ctx = new AudioContext();
+				data.analyser = data.ctx.createAnalyser();
+				data.vidSrc = data.ctx.createMediaElementSource(data.video);
+				
+				data.vidSrc.connect(data.analyser);
+				data.vidSrc.connect(data.ctx.destination);
+
+				data.dataArray = new Float32Array(data.analyser.frequencyBinCount);
+				data.analyser.getFloatFrequencyData(data.dataArray);
+
+				data.bars = Array(100).join('a').split('a').map((el) => {
+					let bar = document.createElement('div');
+					bar.classList.add('ytma_visualization_bar');
+					visualizer.appendChild(bar);
+					return bar;
+				});
+
+				const shouldVisualize = JSON.parse(localStorage.getItem('visualizing') || JSON.stringify(false));
+				if (shouldVisualize) {
+					document.body.classList.add('showVisualizer');
+				}
+
+				window.setInterval(() => {
+					checkForVisualizer(data);
+				}, 50);
+			}
+
+			return setupVisualizer;
+		}
+
+		export function handleYoutubeMusicTasks() {
+			function executeTask(name: string, id: number) {
+				let result = null;
+				switch (name) {
+					case 'getTime':
+						result = (
+							document.querySelector('.html5-video-player') as YoutubeVideoPlayer
+						).getCurrentTime();
+						break;
+					default:
+						if (name.indexOf('getSongName') > -1) {
+							let timestampContainers = document
+								.querySelector('#eow-description')
+								.querySelectorAll('a[href="#"]');
+							const index = ~~name.split('getSongName')[1];
+							const textNodes = [];
+							if (!isNaN(index) && timestampContainers[index]) {
+								let currentNode = timestampContainers[index].previousSibling as HTMLElement;
+
+								//Search back until a <br> is found
+								while (currentNode && currentNode.tagName !== 'BR') {
+									if (!currentNode.tagName) {
+										textNodes.push(currentNode.nodeValue);
+									}
+									currentNode = currentNode.previousSibling as HTMLElement;
+								}
+
+								currentNode = timestampContainers[index].nextSibling as HTMLElement;
+
+								//Search forward until a <br> is found
+								while (currentNode && currentNode.tagName !== 'BR') {
+									if (!currentNode.tagName) {
+										textNodes.push(currentNode.nodeValue);
+									}
+									currentNode = currentNode.nextSibling as HTMLElement;
+								}
+
+								//Go through list and find something that resembles a song
+								for (let i = 0; i < textNodes.length; i++) {
+									if (/.+-.+/.test(textNodes[i])) {
+										//This is a song
+										result = textNodes[i];
+										break;
+									}
+								}
+
+								if (!result) {
+									//Just try this instead
+									result = textNodes[0];
+								}
+							} else {
+								result = null;
+							}
+						}
+						break;
+				}
+
+				localStorage.setItem(`taskResult${id}`, result + '');
+			}
+
+			function checkForTasks() {
+				let tasks;
+				if ((tasks = localStorage.getItem('tasks'))) {
+					try {
+						tasks = JSON.parse(tasks);
+					} catch(e) {
+						tasks = [];
+					}
+					if (Array.isArray(tasks) && tasks.length > 0) {
+						tasks.forEach((task) => {
+							executeTask(task.name, task.id);
+						});
+						localStorage.setItem('tasks', '[]');
+					}
+				}
+			}
+
+			window.setInterval(checkForTasks, 50);
+		}
 	}
 }
