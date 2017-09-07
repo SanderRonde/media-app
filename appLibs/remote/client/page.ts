@@ -23,3 +23,37 @@ Array.from(document.querySelectorAll('.rippleTarget')).forEach((rippleTarget: HT
 		ripple.upAction();
 	});
 });
+
+const ws = new WebSocket(`ws://${location.href}`);
+ws.onmessage = (event) => {
+	const data = JSON.parse(event.data) as {
+		type: 'statusUpdate';
+		data: {
+			app: string;
+			status: string;
+		};
+	}|{
+		type: 'playUpdate';
+		data: {
+			playing: boolean;
+		}
+	};
+
+	switch (data.type) {
+		case 'playUpdate':
+			const playCont = document.getElementById('playPause');
+			if (!data.data.playing) {
+				playCont.classList.add('pause');
+			} else {
+				playCont.classList.remove('pause');
+			}
+			break;
+		case 'statusUpdate':
+			const statusTypeContainer = document.getElementById('statusType');
+			const statusContainer = document.getElementById('status');
+
+			statusTypeContainer.innerText = data.data.app;
+			statusContainer.innerText = data.data.status;
+			break;
+	}
+}

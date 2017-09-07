@@ -86,3 +86,19 @@ html {
 	line-height: 5vh;
 	padding: 0 2vw;
 }
+
+#playPause #playButton {
+	display: block;
+}
+
+#playPause #pauseButton {
+	display: none;
+}
+
+#playPause.pause #playButton {
+	display: none;
+}
+
+#playPause.pause #pauseButton {
+	display: block;
+}
