@@ -1,6 +1,6 @@
 import { 
 	REMOTE_PORT, INDEX_PATH, EXTERNAL_EVENTS,
-	PAPER_RIPPLE_DIR
+	PAPER_RIPPLE_DIR, EXTERNAL_EVENT
 } from '../constants/constants'
 
 import http = require('http');
@@ -73,7 +73,7 @@ function sendCommand(command: string, activeWindow: Electron.BrowserWindow) {
 async function handleAPIRequest(url: string, res: http.ServerResponse, activeWindow: Electron.BrowserWindow) {
 	const command = url.split('/api/').slice(1).join('/api/');
 
-	if (EXTERNAL_EVENTS.indexOf(command) > -1) {
+	if (EXTERNAL_EVENTS.indexOf(command as EXTERNAL_EVENT) > -1) {
 		sendCommand(command, activeWindow);
 		res.write(JSON.stringify({
 			success: true
