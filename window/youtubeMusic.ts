@@ -315,7 +315,7 @@ export namespace YoutubeMusic {
 						ipcRenderer.send('toBgPage', {
 							type: 'passAlong',
 							data: {
-								type: 'onPause',
+								type: 'onPlay',
 								data: {
 									view: 'ytmusic'
 								}
@@ -326,7 +326,7 @@ export namespace YoutubeMusic {
 						ipcRenderer.send('toBgPage', {
 							type: 'passAlong',
 							data: {
-								type: 'onPlay',
+								type: 'onPause',
 								data: {
 									view: 'ytmusic'
 								}

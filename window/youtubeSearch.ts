@@ -288,7 +288,7 @@ export namespace YoutubeSearch {
 									ipcRenderer.send('toBgPage', {
 										type: 'passAlong',
 										data: {
-											type: 'onPause',
+											type: 'onPlay',
 											data: {
 												view: 'youtubesearch'
 											}
@@ -299,7 +299,7 @@ export namespace YoutubeSearch {
 									ipcRenderer.send('toBgPage', {
 										type: 'passAlong',
 										data: {
-											type: 'onPlay',
+											type: 'onPause',
 											data: {
 												view: 'youtubesearch'
 											}

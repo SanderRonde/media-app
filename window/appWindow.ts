@@ -58,6 +58,13 @@ export interface PassedAlongMessages {
 	}
 	navToVideo: string;
 	youtubeSearchClick: void;
+
+	onPause: {
+		view: ViewNames;
+	};
+	onPlay: {
+		view: ViewNames;
+	};
 }
 
 const KeyListeningViews: ViewNames[] = [
@@ -360,10 +367,8 @@ export namespace AppWindow {
 		viewsEl.classList.remove('ytmusic', 'netflix', 'youtubeSubscriptions', 'youtubesearch');
 		viewsEl.classList.add(view);
 
-		if (isLoaded) {
-			await Helpers.wait(500);
-			getActiveViewClass().onFocus();
-		}
+		await Helpers.wait(500);
+		getActiveViewClass().onFocus();
 	}
 
 	export async function init(startView: ViewNames, isDebug: boolean) {
@@ -437,11 +442,6 @@ export namespace AppWindow {
 		}|{
 			cmd: keyof MessageReasons | EXTERNAL_EVENT
 			type: 'event';
-		}|{
-			type: 'onPause'|'onPlay';
-			data: {
-				view: ViewNames;
-			}
 		}) => {
 			if (message.type === 'response') {
 				const identifier = message.identifier;
@@ -451,13 +451,6 @@ export namespace AppWindow {
 					val.fn(message.data);
 					channels.splice(channels.indexOf(val), 1);
 				});
-			} else if (message.type === 'onPause' || message.type === 'onPlay') {
-				if (message.data.view === getActiveViewName()) {
-					ipcRenderer.send('toBgPage', {
-						type: 'playStatus',
-						data: message.type === 'onPause' ? 'pause' : 'play'
-					});
-				}
 			} else {
 				onShortcut((message as {
 					cmd: keyof MessageReasons | EXTERNAL_EVENT
@@ -500,6 +493,24 @@ export namespace AppWindow {
 					break;
 				case 'youtubeSearchClick':
 					YoutubeSearch.SearchBar.onPageClick();
+					break;
+				case 'onPause':
+					const onPauseData = data as PassedAlongMessages['onPause'];
+					if (onPauseData.view === getActiveViewName()) {
+						ipcRenderer.send('toBgPage', {
+							type: 'playStatus',
+							data: 'pause'
+						});
+					}
+					break;
+				case 'onPlay':
+					const onPlayData = data as PassedAlongMessages['onPause'];
+					if (onPlayData.view === getActiveViewName()) {
+						ipcRenderer.send('toBgPage', {
+							type: 'playStatus',
+							data: 'pause'
+						});
+					}
 					break;
 			}
 		});
