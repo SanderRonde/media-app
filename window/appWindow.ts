@@ -200,7 +200,7 @@ export namespace AppWindow {
 		});
 
 		document.addEventListener('keydown', (e) => {
-			if (getActiveViewName() in KeyListeningViews) {
+			if (KeyListeningViews.indexOf(getActiveViewName()) > -1) {
 				if (e.key === 'v' && e.ctrlKey) {
 					//It's a paste
 					const pasteData = clipboard.readText();
@@ -346,7 +346,7 @@ export namespace AppWindow {
 		}
 
 		activeView = view;
-		const isLoaded = view in loadedViews;
+		const isLoaded = loadedViews.indexOf(activeView) > -1
 		if (isLoaded) {
 			hideSpinner();
 			getActiveViewClass().Commands.play();

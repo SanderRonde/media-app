@@ -73,7 +73,7 @@ function sendCommand(command: string, activeWindow: Electron.BrowserWindow) {
 async function handleAPIRequest(url: string, res: http.ServerResponse, activeWindow: Electron.BrowserWindow) {
 	const command = url.split('/api/').slice(1).join('/api/');
 
-	if (command in EXTERNAL_EVENTS) {
+	if (EXTERNAL_EVENTS.indexOf(command) > -1) {
 		sendCommand(command, activeWindow);
 		res.write(JSON.stringify({
 			success: true
