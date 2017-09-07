@@ -29,3 +29,7 @@ export const EXTERNAL_EVENTS: EXTERNAL_EVENT[] = [
 ]
 
 export type EXTERNAL_EVENTS = EXTERNAL_EVENT[];
+
+export const LOG_REQUESTS = false;
+
+export const LOG_ERROR_REQUESTS = true;

@@ -26,8 +26,27 @@ function initRipple() {
 	});
 }
 
+interface Window {
+	ws: WebSocket;
+}
+
+function mapIds(name: string): string {
+	switch (name) {
+		case 'Subs':
+			return 'youtubeSubscriptions';
+		case 'Music':
+			return 'youtubeMusic';
+		case 'YTs':
+			return 'youtubeSearch';
+		case 'Netflix':
+			return 'netflix';
+	}
+	return '';
+}
+
 function initWs() {
-	const ws = new WebSocket(`ws://${location.hostname}:${location.port}`);
+	const ws = window.ws = new WebSocket(`ws://${location.hostname}:${location.port}`,
+		'echo-protocol');
 	ws.onmessage = (event) => {
 		const data = JSON.parse(event.data) as {
 			type: 'statusUpdate';
@@ -44,7 +63,8 @@ function initWs() {
 
 		switch (data.type) {
 			case 'playUpdate':
-				const playCont = document.getElementById('playPause');
+				debugger;
+				const playCont = document.getElementById('pausePlay');
 				if (!data.data.playing) {
 					playCont.classList.add('pause');
 				} else {
@@ -62,7 +82,7 @@ function initWs() {
 					switchType.classList.remove('selected');
 				});
 
-				document.getElementById(data.data.app).classList.add('selected');
+				document.getElementById(mapIds(data.data.app)).classList.add('selected');
 				break;
 		}
 	}

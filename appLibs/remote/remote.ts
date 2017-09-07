@@ -1,7 +1,7 @@
 import { 
 	REMOTE_PORT, INDEX_PATH, EXTERNAL_EVENTS,
 	PAPER_RIPPLE_DIR, EXTERNAL_EVENT, ICONS_DIR,
-	SW_TOOLBOX_DIR
+	SW_TOOLBOX_DIR, LOG_ERROR_REQUESTS, LOG_REQUESTS
 } from '../constants/constants'
 
 import ws = require('websocket');
@@ -54,7 +54,7 @@ class WSHandler {
 	constructor(server: http.Server) {
 		this.wsServer = new ws.server({
 			httpServer: server,
-			autoAcceptConnections: true
+			autoAcceptConnections: false
 		});
 		this.wsServer.on('request', (request) => {
 			const connection = request.accept('echo-protocol', request.origin);
@@ -131,9 +131,10 @@ export class RemoteServer {
 			} else {
 				this.handleFileRequest(url, res);
 			}
-		}).listen(REMOTE_PORT, async () => {
+		});
+		this.httpServer.listen(REMOTE_PORT, async () => {
 			console.log(`HTTP server listening on ${await this.getIp()}:${REMOTE_PORT}`)
-		}) as http.Server;
+		});
 
 		this.wsHandler = new WSHandler(this.httpServer);
 	}
@@ -151,7 +152,9 @@ export class RemoteServer {
 	}
 	
 	private respondError(res: http.ServerResponse, url: string, statusCode: keyof typeof STATUS_CODES) {
-		console.log(`👎 - [${statusCode}] - ${url}`)
+		if (LOG_ERROR_REQUESTS) {
+			console.log(`👎 - [${statusCode}] - ${url}`)
+		}
 		res.writeHead(~~statusCode, STATUS_CODES[statusCode]);
 		res.end();
 	}
@@ -275,7 +278,9 @@ export class RemoteServer {
 	private async serveFile(url: string, res: http.ServerResponse) {
 		const data = await this.renderData(url, res);
 		if (data !== null) {
-			console.log(`[200] - ${url}`);
+			if (LOG_REQUESTS) {
+				console.log(`[200] - ${url}`);
+			}
 			res.write(data);
 			res.end();
 		}
