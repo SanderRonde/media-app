@@ -63,7 +63,6 @@ function initWs() {
 
 		switch (data.type) {
 			case 'playUpdate':
-				debugger;
 				const playCont = document.getElementById('pausePlay');
 				if (!data.data.playing) {
 					playCont.classList.add('pause');
