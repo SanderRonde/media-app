@@ -7,8 +7,8 @@
 	"start_url": "/",
 	"orientation": "portrait",
 	"display": "fullscreen",
-	"background_color": "#03afd0",
-	"theme_color": "#000000",
+	"background_color": "#fff",
+	"theme_color": "#f44336",
 	"description": "Remote control for Media App",
 	"icons": [{
 		"src": "icons/48.png",

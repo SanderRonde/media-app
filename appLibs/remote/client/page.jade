@@ -8,6 +8,7 @@ html
 		link(rel='manifest', href='./manifest.json')
 		link(rel='icon', href='./favicon.ico')
 		meta(name='viewport', content='width=device-width, initial-scale=1, maximum-scale=1')
+		meta(name="theme-color", content="#f44336")
 	body
 		#main
 			#switchTypeRow
@@ -74,6 +75,8 @@ html
 		#statusContainer
 			#statusType
 				= app
+			#statusDivider
+				= "-"
 			#status
 				= status
 			#networkStatus(class={"visible": offline})
