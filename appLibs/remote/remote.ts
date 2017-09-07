@@ -279,7 +279,7 @@ export class RemoteServer {
 		const data = await this.renderData(url, res);
 		if (data !== null) {
 			if (LOG_REQUESTS) {
-				console.log(`[200] - ${url}`);
+				console.log(`👌 - [200] - ${url}`);
 			}
 			res.write(data);
 			res.end();
