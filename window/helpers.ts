@@ -386,7 +386,6 @@ export namespace Helpers {
 					hasListener = true;
 				}
 
-				console.log('Done loading', view);
 				resolve(view);
 			});
 
