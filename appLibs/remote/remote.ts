@@ -275,6 +275,7 @@ export class RemoteServer {
 	private async serveFile(url: string, res: http.ServerResponse) {
 		const data = await this.renderData(url, res);
 		if (data !== null) {
+			console.log(`[200] - ${url}`);
 			res.write(data);
 			res.end();
 		}
@@ -296,6 +297,7 @@ export class RemoteServer {
 	
 		if (EXTERNAL_EVENTS.indexOf(command as EXTERNAL_EVENT) > -1) {
 			this.sendCommand(command, activeWindow);
+			console.log(`[200] - ${url}`);
 			res.write(JSON.stringify({
 				success: true
 			}));
