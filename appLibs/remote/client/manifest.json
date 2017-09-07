@@ -5,7 +5,7 @@
 	"lang": "nl",
 	"short_name": "Remote",
 	"start_url": "/",
-	"orientation": "portrait-primary",
+	"orientation": "portrait",
 	"display": "fullscreen",
 	"background_color": "#03afd0",
 	"theme_color": "#000000",
