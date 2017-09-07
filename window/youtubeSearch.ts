@@ -668,7 +668,6 @@ export namespace YoutubeSearch {
 			Helpers.downloadVideo((await Video.getView()).src)
 			return true;
 		}
-		debugger;
 		if (VALID_INPUT.indexOf(event.key) > -1 && 
 			!event.altKey && !event.ctrlKey) {
 				SearchBar.focus(event.key);
