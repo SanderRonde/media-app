@@ -24,7 +24,7 @@ Array.from(document.querySelectorAll('.rippleTarget')).forEach((rippleTarget: HT
 	});
 });
 
-const ws = new WebSocket(`ws://${location.href}`);
+const ws = new WebSocket(`ws://${location.hostname}:${location.port}`);
 ws.onmessage = (event) => {
 	const data = JSON.parse(event.data) as {
 		type: 'statusUpdate';
@@ -54,6 +54,12 @@ ws.onmessage = (event) => {
 
 			statusTypeContainer.innerText = data.data.app;
 			statusContainer.innerText = data.data.status;
+
+			Array.from(document.querySelectorAll('#switchTypeRow > *')).forEach((switchType) => {
+				switchType.classList.remove('selected');
+			});
+
+			document.getElementById(data.data.app).classList.add('selected');
 			break;
 	}
 }

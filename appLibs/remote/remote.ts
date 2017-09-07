@@ -1,6 +1,6 @@
 import { 
 	REMOTE_PORT, INDEX_PATH, EXTERNAL_EVENTS,
-	PAPER_RIPPLE_DIR, EXTERNAL_EVENT
+	PAPER_RIPPLE_DIR, EXTERNAL_EVENT, ICONS_DIR
 } from '../constants/constants'
 
 import http = require('http');
@@ -8,6 +8,20 @@ import path = require('path');
 import urlLib = require('url');
 import fs = require('fs');
 import ws = require('websocket');
+
+const PATH_MAPS = {
+	'/': INDEX_PATH,
+	'/paper-ripple.css': PAPER_RIPPLE_DIR + 'paper-ripple.min.css',
+	'/paper-ripple.css.map': PAPER_RIPPLE_DIR + 'paper-ripple.css.min.map',
+	'/PaperRipple.js': PAPER_RIPPLE_DIR + 'PaperRipple.min.js',
+	'/PaperRipple.js.map': PAPER_RIPPLE_DIR + 'PaperRipple.js.min.map',
+	'/images/48.png': ICONS_DIR + '48.png',
+	'/images/72.png': ICONS_DIR + '72.png',
+	'/images/96.png': ICONS_DIR + '96.png',
+	'/images/144.png': ICONS_DIR + '144.png',
+	'/images/168.png': ICONS_DIR + '168.png',
+	'/images/192.png': ICONS_DIR + '192.png'
+}
 
 function getIp() {
 	return new Promise((resolve, reject) => {
@@ -81,14 +95,6 @@ async function handleAPIRequest(url: string, res: http.ServerResponse, activeWin
 	} else {
 		respondError(res, 500, 'Server error');
 	}
-}
-
-const PATH_MAPS = {
-	'/': INDEX_PATH,
-	'/paper-ripple.css': PAPER_RIPPLE_DIR + 'paper-ripple.min.css',
-	'/paper-ripple.css.map': PAPER_RIPPLE_DIR + 'paper-ripple.css.min.map',
-	'/PaperRipple.js': PAPER_RIPPLE_DIR + 'PaperRipple.min.js',
-	'/PaperRipple.js.map': PAPER_RIPPLE_DIR + 'PaperRipple.js.min.map'
 }
 
 function getURL(req: http.IncomingMessage): string {
