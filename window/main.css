@@ -471,9 +471,8 @@ body {
 }
 
 #youtubeSearchCont.showVideo > #youtubeSearchVideoView {
-	transform: translateY(calc(-100vh - 3px));
+	transform: translateY(-100vh);
 }
-
 
 #setupCont {
 	background-color: rgba(0, 0, 0, 0.7);
