@@ -103,7 +103,7 @@ function initListeners() {
 		'up', 'down', 'left', 'right',
 		'toggleVideo'
 	]).forEach((externalEvent) => {
-		document.getElementById(externalEvent).addEventListener('tap', () => {
+		document.getElementById(externalEvent).addEventListener('click', () => {
 			fetch(`/api/${externalEvent}`);
 		});
 	});
