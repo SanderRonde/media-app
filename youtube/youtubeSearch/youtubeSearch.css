@@ -3,8 +3,21 @@ body {
 	overflow-y: scroll;
 }
 
-#masthead-positioner,
-#masthead-positioner-height-offset,
-.branded-page-v2-subnav-container.branded-page-gutter-padding {
+#masthead-container {
 	display: none;
+}
+
+#page-manager {
+	margin-top: 64px;
+}
+
+ytd-search-sub-menu-renderer > #container, 
+ytd-search-pyv-renderer, #masthead-container {
+	display: none;
+}
+
+ytd-app {
+	overflow-y: scroll;
+	max-height: 100vh;
+	
 }

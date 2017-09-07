@@ -360,18 +360,12 @@ export namespace YoutubeSearch {
 					name: 'css',
 					matches: ['*://www.youtube.com/*'],
 					css: {
-						files: ['youtubeSearch/results/results.css']
+						files: [
+							'youtubeSearch/results/results.css'
+						]
 					},
 					run_at: 'document_start'
 				}]);
-
-				// searchResultsView.request.onBeforeRequest.addListener((details) => {
-				// 	return {
-				// 		cancel: details.url.indexOf('watch') > -1
-				// 	}
-				// }, {
-				// 	urls: ['*://*/*']
-				// }, ['blocking']);
 			}, 10);
 		}
 
