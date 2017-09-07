@@ -85,6 +85,9 @@ html {
 	font-weight: bold;
 	line-height: 5vh;
 	padding: 0 2vw;
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
 }
 
 #pausePlay #play {
@@ -113,4 +116,18 @@ html {
 
 #pausePlay {
 	width: 35vw;
+}
+
+#networkStatus {
+	display: none;
+	width: 20px;
+	fill: white;
+}
+
+#networkStatus.visible {
+	display: block;
+}
+
+#status {
+	flex-grow: 100;
 }
