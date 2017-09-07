@@ -1,8 +1,10 @@
 export const REMOTE_PORT = 1234;
 
-export const INDEX_PATH = 'page.jade';
+export const INDEX_PATH = '/page.jade';
 
 export const PAPER_RIPPLE_DIR = '../../../node_modules/paper-ripple/dist/'
+
+export const SW_TOOLBOX_DIR = '../../../node_modules/sw-toolbox/'
 
 export const ICONS_DIR = '../../../icons/';
 
