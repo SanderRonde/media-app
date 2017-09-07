@@ -620,7 +620,11 @@ export namespace YoutubeSearch {
 			(await Video.getView()).focus();
 			AppWindow.updateStatus(await Video.getTitle());
 		} else {
-			AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch || 'nothing'}`)
+			if (SearchBar.lastSearch) {
+				AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch}`);
+			} else {
+				AppWindow.updateStatus('Looking at search page');
+			}
 		}
 	}
 
@@ -640,7 +644,11 @@ export namespace YoutubeSearch {
 			await Helpers.wait(500);
 			(await SearchResultsPage.getView()).focus();
 			SearchBar.tempShow();
-			AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch || 'nothing'}`)
+			if (SearchBar.lastSearch) {
+				AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch}`)
+			} else {
+				AppWindow.updateStatus('Looking at search page');
+			}
 		} else {
 			subsCont.classList.add('showVideo');
 			activePage = 'video';
