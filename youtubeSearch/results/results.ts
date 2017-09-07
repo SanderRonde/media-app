@@ -88,6 +88,9 @@ namespace YoutubeSearchResultsPage {
 			const thumbnail = item.querySelector('#thumbnail') as HTMLAnchorElement;
 			const originalLink = thumbnail.href;
 			thumbnail.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+
 				ipcRenderer.send('toBgPage', {
 					type: 'passAlong',
 					data: {
@@ -100,6 +103,9 @@ namespace YoutubeSearchResultsPage {
 
 			const title = item.querySelector('#video-title') as HTMLAnchorElement;
 			title.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+
 				ipcRenderer.send('toBgPage', {
 					type: 'passAlong',
 					data: {
