@@ -55,6 +55,7 @@ namespace PlaceHolderPage {
 		const textNode = document.createElement('span');
 		textNode.style.fontWeight = 'bold';
 		textNode.style.fontSize = '300%';
+		textNode.style.userSelect = 'none';
 		textNode.appendChild(document.createTextNode('Search Something'));
 		el.appendChild(textNode);
 
