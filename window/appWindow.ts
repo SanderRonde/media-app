@@ -512,7 +512,7 @@ export namespace AppWindow {
 					if (onPlayData.view === getActiveViewName()) {
 						ipcRenderer.send('toBgPage', {
 							type: 'playStatus',
-							data: 'pause'
+							data: 'play'
 						});
 					}
 					break;
