@@ -424,9 +424,10 @@ export namespace YoutubeSearch {
 			lastSearch = query;
 			const searchResultsView = await SearchResultsPage.getView();
 			searchResultsView.loadURL(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
+			hideSuggestions();
 		}
 
-		function genSuggestionElement(suggestion: string): HTMLElement {
+		function genSuggestionElement(suggestion: string, index: number): HTMLElement {
 			const container = document.createElement('div');
 			container.classList.add('suggestion');
 			container.setAttribute('tabindex', '-1');
@@ -446,12 +447,12 @@ export namespace YoutubeSearch {
 			container.appendChild(suggestionPart);
 
 			container.addEventListener('click', () => {
-				console.log('Calling this way');
+				updateSelectedSuggestion(index);
 				doSearch(suggestion);
 			});
 			container.addEventListener('keydown', (e) => {
 				if (e.key === ' ') {
-					console.log('Calling other way');
+					updateSelectedSuggestion(index);
 					doSearch(suggestion);
 				}
 			});
@@ -526,7 +527,6 @@ export namespace YoutubeSearch {
 			});
 
 			$('#searchButton').addEventListener('click', (e) => {
-				console.log('Woob woob');
 				e.preventDefault();
 				e.stopPropagation();
 				doSearch(updateInputValue());

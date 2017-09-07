@@ -520,6 +520,7 @@ body {
 	z-index: 5;
 	width: 100vw;
 	transition: transform 250ms ease-in;
+	pointer-events: none;
 }
 
 #youtubeSearchVideoView.searchHidden #searchBarCenterer {
@@ -683,6 +684,10 @@ body {
 	margin-top: 26px;
 }
 
+#searchBar > * {
+	pointer-events: all;
+}
+
 #suggestions {
 	padding: 16px 0;
 	width: calc(100vw - 166px);
@@ -716,9 +721,10 @@ body {
 	font-weight: 16px;
 	padding: 4px 24px 4px 10px;
 	outline: none;
+	cursor: pointer;
 }
 
-.suggestion.selected {
+.suggestion.selected, .suggestion:active {
 	background-color: rgb(238, 238, 238);
 }
 
