@@ -541,6 +541,28 @@ export namespace YoutubeSearch {
 			return false;
 		}
 
+		let wasShownPreTemp = true;
+		
+		export function tempShow(first: boolean = false) {
+			if (first) {
+				wasShownPreTemp = isShown();
+			}
+
+			show();
+		}
+
+		export function undoTempShow() {
+			if (wasShownPreTemp) {
+				show();
+			} else {
+				hide();
+			}
+		}
+
+		export function isShown() {
+			return !$('#youtubeSearchCont').classList.contains('searchHidden');
+		}
+
 		export function show() {
 			if (activePage === 'video') {
 				$('#youtubeSearchCont').classList.remove('searchHidden');
@@ -559,7 +581,7 @@ export namespace YoutubeSearch {
 			return false;
 		}
 
-		export function focus(key?: string) {
+		export function focus(key: string = '') {
 			show();
 			searchBar.value = searchBar.value + key;
 			searchBar.focus();
@@ -575,6 +597,7 @@ export namespace YoutubeSearch {
 	}
 
 	export async function changeVideo(url: string) {
+		console.log(url);
 		(await Video.getView()).loadURL(url);
 		showVideo();
 	}
@@ -616,12 +639,14 @@ export namespace YoutubeSearch {
 			activePage = 'results';
 			await Helpers.wait(500);
 			(await SearchResultsPage.getView()).focus();
+			SearchBar.tempShow();
 			AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch}`)
 		} else {
 			subsCont.classList.add('showVideo');
 			activePage = 'video';
 			await Helpers.wait(500);
 			(await Video.getView()).focus();
+			SearchBar.undoTempShow();
 			AppWindow.updateStatus(await Video.getTitle());
 		}
 	}
@@ -643,7 +668,8 @@ export namespace YoutubeSearch {
 			Helpers.downloadVideo((await Video.getView()).src)
 			return true;
 		}
-		if (event.key in VALID_INPUT && 
+		debugger;
+		if (VALID_INPUT.indexOf(event.key) > -1 && 
 			!event.altKey && !event.ctrlKey) {
 				SearchBar.focus(event.key);
 				return true;
@@ -671,12 +697,13 @@ export namespace YoutubeSearch {
 				//Go to that view and focus the video
 				await AppWindow.switchToview('youtubesearch');
 				const interval = window.setInterval(async () => {
-					if ('youtubesearch' in AppWindow.loadedViews && (await Video.getView())) {
-						//It's loaded
-						window.clearInterval(interval);
+					if (AppWindow.loadedViews.indexOf('youtubesearch') > -1 && 
+						(await Video.getView())) {
+							//It's loaded
+							window.clearInterval(interval);
 
-						Video.navTo(data);
-					}
+							Video.navTo(data);
+						}
 				}, 50);
 			}
 		}			
