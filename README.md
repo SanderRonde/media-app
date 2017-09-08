@@ -23,6 +23,8 @@ Download can be found [here](https://github.com/SanderRonde/media-app/releases)
 * Scrolling on the video changes volume (up = raise, down = lower)
 * Pressing ```?``` identifies the current song (if possible) and shows it to you
 * Pressing ```D``` downloads the song once the ```?``` dialog is up
+* Pressing ```R``` reloads the video in order to counteract youtube randomly
+	slowing down or speeding up
 
 
 ### Youtube Search
