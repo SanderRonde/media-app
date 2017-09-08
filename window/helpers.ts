@@ -170,7 +170,7 @@ export namespace Helpers {
 			const searchPageView = $('#youtubeSearchPageView');
 			searchPageView && searchPageView.remove();
 		}
-		shell.openExternal(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`);
+		shell.openExternal(`https://ytmp3.cc/#v${url.split('?v=')[1]}`);
 	}
 
 	const MatchPatterns = class MatchPatterns {
