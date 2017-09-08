@@ -784,3 +784,13 @@ body {
 .youtubeAddedVideoContainer.visible {
 	transform: translateX(0);
 }
+
+.youtubeAddedVideoHiddenThumbnail {
+	height: 160px;
+	line-height: 160px;
+	font-size: 100px;
+	text-align: center;
+	background-color: #303030;
+	color: #D8D8D8;
+	width: 284.4px;
+}

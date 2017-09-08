@@ -538,15 +538,27 @@ export namespace YoutubeSearch {
 			}));
 		}
 
+		function genImageElement(thumbnail: string): HTMLElement {
+			if (thumbnail !== null) {
+				const image = document.createElement('img');
+				image.classList.add('youtubeAddedVideoImage')
+				image.src = thumbnail;
+				return image;
+			} else {
+				const thumbnail = document.createElement('div');
+				thumbnail.classList.add('youtubeAddedVideoHiddenThumbnail');
+				thumbnail.innerText = '?';
+				return thumbnail;
+			}
+		}	
+
 		function createAddedVideoElement(title: string, thumbnail: string): HTMLElement {
 			const container = document.createElement('div');
 			container.classList.add('youtubeAddedVideoContainer');
 
 			const imageContainer = document.createElement('div');
 			imageContainer.classList.add('youtubeAddedVideoImageContainer');
-			const image = document.createElement('img');
-			image.classList.add('youtubeAddedVideoImage')
-			image.src = thumbnail;
+			const image = genImageElement(thumbnail);
 
 			const titleContainer = document.createElement('div');
 			titleContainer.classList.add('youtubeAddedVideoTitle');
@@ -559,10 +571,14 @@ export namespace YoutubeSearch {
 			return container;
 		}
 
-		async function displayAddedVideo(url: string) {
-			const videoInfo = await getVideoInfo(url);
-			const title = videoInfo.items[0].snippet.title;
-			const thumbnail = videoInfo.items[0].snippet.thumbnails.maxres.url;
+		async function displayAddedVideo(url: string, hidden: boolean) {
+			let title = '???';
+			let thumbnail: string = null;
+			if (!hidden) {
+				const videoInfo = await getVideoInfo(url);
+				title = videoInfo.items[0].snippet.title;
+				thumbnail = videoInfo.items[0].snippet.thumbnails.maxres.url;
+			}
 
 			const element = createAddedVideoElement(title, thumbnail);
 			document.body.insertBefore(element, document.body.children[0]);
@@ -594,9 +610,7 @@ export namespace YoutubeSearch {
 				return;
 			}
 
-			if (!hidden) {
-				displayAddedVideo(url);
-			}
+			displayAddedVideo(url, hidden);
 			queue.push(url);
 		}
 
