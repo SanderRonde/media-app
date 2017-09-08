@@ -588,6 +588,14 @@ export namespace Helpers {
 		}
 
 		export function handleToggleHiddens(key: string) {
+			window.setTimeout(() => {
+				if (Array.from(document.querySelectorAll('a[is="yt-endpoint"]')).filter((a: HTMLAnchorElement) => {
+					return a.href.indexOf('accounts.google.com') > -1;
+				}).length > 0) {
+					document.body.classList.toggle('showHiddens');
+				}
+			}, 5000);
+
 			document.body.addEventListener('keydown', (e) => {
 				if (e.key === key) {
 					//Hide or show video
