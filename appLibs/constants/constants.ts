@@ -30,6 +30,13 @@ export const EXTERNAL_EVENTS: EXTERNAL_EVENT[] = [
 
 export type EXTERNAL_EVENTS = EXTERNAL_EVENT[];
 
+export type ARG_EVENT = 'cast'|'hiddenCast';
+
+export const ARG_EVENTS: ARG_EVENT[] = [
+	'cast',
+	'hiddenCast'
+]
+
 export const LOG_REQUESTS = false;
 
 export const LOG_ERROR_REQUESTS = true;

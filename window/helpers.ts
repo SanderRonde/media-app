@@ -781,5 +781,18 @@ export namespace Helpers {
 
 			window.setInterval(checkForTasks, 50);
 		}
+
+		export function detectOnEnd() {
+			const ipcRenderer = require('electron').ipcRenderer;
+			const video = document.querySelector('video');
+			video.addEventListener('ended', () => {
+				ipcRenderer.send('toBgPage', {
+					type: 'passAlong',
+					data: {
+						type: 'onVideoEnded'
+					}
+				})
+			});
+		}
 	}
 }

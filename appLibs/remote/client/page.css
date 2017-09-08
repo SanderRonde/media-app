@@ -2,6 +2,7 @@ body {
 	margin: 0;
 	user-select: none;
 	font-family: 'Roboto';
+	-webkit-tap-highlight-color: transparent;
 }
 
 #main {
@@ -134,4 +135,93 @@ html {
 
 #statusDivider {
 	margin: 0 7px;
+}
+
+#overlay {
+	width: 100vw;
+	height: 100vh;
+	position: absolute;
+	z-index: 10;
+	background-color: rgba(0,0,0,0.5);
+}
+
+#dialogContainer {
+	position: absolute;
+	z-index: 20;
+	width: 100vw;
+	height: 100vh;
+	pointer-events: none;
+}
+
+#dialogVerticalCenterer {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	height: 50vh;
+}
+
+#dialogHorizontalCenterer {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+#dialogTitle {
+	font-weight: 500;
+	margin-bottom: 13px;
+	font-size: 150%;
+}
+
+#dialogInput {
+	width: calc(100% - 15px);
+	font-size: 120%;
+	padding: 5px;
+}
+
+#dialogButtons {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-end;
+	margin-top: 5px;
+}
+
+#dialogButtons > * {
+	padding: 14px 10px;
+	text-transform: uppercase;
+	position: relative;
+	min-width: 40px;
+	text-align: center;
+	font-size: 120%;
+	color: rgb(38, 153, 244);
+	font-weight: 500;
+}
+
+.blueRipple .paper-ripple {
+	color:  #03A9F4;
+}
+
+#overlay {
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 250ms ease-in-out;
+}
+
+#dialog {
+	transition: transform 300ms ease-in;
+	transform: translateY(-100vh);
+	pointer-events: none;
+	z-index: 1000;
+	background-color: white;
+	width: calc(90vw - 20px);
+	padding: 10px;
+}
+
+body.showDialog #overlay {
+	opacity: 1;
+	pointer-events: all;
+}
+
+body.showDialog #dialog {
+	transform: translateY(0);
+	pointer-events: all;
 }

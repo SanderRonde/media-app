@@ -1,5 +1,6 @@
 import { Helpers, MappedKeyboardEvent, $ } from './helpers'
 import { YoutubeVideoPlayer } from './youtubeMusic'
+import { googleAPIKey } from '../genericJs/secrets'
 import { AppWindow } from './appWindow'
 
 function arr(first: number, last: number): number[] {
@@ -156,13 +157,15 @@ export namespace YoutubeSearch {
 							REPLACE.initialSizing(player, 'youtubesearch');
 							REPLACE.handleResize(player);
 							REPLACE.handleToggleHiddens('k');
+							REPLACE.detectOnEnd();
 						})();
 					}, {
 						volumeManager: Helpers.YoutubeVideoFunctions.volumeManager,
 						playPauseListeners: Helpers.YoutubeVideoFunctions.playPauseListeners,
 						initialSizing: Helpers.YoutubeVideoFunctions.initialSizing,
 						handleResize: Helpers.YoutubeVideoFunctions.handleResize,
-						handleToggleHiddens: Helpers.YoutubeVideoFunctions.handleToggleHiddens
+						handleToggleHiddens: Helpers.YoutubeVideoFunctions.handleToggleHiddens,
+						detectOnEnd: Helpers.YoutubeVideoFunctions.detectOnEnd
 					});
 				});
 			}, 10);
@@ -438,6 +441,171 @@ export namespace YoutubeSearch {
 			show();
 			searchBar.value = searchBar.value + key;
 			searchBar.focus();
+		}
+	}
+
+	export namespace Queue {
+		const queue: string[] = [];
+
+		function getVideoId(url: string) {
+			const parsedURL = new URL(url);
+			if (parsedURL.hostname === 'youtu.be') {
+				return parsedURL.pathname.slice(1);
+			} else {
+				return parsedURL.searchParams.get('v');
+			}
+		}
+
+		interface VideoInfo {
+			kind: string;
+			etag: string;
+			pageInfo: {
+				totalResults: number;
+				resultsPerPage: number;
+			}
+			items: {
+				id: string;
+				kind: string;
+				etag: string;
+				snippet: {
+					publishedAt: string;
+					channelId: string;
+					channelTitle: string;
+					title: string;
+					description: string;
+					thumbnails: {
+						default: {
+							width: number;
+							height: number;
+							url: string;
+						}
+						medium: {
+							width: number;
+							height: number;
+							url: string;
+						}
+						high: {
+							width: number;
+							height: number;
+							url: string;
+						};
+						standard: {
+							width: number;
+							height: number;
+							url: string;
+						};
+						maxres: {
+							width: number;
+							height: number;
+							url: string;
+						};
+					}
+					categoryId: string;
+					tags: string[];
+					liveBroadcastContent: string;
+					localized: {
+						title: string;
+						description: string;
+					}
+				};
+				contentDetails: {
+					duration: string;
+					aspectRatio: string;
+					caption: string;
+					definition: string;
+					dimension: string;
+					projection: string;
+					licensedContent: boolean;
+				};
+				statistics: {
+					viewCount: string;
+					likeCount: string;
+					dislikeCount: string;
+					favoriteCount: string;
+					commentCount: string;
+				};
+				status: {
+					uploadStatus: string;
+					privacyStatus: string;
+				}
+			}[]
+		}
+
+		async function getVideoInfo(url: string): Promise<VideoInfo> {
+			const videoId = getVideoId(url);
+			return await (fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${googleAPIKey}&part=snippet,contentDetails,statistics,status`).then((res) => {
+				return res.json();
+			}));
+		}
+
+		function createAddedVideoElement(title: string, thumbnail: string): HTMLElement {
+			const container = document.createElement('div');
+			container.classList.add('youtubeAddedVideoContainer');
+
+			const imageContainer = document.createElement('div');
+			imageContainer.classList.add('youtubeAddedVideoImageContainer');
+			const image = document.createElement('img');
+			image.classList.add('youtubeAddedVideoImage')
+			image.src = thumbnail;
+
+			const titleContainer = document.createElement('div');
+			titleContainer.classList.add('youtubeAddedVideoTitle');
+			titleContainer.innerText = title;
+
+			imageContainer.appendChild(image);
+			container.appendChild(imageContainer);
+			container.appendChild(titleContainer);
+
+			return container;
+		}
+
+		async function displayAddedVideo(url: string) {
+			const videoInfo = await getVideoInfo(url);
+			const title = videoInfo.items[0].snippet.title;
+			const thumbnail = videoInfo.items[0].snippet.thumbnails.maxres.url;
+
+			const element = createAddedVideoElement(title, thumbnail);
+			document.body.insertBefore(element, document.body.children[0]);
+			await Helpers.wait(50);
+			element.classList.add('visible');
+			await Helpers.wait(5000);
+			element.classList.remove('visible');
+			await Helpers.wait(500);
+			element.remove();
+		}
+
+		function play(url: string) {
+			Video.navTo(url);
+		}
+
+		function isYoutubeUrl(url: string): boolean {
+			const parsedURL = new URL(url);
+			if (parsedURL.hostname === 'youtu.be') {
+				return true;
+			}
+			if (parsedURL.hostname === 'www.youtube.com' && parsedURL.searchParams.has('v')) {
+				return true;
+			}
+			return false;
+		}
+
+		export function push(url: string, hidden: boolean = false) {
+			if (!isYoutubeUrl(url)) {
+				return;
+			}
+
+			if (!hidden) {
+				displayAddedVideo(url);
+			}
+			queue.push(url);
+		}
+
+		export function skip() {
+			play(queue.shift());
+		}
+
+		export function onVideoEnd() {
+			skip();
 		}
 	}
 

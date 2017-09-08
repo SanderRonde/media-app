@@ -1,7 +1,8 @@
 import { 
 	REMOTE_PORT, INDEX_PATH, EXTERNAL_EVENTS,
 	PAPER_RIPPLE_DIR, EXTERNAL_EVENT, ICONS_DIR,
-	SW_TOOLBOX_DIR, LOG_ERROR_REQUESTS, LOG_REQUESTS
+	SW_TOOLBOX_DIR, LOG_ERROR_REQUESTS, LOG_REQUESTS,
+	ARG_EVENTS, ARG_EVENT
 } from '../constants/constants'
 
 import ws = require('websocket');
@@ -292,15 +293,17 @@ export class RemoteServer {
 		this.serveFile(url, res);
 	}
 	
-	private sendCommand(command: string, activeWindow: Electron.BrowserWindow) {
+	private sendCommand(command: string, activeWindow: Electron.BrowserWindow, data?: string) {
 		activeWindow && activeWindow.webContents.send('fromBgPage', {
 			cmd: command,
-			type: 'event'
+			type: 'event',
+			data: data
 		});
 	}
 	
 	private async handleAPIRequest(url: string, res: http.ServerResponse, activeWindow: Electron.BrowserWindow) {
 		const command = url.split('/api/').slice(1).join('/api/');
+		const partialCommand = command.split('/')[0];
 	
 		if (EXTERNAL_EVENTS.indexOf(command as EXTERNAL_EVENT) > -1) {
 			this.sendCommand(command, activeWindow);
@@ -311,6 +314,8 @@ export class RemoteServer {
 				success: true
 			}));
 			res.end();
+		} else if (ARG_EVENTS.indexOf(partialCommand as ARG_EVENT) > -1) {
+			this.sendCommand(partialCommand, activeWindow, decodeURIComponent(command.split('/').slice(1).join('/')));
 		} else {
 			this.respondError(res, url, '500');
 		}

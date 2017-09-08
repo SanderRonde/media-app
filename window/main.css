@@ -744,3 +744,43 @@ body {
 .suggestionPart {
 	font-weight: bold;
 }
+
+.youtubeAddedVideoContainer {
+    position: absolute;
+    z-index: 1000;
+    right: 25px;
+    bottom: 20px;
+    height: 202px;
+    width: 315px;
+    background-color: #E0F7FA;
+    transition: transform 400ms ease-in;
+    transform: translateX(50vw);
+}
+
+.youtubeAddedVideoImageContainer {
+	padding: 15px 15px 0 15px;
+}
+
+.youtubeAddedVideoImage {
+    height: 160px;
+}
+
+.youtubeAddedVideoTitle {
+    padding: 0 15px;
+    font-weight: bold;
+    text-overflow: ellipsis;
+    height: 21px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.youtubeAddedVideoNextText {
+    font-weight: bold;
+    font-size: 150%;
+    padding-left: 15px;
+    padding-top: 5px;
+}
+
+.youtubeAddedVideoContainer.visible {
+	transform: translateX(0);
+}

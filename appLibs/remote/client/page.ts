@@ -116,7 +116,39 @@ function initOfflineIndicator() {
 	});
 }
 
+function initCasting() {
+	function hideDialog() {
+		document.body.classList.remove('showDialog');
+	}
+
+	let isHidden: boolean = false;
+	document.getElementById('cast').addEventListener('click', () => {
+		isHidden = false;
+		document.body.classList.add('showDialog');
+	});
+	document.getElementById('castHidden').addEventListener('click', () => {
+		isHidden = true;
+		document.body.classList.add('showDialog');
+	});
+
+	document.getElementById('overlay').addEventListener('click', () => {
+		hideDialog();
+	});
+	document.getElementById('cancelButton').addEventListener('click', () => {
+		hideDialog();
+	});
+	document.getElementById('okButton').addEventListener('click', () => {
+		hideDialog();
+		const dialogInput = (document.getElementById('dialogInput') as HTMLInputElement);
+		const url = dialogInput.value;
+		dialogInput.value = '';
+
+		fetch(`/api/${isHidden ? 'hiddenCast' : 'cast'}/${encodeURIComponent(url)}`)
+	});
+}
+
 initWs();
 initRipple();
+initCasting();
 initListeners();
 initOfflineIndicator();

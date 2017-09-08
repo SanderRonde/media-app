@@ -1,4 +1,4 @@
-import { EXTERNAL_EVENT } from '../appLibs/constants/constants'
+import { EXTERNAL_EVENT, ARG_EVENT } from '../appLibs/constants/constants'
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
 import { MappedKeyboardEvent, Helpers, $ } from './helpers'
 import { ipcRenderer, clipboard } from 'electron'
@@ -58,6 +58,7 @@ export interface PassedAlongMessages {
 	}
 	navToVideo: string;
 	youtubeSearchClick: void;
+	onVideoEnded: void;
 
 	onPause: {
 		view: ViewNames;
@@ -221,7 +222,7 @@ export namespace AppWindow {
 		});
 	}
 
-	async function onShortcut(command: keyof MessageReasons | EXTERNAL_EVENT) {
+	async function onShortcut(command: keyof MessageReasons | EXTERNAL_EVENT | ARG_EVENT, data?: string) {
 		const activeViewView = getActiveViewClass().Commands;
 		switch (command) {
 			case 'lowerVolume':
@@ -283,6 +284,8 @@ export namespace AppWindow {
 					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
 						window.videos.selected.goRight();
 					});
+				} else if (activeView === 'youtubesearch') {
+					YoutubeSearch.Queue.skip();
 				}
 				break;
 			case 'toggleVideo':
@@ -291,6 +294,12 @@ export namespace AppWindow {
 				} else if (activeView === 'youtubesearch') {
 					YoutubeSearch.toggleVideoVisibility();
 				}
+				break;
+			case 'cast':
+				YoutubeSearch.Queue.push(data);
+				break;
+			case 'hiddenCast':
+				YoutubeSearch.Queue.push(data, true);
 				break;
 		}
 	}
@@ -444,8 +453,9 @@ export namespace AppWindow {
 			data: MessageReasons[keyof MessageReasons];
 			type: 'response';
 		}|{
-			cmd: keyof MessageReasons | EXTERNAL_EVENT
+			cmd: keyof MessageReasons | EXTERNAL_EVENT | ARG_EVENT
 			type: 'event';
+			data?: string;
 		}) => {
 			if (message.type === 'response') {
 				const identifier = message.identifier;
@@ -456,10 +466,8 @@ export namespace AppWindow {
 					channels.splice(channels.indexOf(val), 1);
 				});
 			} else {
-				onShortcut((message as {
-					cmd: keyof MessageReasons | EXTERNAL_EVENT
-					type: 'event';
-				}).cmd);
+				const { cmd, data } = message;
+				onShortcut(cmd, data);
 			}
 		});
 		ipcRenderer.on('passedAlong', <T extends keyof PassedAlongMessages>(event: Event, message: {
@@ -515,6 +523,9 @@ export namespace AppWindow {
 							data: 'play'
 						});
 					}
+					break;
+				case 'onVideoEnded':
+					YoutubeSearch.Queue.onVideoEnd();
 					break;
 			}
 		});
