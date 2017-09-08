@@ -278,34 +278,31 @@ export namespace YoutubeSearch {
 		}
 
 		function genSuggestionElement(suggestion: string, index: number): HTMLElement {
-			const container = document.createElement('div');
-			container.classList.add('suggestion');
-			container.setAttribute('tabindex', '-1');
+			const currentPartText = suggestion.indexOf(originalInput) === 0 ?
+				originalInput : '';
+			const suggestionPartText = suggestion.indexOf(originalInput) === 0 ?
+				suggestion.slice(originalInput.length) : suggestion;
 
-			const currentPart = document.createElement('span');
-			const suggestionPart = document.createElement('span');
-			suggestionPart.classList.add('suggestionPart');
-			if (suggestion.indexOf(originalInput) === 0) {
-				currentPart.innerText = originalInput;
-				suggestionPart.innerText = suggestion.slice(originalInput.length);
-			} else {
-				currentPart.innerText = '';
-				suggestionPart.innerText = suggestion;
-			}
-			
-			container.appendChild(currentPart);
-			container.appendChild(suggestionPart);
-
-			container.addEventListener('click', () => {
-				updateSelectedSuggestion(index);
-				doSearch(suggestion);
-			});
-			container.addEventListener('keydown', (e) => {
-				if (e.key === ' ') {
-					updateSelectedSuggestion(index);
-					doSearch(suggestion);
+			const container = Helpers.el('div', 'suggestion', [
+				Helpers.el('span', '', currentPartText),
+				Helpers.el('span', 'suggestionPart', suggestionPartText)
+			], {
+				props: {
+					tabindex: '-1'
+				},
+				listeners: {
+					click: () => {
+						updateSelectedSuggestion(index);
+						doSearch(suggestion);		
+					},
+					keydown: (e: KeyboardEvent) => {
+						if (e.key === ' ') {
+							updateSelectedSuggestion(index);
+							doSearch(suggestion);
+						}
+					}
 				}
-			});
+			})
 
 			return container;
 		}
@@ -552,35 +549,21 @@ export namespace YoutubeSearch {
 
 		function genImageElement(thumbnail: string): HTMLElement {
 			if (thumbnail !== null) {
-				const image = document.createElement('img');
-				image.classList.add('youtubeAddedVideoImage')
-				image.src = thumbnail;
-				return image;
+				return Helpers.el('img', 'youtubeAddedVideoImage', [], {
+					props: {
+						src: thumbnail
+					}
+				});
 			} else {
-				const thumbnail = document.createElement('div');
-				thumbnail.classList.add('youtubeAddedVideoHiddenThumbnail');
-				thumbnail.innerText = '?';
-				return thumbnail;
+				return Helpers.el('div', 'youtubeAddedVideoHiddenThumbnail', '?');
 			}
 		}	
 
 		function createAddedVideoElement(title: string, thumbnail: string): HTMLElement {
-			const container = document.createElement('div');
-			container.classList.add('youtubeAddedVideoContainer');
-
-			const imageContainer = document.createElement('div');
-			imageContainer.classList.add('youtubeAddedVideoImageContainer');
-			const image = genImageElement(thumbnail);
-
-			const titleContainer = document.createElement('div');
-			titleContainer.classList.add('youtubeAddedVideoTitle');
-			titleContainer.innerText = title;
-
-			imageContainer.appendChild(image);
-			container.appendChild(imageContainer);
-			container.appendChild(titleContainer);
-
-			return container;
+			return Helpers.el('div', 'youtubeAddedVideoContainer', [
+				Helpers.el('div', 'youtubeAddedVideoImageContainer', genImageElement(thumbnail)),
+				Helpers.el('div', 'youtubeAddedVideoTitle', title)
+			]);
 		}
 
 		async function displayAddedVideo(url: string, hidden: boolean) {

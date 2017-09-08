@@ -40,24 +40,22 @@ async function storeSecrets(secrets: SecretsMap): Promise<void> {
 	});
 }
 
-const el = Helpers.el;
-
 async function askForSecrets<T extends keyof SecretsMap>(key: T): Promise<SecretsMap[T]> {
 	return new Promise<SecretsMap[T]>(async (resolve) => {
-		const promptContainer = el('div', 'promptContainer', [
-			el('div', 'promptTitle', 'Please fill in these values'),
-			el('div', 'promptInputs', [
-				el('div', 'promptAPIKey', [
-					el('div', 'promptAPIKeyText', 'Youtube API Key:'),
-					el('input', 'promptAPIKeyInput', [], {
+		const promptContainer = Helpers.el('div', 'promptContainer', [
+			Helpers.el('div', 'promptTitle', 'Please fill in these values'),
+			Helpers.el('div', 'promptInputs', [
+				Helpers.el('div', 'promptAPIKey', [
+					Helpers.el('div', 'promptAPIKeyText', 'Youtube API Key:'),
+					Helpers.el('input', 'promptAPIKeyInput', [], {
 						props: {
 							placeholder: 'Youtube API Key'
 						}
 					})
 				]),
-				el('div', 'promptFirebaseConfig', [
-					el('div', 'promptFirebaseConfigText', 'Firebase Config:'),
-					el('textarea', 'promptFirebaseConfigInput', [], {
+				Helpers.el('div', 'promptFirebaseConfig', [
+					Helpers.el('div', 'promptFirebaseConfigText', 'Firebase Config:'),
+					Helpers.el('textarea', 'promptFirebaseConfigInput', [], {
 						props: {
 							placeholder: '{ apiKey: "...", ... }',
 							rows: '8'
@@ -65,8 +63,8 @@ async function askForSecrets<T extends keyof SecretsMap>(key: T): Promise<Secret
 					})
 				])
 			]),
-			el('div', 'promptButtons', [
-				el('div', 'promptOkButton', 'OK', {
+			Helpers.el('div', 'promptButtons', [
+				Helpers.el('div', 'promptOkButton', 'OK', {
 					listeners: {
 						'click': async () => {
 							const [ apiKey, firebaseConfig ] = [
