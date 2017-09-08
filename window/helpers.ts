@@ -567,7 +567,7 @@ export namespace Helpers {
 
 				doTempInterval(() => {
 					player.setSizeStyle(false, true);
-				}, 100, 5000);
+				}, 100, 10000);
 			}
 
 			prepareVideo();
