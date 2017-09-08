@@ -16,6 +16,10 @@ export namespace Netflix {
 			});
 		}
 
+		export function loaded() {
+			return videoView !== null;
+		}
+
 		export async function getPlayStatus(): Promise<boolean> {
 			return Helpers.execute(await getView(), () => {
 				if (document.querySelector('.button-nfplayerPause')) {
@@ -156,7 +160,10 @@ export namespace Netflix {
 
 	export async function onClose() {
 		//Go for a semi-clean exit
-		(await Video.getView()).src && (await Video.getView()).canGoBack() && (await Video.getView()).goBack();
+		Video.loaded() && 
+		(await Video.getView()).src && 
+		(await Video.getView()).canGoBack() &&
+		(await Video.getView()).goBack();
 	}
 
 	export function updateStatus() { }
