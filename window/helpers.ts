@@ -803,4 +803,48 @@ export namespace Helpers {
 			});
 		}
 	}
+
+	export function el<T extends keyof HTMLElementTagNameMap>(tagName: T, className: string, 
+		children: string|HTMLElement|(HTMLElement|string)[] = [], options: {
+			props?: {
+				[key: string]: string;
+			};
+			listeners?: {
+				[event: string]: ((e: Event) => void)|((e: Event) => void)[]
+			};
+			init?(): void;
+		} = {}): HTMLElementTagNameMap[T] {
+			const element = document.createElement(tagName);
+			element.classList.add(className);
+
+			let childrenArr: (HTMLElement|string)[] = Array.isArray(children) ?
+				children : [children];
+
+			for (let child of childrenArr) {
+				if (typeof child === 'string') {
+					element.innerText = child;
+				} else {
+					element.appendChild(child);
+				}
+			}
+
+			for (let key in options.props) {
+				element.setAttribute(key, options.props[key]);
+			}
+			for (let event in options.listeners) {
+				const eventListeners = options.listeners[event];
+				const listeners = Array.isArray(eventListeners) ? eventListeners : [eventListeners];
+
+				listeners.forEach((listener) => {
+					element.addEventListener(event, () => {
+						listener.bind(element)();
+					});
+				});
+			}
+			if (options.init) {
+				options.init.bind(element)();
+			}
+
+			return element;
+		}
 }

@@ -1,6 +1,6 @@
 import { Helpers, MappedKeyboardEvent, $ } from './helpers'
 import { YoutubeVideoPlayer } from './youtubeMusic'
-import { googleAPIKey } from '../genericJs/secrets'
+import { getSecret } from '../genericJs/getSecrets'
 import { AppWindow } from './appWindow'
 
 function arr(first: number, last: number): number[] {
@@ -531,9 +531,21 @@ export namespace YoutubeSearch {
 			}[]
 		}
 
+
+		let googleAPIKey: string = null;
+		async function getGoogleAPIKey(): Promise<string> {
+			if (googleAPIKey) {
+				return googleAPIKey;
+			}
+
+			const key = await getSecret('googleAPIKey');
+			googleAPIKey = key;
+			return googleAPIKey;
+		}
+
 		async function getVideoInfo(url: string): Promise<VideoInfo> {
 			const videoId = getVideoId(url);
-			return await (fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${googleAPIKey}&part=snippet,contentDetails,statistics,status`).then((res) => {
+			return await (fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${await getGoogleAPIKey()}&part=snippet,contentDetails,statistics,status`).then((res) => {
 				return res.json();
 			}));
 		}
@@ -739,20 +751,23 @@ export namespace YoutubeSearch {
 	export async function onPaste(data: string) {
 		const reg = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})/;
 		if (reg.exec(data)) {
-			if (AppWindow.getActiveViewName() === 'youtubesearch' && (await Video.getView())) {
-				Video.navTo(data);
-			} else {
-				//Go to that view and focus the video
-				await AppWindow.switchToview('youtubesearch');
-				const interval = window.setInterval(async () => {
-					if (AppWindow.loadedViews.indexOf('youtubesearch') > -1 && 
-						(await Video.getView())) {
-							//It's loaded
-							window.clearInterval(interval);
+			const url = new URL(data);
+			if ((url.hostname === 'youtu.be' || url.hostname === 'www.youtube.com') && url.searchParams.has('v')) {
+				if (AppWindow.getActiveViewName() === 'youtubesearch' && (await Video.getView())) {
+					Video.navTo(data);
+				} else {
+					//Go to that view and focus the video
+					await AppWindow.switchToview('youtubesearch');
+					const interval = window.setInterval(async () => {
+						if (AppWindow.loadedViews.indexOf('youtubesearch') > -1 && 
+							(await Video.getView())) {
+								//It's loaded
+								window.clearInterval(interval);
 
-							Video.navTo(data);
-						}
-				}, 50);
+								Video.navTo(data);
+							}
+					}, 50);
+				}
 			}
 		}			
 	}

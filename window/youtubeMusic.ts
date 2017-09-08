@@ -1,24 +1,8 @@
 import { Helpers, $, MappedKeyboardEvent } from './helpers'
+import { FireBaseConfig, getSecret } from '../genericJs/getSecrets'
 import { AppWindow } from './appWindow'
 import firebase = require('firebase');
-import { shell } from 'electron'
-
-const firebaseConfig = ((require('optional-require') as optionalRequire)(require)<{
-	firebaseConfig: {
-		apiKey: string;
-		authDomain: string;
-		databaseURL: string;
-		projectId: string;
-		storageBucket: string;
-		messagingSenderId: string;	
-	}
-}>('../genericJs/secrets') || {
-	firebaseConfig: null
-}).firebaseConfig;
-if (firebaseConfig === null) {
-	alert('Please export your firebase API config in genericJs/secrets.ts');
-}
-firebase.initializeApp(firebaseConfig);
+import { shell } from 'electron';
 
 export interface YoutubeVideoPlayer extends HTMLElement {
 	getVolume(): number;
@@ -42,7 +26,7 @@ export namespace YoutubeMusic {
 	let view: Electron.WebviewTag = null;
 
 	namespace Visualization {
-	let visualizing = false;
+		let visualizing = false;
 
 		export function isVisualizing() {
 			return visualizing;
@@ -53,7 +37,57 @@ export namespace YoutubeMusic {
 		}
 	}
 
-namespace Content {
+	namespace Firebase {
+		let initialized: boolean = false;
+
+		async function getFirebaseConfig(): Promise<FireBaseConfig> {
+			return await getSecret('firebaseConfig');
+		}
+
+		async function init() {
+			const config = await getFirebaseConfig();
+			firebase.initializeApp(config);
+			initialized = true;
+		}
+
+		export async function get(key: string): Promise<string> {
+			return new Promise<string>(async (resolve) => {
+				if (!initialized) {
+					await init();
+				}
+
+				const db = firebase.database();
+				const ref = db.ref(key);
+				ref.once('value', (snapshot) => {
+					const snapshotVal = snapshot.val();
+					if (snapshotVal && snapshotVal[key] && typeof snapshotVal[key] === 'string') {
+						resolve(snapshotVal[key]);
+					} else {
+						require('electron').remote.dialog.showErrorBox('Error loading firebase value', 
+							'Could not find valid url, quitting');
+						require('electron').remote.app.quit();
+						resolve(null);
+					}
+				});
+			});
+		}
+
+		export async function store(key: string, val: string): Promise<void> {
+			return new Promise<void>(async (resolve) => {
+				if (!initialized) {
+					await init();
+				}
+
+				const db = firebase.database()
+				const ref = db.ref(key);
+				ref.update({
+					[key]: val
+				});
+			});
+		}
+	}
+
+	namespace Content {
 		export function init() {
 			Helpers.hacksecute(view, (REPLACE) => {
 				if ((window as any).executedYTCA) {
@@ -460,16 +494,10 @@ namespace Content {
 		addViewListeners();
 		addListeners();
 
-		const db = firebase.database();
-		const urlRef = db.ref('url');
-		urlRef.once('value', (snapshot) => {
-			const snapshotVal = snapshot.val();
-			if (snapshotVal && snapshotVal.url && typeof snapshotVal.url === 'string') {
-				launch(snapshotVal.url);
-			} else {
-				alert('Could not find valid url');
-			}
-		});
+		const url = await Firebase.get('url');
+		if (url) {
+			launch(url);
+		}
 	}
 
 	export function onClose() {
@@ -532,10 +560,6 @@ namespace Content {
 	}
 
 	export function saveURL(url: string) {
-		const db = firebase.database()
-		const ref = db.ref('url');
-		ref.update({
-			url: url
-		});
+		Firebase.store('url', url);
 	}
 }
