@@ -5,8 +5,10 @@ branches:
   - master
 install:
 - npm install
+- npm install typescript@latest -g
 script:
-- npm pack
+- tsc
+- electron-builder -wl
 notifications:
   email:
     on_success: change
