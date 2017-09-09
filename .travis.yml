@@ -4,7 +4,8 @@ branches:
   only:
   - master
 install:
-- npm install
+- npm install yarn -g
+- yarn install
 - npm install typescript@latest -g
 - ./install-wine.sh
 script:
