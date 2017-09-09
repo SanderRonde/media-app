@@ -3,4 +3,4 @@ cd wine
 sudo apt-get update
 sudo apt-get install build-essential
 ./configure --enable-win64
-./make
+make
