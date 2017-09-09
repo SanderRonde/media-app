@@ -5,6 +5,8 @@ branches:
   - master
 install:
 - npm install
+script:
+- npm pack
 notifications:
   email:
     on_success: change
