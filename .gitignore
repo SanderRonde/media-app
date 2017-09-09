@@ -199,6 +199,6 @@ app/window/**/*.js
 **/*.js
 
 media-app-win32-x64/**
-genericJs/secrets.ts
+app/genericJs/secrets.ts
 
 **/*.map
