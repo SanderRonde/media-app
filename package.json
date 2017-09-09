@@ -2,17 +2,48 @@
   "name": "media-app",
   "version": "2.0.34",
   "description": "Runs Netflix and Youtube as a desktop app",
-  "main": "app.js",
+  "main": "app/app.js",
   "build": {
     "appId": "com.sanderronde.mediaapp",
     "productName": "Media App",
     "publish": {
       "provider": "github",
       "owner": "SanderRonde"
-    }
+    },
+    "directories": {
+      "buildResources": "buildResources"
+    },
+    "mac": {
+      "category": "public.app-category.entertainment",
+      "icon": "buildResources/icon.icns"
+    },
+    "dmg": {
+      "contents": [{
+          "x": 110,
+          "y": 150
+        }, {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "linux": {
+      "category": "Video",
+      "target": [
+        "AppImage",
+        "deb",
+        "tar.gz"
+      ],
+      "icon": "./"
+    },
+    "files": [
+      "app"
+    ]
   },
   "scripts": {
-    "pack": "grunt compile && electron-builder build",
+    "pack": "grunt compile && electron-builder -wl",
     "postinstall": "electron-builder install-app-deps"
   },
   "repository": {
@@ -27,7 +58,10 @@
     "subscriptions",
     "app"
   ],
-  "author": "Sander Ronde <awsdfgvhbjn@gmail.com>",
+  "author": {
+    "name": "Sander Ronde",
+    "email": "awsdfgvhbjn@gmail.com"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/SanderRonde/media-app/issues"
