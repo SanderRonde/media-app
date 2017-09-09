@@ -202,3 +202,5 @@ media-app-win32-x64/**
 app/genericJs/secrets.ts
 
 **/*.map
+
+dist/
