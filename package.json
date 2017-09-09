@@ -5,7 +5,11 @@
   "main": "app.js",
   "build": {
     "appId": "com.sanderronde.mediaapp",
-    "productName": "Media App"
+    "productName": "Media App",
+    "publish": {
+      "provider": "github",
+      "owner": "SanderRonde"
+    }
   },
   "scripts": {
     "test": "grunt test",
