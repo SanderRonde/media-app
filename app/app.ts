@@ -4,6 +4,7 @@ import {
 } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
+import { AppUpdater } from './appLibs/updater/updater'
 import { RemoteServer }  from './appLibs/remote/remote';
 import { AdBlocking } from './appLibs/adblocking/adblocking';
 import { registerShortcuts } from './appLibs/shortcuts/shortcuts';
@@ -74,6 +75,7 @@ const DEBUG = process.argv.filter((arg) => {
 			}
 		});
 		
+		new AppUpdater();
 		activeServer = new RemoteServer(activeWindowContainer);
 		registerShortcuts(activeWindowContainer);
 
