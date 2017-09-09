@@ -36,9 +36,7 @@
   },
   "homepage": "https://github.com/SanderRonde/media-app#readme",
   "dependencies": {
-    "@types/jade": "^0.0.30",
     "abp-filter-parser": "^0.2.0",
-    "electron-builder": "^19.27.7",
     "electron-context-menu": "^0.9.1",
     "electron-widevinecdm": "^3.0.0",
     "firebase": "^4.2.0",
@@ -54,8 +52,10 @@
   },
   "devDependencies": {
     "@types/electron": "^1.6.10",
+    "@types/jade": "^0.0.30",
     "@types/md5": "^2.1.32",
     "electron": "^1.6.11",
+    "electron-builder": "^19.27.7",
     "electron-packager": "^8.2.0",
     "electron-prebuilt": "^1.4.5",
     "grunt": "^1.0.1",
