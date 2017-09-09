@@ -8,9 +8,7 @@ install:
 - yarn install --ignore-engines
 - npm install typescript@latest -g
 script:
-- sh ./install-wine.sh
-- tsc
-- electron-builder -wl
+- sh ./install-wine.sh && tsc && electron-builder -wl
 notifications:
   email:
     on_success: change
