@@ -4,11 +4,14 @@
   "description": "Runs Netflix and Youtube as a desktop app",
   "main": "app.js",
   "build": {
-    "productName": "Media App",
-    "files": "**.*"
+    "appId": "com.sanderronde.mediaapp",
+    "productName": "Media App"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
   },
   "repository": {
     "type": "git",
@@ -31,6 +34,7 @@
   "dependencies": {
     "@types/jade": "^0.0.30",
     "abp-filter-parser": "^0.2.0",
+    "electron-builder": "^19.27.7",
     "electron-context-menu": "^0.9.1",
     "electron-widevinecdm": "^3.0.0",
     "firebase": "^4.2.0",
