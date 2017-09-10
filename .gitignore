@@ -204,3 +204,5 @@ app/genericJs/secrets.ts
 **/*.map
 
 dist/
+
+out/

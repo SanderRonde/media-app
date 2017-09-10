@@ -1,8 +1,8 @@
 {
   "name": "media-app",
   "version": "2.0.34",
-  "description": "Runs Netflix and Youtube as a desktop app",
-  "main": "app/app.js",
+  "description": "Media App",
+  "main": "./out/app.js",
   "build": {
     "appId": "com.sanderronde.mediaapp",
     "productName": "Media App",
@@ -41,11 +41,19 @@
       "icon": "./"
     },
     "files": [
-      "app"
+      "out/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "./**/*",
+      "!./appLibs/**/*",
+      "./appLibs/adblocking/easylist.txt",
+      "./appLibs/remote/client/**.*"
     ]
   },
   "scripts": {
-    "pack": "grunt compile && electron-builder -wl",
+    "pack": "grunt preBuild && electron-builder -wl",
     "postinstall": "electron-builder install-app-deps"
   },
   "repository": {
@@ -72,6 +80,7 @@
   "dependencies": {
     "abp-filter-parser": "^0.2.0",
     "electron-context-menu": "^0.9.1",
+    "electron-updater": "^2.8.9",
     "electron-widevinecdm": "^3.0.0",
     "firebase": "^4.2.0",
     "fs": "0.0.1-security",
