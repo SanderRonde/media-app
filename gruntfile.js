@@ -4,19 +4,22 @@ module.exports = function(grunt) {
 		exec: {
 			tsc: 'tsc -p ./tsconfig.json --watch false'
 		},
-		zip: {
-			'using-cwd': {
-				cwd: './app',
-				src: ['app/**', 'app/**/*.ts'],
-				dest: 'build/MediaApp.zip'
+		copy: {
+			moveApp: {
+				files: [{
+					expand: true,
+					cwd: 'app/',
+					src: ['**/*.*', '!**/*.ts', '!**/*.map'],
+					dest: 'out/'
+				}]
 			}
 		}
 	});
 
 	grunt.loadNpmTasks('grunt-exec');
-	grunt.loadNpmTasks('grunt-zip');
+	grunt.loadNpmTasks('grunt-contrib-copy');
 
-	grunt.registerTask('build', ['zip']);
 	grunt.registerTask('compile', ['exec:tsc']);
-	grunt.registerTask('test', []);
+	grunt.registerTask('move', ['copy:moveApp']);
+	grunt.registerTask('preBuild', ['compile', 'move']);
 }

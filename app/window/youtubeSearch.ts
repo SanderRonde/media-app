@@ -1,6 +1,6 @@
 import { Helpers, MappedKeyboardEvent, $ } from './helpers'
 import { YoutubeVideoPlayer } from './youtubeMusic'
-import { googleAPIKey } from '../genericJs/secrets'
+import { getSecret } from '../genericJs/getSecrets'
 import { AppWindow } from './appWindow'
 
 function arr(first: number, last: number): number[] {
@@ -278,34 +278,31 @@ export namespace YoutubeSearch {
 		}
 
 		function genSuggestionElement(suggestion: string, index: number): HTMLElement {
-			const container = document.createElement('div');
-			container.classList.add('suggestion');
-			container.setAttribute('tabindex', '-1');
+			const currentPartText = suggestion.indexOf(originalInput) === 0 ?
+				originalInput : '';
+			const suggestionPartText = suggestion.indexOf(originalInput) === 0 ?
+				suggestion.slice(originalInput.length) : suggestion;
 
-			const currentPart = document.createElement('span');
-			const suggestionPart = document.createElement('span');
-			suggestionPart.classList.add('suggestionPart');
-			if (suggestion.indexOf(originalInput) === 0) {
-				currentPart.innerText = originalInput;
-				suggestionPart.innerText = suggestion.slice(originalInput.length);
-			} else {
-				currentPart.innerText = '';
-				suggestionPart.innerText = suggestion;
-			}
-			
-			container.appendChild(currentPart);
-			container.appendChild(suggestionPart);
-
-			container.addEventListener('click', () => {
-				updateSelectedSuggestion(index);
-				doSearch(suggestion);
-			});
-			container.addEventListener('keydown', (e) => {
-				if (e.key === ' ') {
-					updateSelectedSuggestion(index);
-					doSearch(suggestion);
+			const container = Helpers.el('div', 'suggestion', [
+				Helpers.el('span', '', currentPartText),
+				Helpers.el('span', 'suggestionPart', suggestionPartText)
+			], {
+				props: {
+					tabindex: '-1'
+				},
+				listeners: {
+					click: () => {
+						updateSelectedSuggestion(index);
+						doSearch(suggestion);		
+					},
+					keydown: (e: KeyboardEvent) => {
+						if (e.key === ' ') {
+							updateSelectedSuggestion(index);
+							doSearch(suggestion);
+						}
+					}
 				}
-			});
+			})
 
 			return container;
 		}
@@ -531,38 +528,52 @@ export namespace YoutubeSearch {
 			}[]
 		}
 
+
+		let googleAPIKey: string = null;
+		async function getGoogleAPIKey(): Promise<string> {
+			if (googleAPIKey) {
+				return googleAPIKey;
+			}
+
+			const key = await getSecret('googleAPIKey');
+			googleAPIKey = key;
+			return googleAPIKey;
+		}
+
 		async function getVideoInfo(url: string): Promise<VideoInfo> {
 			const videoId = getVideoId(url);
-			return await (fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${googleAPIKey}&part=snippet,contentDetails,statistics,status`).then((res) => {
+			return await (fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${await getGoogleAPIKey()}&part=snippet,contentDetails,statistics,status`).then((res) => {
 				return res.json();
 			}));
 		}
 
+		function genImageElement(thumbnail: string): HTMLElement {
+			if (thumbnail !== null) {
+				return Helpers.el('img', 'youtubeAddedVideoImage', [], {
+					props: {
+						src: thumbnail
+					}
+				});
+			} else {
+				return Helpers.el('div', 'youtubeAddedVideoHiddenThumbnail', '?');
+			}
+		}	
+
 		function createAddedVideoElement(title: string, thumbnail: string): HTMLElement {
-			const container = document.createElement('div');
-			container.classList.add('youtubeAddedVideoContainer');
-
-			const imageContainer = document.createElement('div');
-			imageContainer.classList.add('youtubeAddedVideoImageContainer');
-			const image = document.createElement('img');
-			image.classList.add('youtubeAddedVideoImage')
-			image.src = thumbnail;
-
-			const titleContainer = document.createElement('div');
-			titleContainer.classList.add('youtubeAddedVideoTitle');
-			titleContainer.innerText = title;
-
-			imageContainer.appendChild(image);
-			container.appendChild(imageContainer);
-			container.appendChild(titleContainer);
-
-			return container;
+			return Helpers.el('div', 'youtubeAddedVideoContainer', [
+				Helpers.el('div', 'youtubeAddedVideoImageContainer', genImageElement(thumbnail)),
+				Helpers.el('div', 'youtubeAddedVideoTitle', title)
+			]);
 		}
 
-		async function displayAddedVideo(url: string) {
-			const videoInfo = await getVideoInfo(url);
-			const title = videoInfo.items[0].snippet.title;
-			const thumbnail = videoInfo.items[0].snippet.thumbnails.maxres.url;
+		async function displayAddedVideo(url: string, hidden: boolean) {
+			let title = '???';
+			let thumbnail: string = null;
+			if (!hidden) {
+				const videoInfo = await getVideoInfo(url);
+				title = videoInfo.items[0].snippet.title;
+				thumbnail = videoInfo.items[0].snippet.thumbnails.maxres.url;
+			}
 
 			const element = createAddedVideoElement(title, thumbnail);
 			document.body.insertBefore(element, document.body.children[0]);
@@ -594,9 +605,7 @@ export namespace YoutubeSearch {
 				return;
 			}
 
-			if (!hidden) {
-				displayAddedVideo(url);
-			}
+			displayAddedVideo(url, hidden);
 			queue.push(url);
 		}
 
@@ -725,20 +734,23 @@ export namespace YoutubeSearch {
 	export async function onPaste(data: string) {
 		const reg = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})/;
 		if (reg.exec(data)) {
-			if (AppWindow.getActiveViewName() === 'youtubesearch' && (await Video.getView())) {
-				Video.navTo(data);
-			} else {
-				//Go to that view and focus the video
-				await AppWindow.switchToview('youtubesearch');
-				const interval = window.setInterval(async () => {
-					if (AppWindow.loadedViews.indexOf('youtubesearch') > -1 && 
-						(await Video.getView())) {
-							//It's loaded
-							window.clearInterval(interval);
+			const url = new URL(data);
+			if ((url.hostname === 'youtu.be' || url.hostname === 'www.youtube.com') && url.searchParams.has('v')) {
+				if (AppWindow.getActiveViewName() === 'youtubesearch' && (await Video.getView())) {
+					Video.navTo(data);
+				} else {
+					//Go to that view and focus the video
+					await AppWindow.switchToview('youtubesearch');
+					const interval = window.setInterval(async () => {
+						if (AppWindow.loadedViews.indexOf('youtubesearch') > -1 && 
+							(await Video.getView())) {
+								//It's loaded
+								window.clearInterval(interval);
 
-							Video.navTo(data);
-						}
-				}, 50);
+								Video.navTo(data);
+							}
+					}, 50);
+				}
 			}
 		}			
 	}

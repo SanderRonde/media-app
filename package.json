@@ -1,14 +1,60 @@
 {
   "name": "media-app",
   "version": "2.0.34",
-  "description": "Runs Netflix and Youtube as a desktop app",
-  "main": "app.js",
+  "description": "Media App",
+  "main": "./out/app.js",
   "build": {
+    "appId": "com.sanderronde.mediaapp",
     "productName": "Media App",
-    "files": "**.*"
+    "publish": {
+      "provider": "github",
+      "owner": "SanderRonde"
+    },
+    "directories": {
+      "buildResources": "buildResources"
+    },
+    "mac": {
+      "category": "public.app-category.entertainment",
+      "icon": "buildResources/icon.icns"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "linux": {
+      "category": "Video",
+      "target": [
+        "AppImage",
+        "deb",
+        "tar.gz"
+      ],
+      "icon": "./"
+    },
+    "files": [
+      "out/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "./**/*",
+      "!./appLibs/**/*",
+      "./appLibs/adblocking/easylist.txt",
+      "./appLibs/remote/client/**.*"
+    ]
   },
   "scripts": {
-    "test": "grunt test"
+    "pack": "grunt preBuild && electron-builder -wl",
+    "postinstall": "electron-builder install-app-deps"
   },
   "repository": {
     "type": "git",
@@ -22,19 +68,23 @@
     "subscriptions",
     "app"
   ],
-  "author": "Sander Ronde <awsdfgvhbjn@gmail.com>",
+  "author": {
+    "name": "Sander Ronde",
+    "email": "awsdfgvhbjn@gmail.com"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/SanderRonde/media-app/issues"
   },
   "homepage": "https://github.com/SanderRonde/media-app#readme",
   "dependencies": {
-    "@types/jade": "^0.0.30",
     "abp-filter-parser": "^0.2.0",
     "electron-context-menu": "^0.9.1",
+    "electron-updater": "^2.8.9",
     "electron-widevinecdm": "^3.0.0",
     "firebase": "^4.2.0",
     "fs": "0.0.1-security",
+    "grunt-contrib-copy": "^1.0.0",
     "jade": "^1.11.0",
     "md5": "^2.2.1",
     "optional-require": "^1.0.0",
@@ -46,13 +96,14 @@
   },
   "devDependencies": {
     "@types/electron": "^1.6.10",
+    "@types/jade": "^0.0.30",
     "@types/md5": "^2.1.32",
     "electron": "^1.6.11",
+    "electron-builder": "^19.27.7",
     "electron-packager": "^8.2.0",
     "electron-prebuilt": "^1.4.5",
     "grunt": "^1.0.1",
     "grunt-exec": "^3.0.0",
-    "grunt-zip": "^0.17.1",
     "typescript": "2.5.2"
   }
 }

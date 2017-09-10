@@ -784,3 +784,76 @@ body {
 .youtubeAddedVideoContainer.visible {
 	transform: translateX(0);
 }
+
+.youtubeAddedVideoHiddenThumbnail {
+	height: 160px;
+	line-height: 160px;
+	font-size: 100px;
+	text-align: center;
+	background-color: #303030;
+	color: #D8D8D8;
+	width: 284.4px;
+}
+
+.promptContainer {
+    position: absolute;
+    top: calc((100vh - 302px) / 2);
+    left: calc((100vw - 454px) / 2);
+    z-index: 1000000000;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+    padding: 20px 20px 5px 20px;
+    background-color: white;
+    transition: transform 500ms ease-in;
+    transform: translateY(-100vh);
+}
+
+.promptTitle {
+    font-weight: bold;
+    font-size: 150%;
+}
+
+.promptButtons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.promptOkButton {
+    padding: 14px 10px;
+    text-transform: uppercase;
+    position: relative;
+    min-width: 60px;
+    text-align: center;
+    font-size: 120%;
+    color: rgb(38, 153, 244);
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+}
+
+.promptAPIKeyText, .promptFirebaseConfigText {
+    font-weight: 500;
+    font-size: 110%;
+}
+
+.promptInputs > * {
+    margin-top: 10px;
+}
+
+.promptInputs {
+    margin-top: 20px;
+}
+
+.promptAPIKeyInput, .promptFirebaseConfigInput {
+    width: 400px;
+    padding: 5px;
+    resize: none;
+}
+
+.promptContainer.visible {
+    transform: translateY(0);
+}
+
+.promptOkButton:active {
+    font-weight: bold;
+}

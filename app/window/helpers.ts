@@ -170,7 +170,7 @@ export namespace Helpers {
 			const searchPageView = $('#youtubeSearchPageView');
 			searchPageView && searchPageView.remove();
 		}
-		shell.openExternal(`http://www.youtube-mp3.org/#v${url.split('?v=')[1]}`);
+		shell.openExternal(`https://ytmp3.cc/#v${url.split('?v=')[1]}`);
 	}
 
 	const MatchPatterns = class MatchPatterns {
@@ -567,7 +567,7 @@ export namespace Helpers {
 
 				doTempInterval(() => {
 					player.setSizeStyle(false, true);
-				}, 100, 5000);
+				}, 100, 10000);
 			}
 
 			prepareVideo();
@@ -588,6 +588,14 @@ export namespace Helpers {
 		}
 
 		export function handleToggleHiddens(key: string) {
+			window.setTimeout(() => {
+				if (Array.from(document.querySelectorAll('a[is="yt-endpoint"]')).filter((a: HTMLAnchorElement) => {
+					return a.href.indexOf('accounts.google.com') > -1;
+				}).length > 0) {
+					document.body.classList.toggle('showHiddens');
+				}
+			}, 5000);
+
 			document.body.addEventListener('keydown', (e) => {
 				if (e.key === key) {
 					//Hide or show video
@@ -795,4 +803,48 @@ export namespace Helpers {
 			});
 		}
 	}
+
+	export function el<T extends keyof HTMLElementTagNameMap>(tagName: T, className: string, 
+		children: string|HTMLElement|(HTMLElement|string)[] = [], options: {
+			props?: {
+				[key: string]: string;
+			};
+			listeners?: {
+				[event: string]: ((e: Event) => void)|((e: Event) => void)[]
+			};
+			init?(): void;
+		} = {}): HTMLElementTagNameMap[T] {
+			const element = document.createElement(tagName);
+			element.classList.add(className);
+
+			let childrenArr: (HTMLElement|string)[] = Array.isArray(children) ?
+				children : [children];
+
+			for (let child of childrenArr) {
+				if (typeof child === 'string') {
+					element.innerText = child;
+				} else {
+					element.appendChild(child);
+				}
+			}
+
+			for (let key in options.props) {
+				element.setAttribute(key, options.props[key]);
+			}
+			for (let event in options.listeners) {
+				const eventListeners = options.listeners[event];
+				const listeners = Array.isArray(eventListeners) ? eventListeners : [eventListeners];
+
+				listeners.forEach((listener) => {
+					element.addEventListener(event, () => {
+						listener.bind(element)();
+					});
+				});
+			}
+			if (options.init) {
+				options.init.bind(element)();
+			}
+
+			return element;
+		}
 }
