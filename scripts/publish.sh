@@ -1,5 +1,5 @@
 #!/bin/sh
 
-grunt preBuild
+tsc && grunt move
 
 electron-builder -ml -p "onTagOrDraft"
