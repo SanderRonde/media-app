@@ -1,13 +1,5 @@
 #!/bin/sh
 
-node ./scripts/isTag.js
+grunt preBuild
 
-if [ $? -eq 0 ] ; then
-	grunt preBuild
-
-	electron-builder -ml -p "always"
-else
-	grunt preBuild
-
-	electron-builder -ml
-fi
+electron-builder -ml -p "onTagOrDraft"

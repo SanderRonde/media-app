@@ -1,14 +1,3 @@
-cd scripts
-node isTag.js
+grunt preBuild
 
-if errorlevel 0 (
-    cd ..
-    grunt preBuild
-
-    electron-builder -w -p "always"
-) else (
-    cd ..
-    grunt preBuild
-
-    electron-builder -w
-)
+electron-builder -w -p "onTagOrDraft"
