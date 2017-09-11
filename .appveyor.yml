@@ -5,3 +5,7 @@ install:
 
 build_script:
   - ./scripts/publish.bat
+
+environment:
+  GH_TOKEN:
+    secure: vtYG/WSyJs66MQ/2pYeOMrbk1rZk1voVH4hGJJ1HZr0N+23y9RHUJkcsJ1BRnf9+
