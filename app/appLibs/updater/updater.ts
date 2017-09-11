@@ -1,4 +1,4 @@
-import { autoUpdater } from 'electron-updater';
+import { autoUpdater, GithubOptions } from 'electron-updater';
 import { Notification } from 'electron'
 import os = require('os');
 
@@ -19,6 +19,12 @@ export class AppUpdater {
 		if (platform === 'linux') {
 			return;
 		}
+
+		autoUpdater.setFeedURL({
+			provider: 'github',
+			repo: 'media-app',
+			owner: 'SanderRonde'
+		} as GithubOptions)
 	
 		autoUpdater.signals.updateDownloaded((newVersion) => {
 		  new Notification({
