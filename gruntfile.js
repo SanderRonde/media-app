@@ -2,7 +2,7 @@ module.exports = function(grunt) {
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
 		exec: {
-			tsc: 'tsc --project ./tsconfig.json --watch false'
+			tsc: 'tsc -p ./tsconfig.json --watch false'
 		},
 		copy: {
 			moveApp: {
