@@ -1,0 +1,19 @@
+language: node_js
+node_js: node
+branches:
+  only:
+  - master
+install:
+- npm install yarn -g
+- yarn install --ignore-engines
+- npm install typescript@latest electron-builder -g
+os: osx
+script:
+- sh ./scripts/publish.sh
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+env:
+  global:
+    secure: k3lzot/TS6SubnRLMNjJ4ca1dm8vwUXLHmLGP7oGc9bhKxcF2uZNv8BuV2EeX6yNkE3zlzopvo5ulliHzXYoeM6rMmKeQoUmchuvOlxxOv0KYV8NWxGlVtydRl6ZvoKtYGCCIEqsviR/3GRgFNs3WRW9W14pJXHCc4dZ8n0wsxU9FutuPluVVu5z3YKL6ehqU3Oh4LbaMkN3xWjhqLFWNi/2oK+fwoZ1ZXfcVktsO/jp/0AXIkkr0WaJ45TVQSg2MAzlfa6hQGJfDm8INDsxpiJm12w9C8c3YLUJPx2w8aI+t7FJfXlSkanAItHUBFBaXDMeXackHtzgusNI2+cPz5vfTm0AcbAUXNZeURPJKwQwT6ycmgSTeX0sFk47griJZBEi/re75SURb8KsNEfldZxswG6OmA742orAKoj9Fj2edUdLOmYtU/7dvUWWyIFFJzclCxgw8Pm+NRSkwp7Rn22XFNMrTY+U8pCONvO5CDlRknWvLCsHqfqx5EJF+CKxa+IS2yCjwmq6rvbdlV974jmtHFdTPhOIC4RzmolidaAUnGc5VTknrzTshtMPF0Aq4ksfI766BhiTsekoFpxi90Ffkz+VQMOgK9cp9B/nYAd3rop8+KsuJfmOvLpw2SFTZgPtsi5J/Wenu5faQ195646PDGvv2tNESob0eW0fNT0=
