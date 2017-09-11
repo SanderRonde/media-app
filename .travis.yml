@@ -6,7 +6,7 @@ branches:
 install:
 - npm install yarn -g
 - yarn install --ignore-engines
-- npm install typescript@latest electron-builder -g
+- npm install typescript@latest electron-builder grunt -g
 os: osx
 script:
 - sh ./scripts/publish.sh
