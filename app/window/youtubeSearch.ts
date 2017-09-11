@@ -734,7 +734,12 @@ export namespace YoutubeSearch {
 	export async function onPaste(data: string) {
 		const reg = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})/;
 		if (reg.exec(data)) {
-			const url = new URL(data);
+			let url;
+			try {
+				url = new URL(data);
+			} catch (e) {
+				return;
+			}
 			if ((url.hostname === 'youtu.be' || url.hostname === 'www.youtube.com') && url.searchParams.has('v')) {
 				if (AppWindow.getActiveViewName() === 'youtubesearch' && (await Video.getView())) {
 					Video.navTo(data);

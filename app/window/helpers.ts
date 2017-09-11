@@ -1,8 +1,9 @@
 import * as fs from 'fs'
 import * as md5 from 'md5'
 import { shell, ipcRenderer } from 'electron'
-import { YoutubeVideoPlayer } from '../window/youtubeMusic'
 import { ViewNames } from '../window/appWindow'
+import { route } from '../appLibs/routing/routing'
+import { YoutubeVideoPlayer } from '../window/youtubeMusic'
 
 export const EXAMPLE_STYLES = `html, body, a {
 	background-color: white!important;
@@ -281,9 +282,11 @@ export namespace Helpers {
 		}
 		if (config.files) {
 			Promise.all<string>(config.files.map((filepath: string) => {
-				return new Promise<string>((resolve) => {
+				return new Promise<string>(async (resolve) => {
+					filepath = await route(filepath);
 					fs.readFile(filepath, 'utf8', (err, data) => {
 						if (err) {
+							debugger;
 							console.error('Error loading file', filepath, err);
 						} else {
 							resolve(data);

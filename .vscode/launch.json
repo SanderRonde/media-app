@@ -6,7 +6,7 @@
 		  "request": "launch",
 		  "name": "Electron Main",
 		  "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
-			"program": "${workspaceRoot}/app.ts",
+			"program": "${workspaceRoot}/app/app.ts",
 			"sourceMaps": true,
 			"protocol": "legacy",
 			"preLaunchTask": "tsc"

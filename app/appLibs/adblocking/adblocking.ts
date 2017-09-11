@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import { session, dialog } from 'electron'
+import { route } from '../routing/routing';
 import * as filterParser from 'abp-filter-parser'
 
 const FILTER_ALL = {
@@ -78,8 +79,8 @@ export namespace AdBlocking {
 	}
 
 	function init(): Promise<void> {
-		return new Promise<void>((resolve) => {
-			fs.readFile('./appLibs/adblocking/easylist.txt', 'utf8', (err, easylistTxt) => {
+		return new Promise<void>(async (resolve) => {
+			fs.readFile(await route('./appLibs/adblocking/easylist.txt'), 'utf8', (err, easylistTxt) => {
 				if (err) {
 					dialog.showMessageBox({
 						message: 'Failed to find ad blocking list',

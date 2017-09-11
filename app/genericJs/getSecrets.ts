@@ -1,5 +1,6 @@
 const optionalRequire = (require('optional-require') as optionalRequire)(require);
 import { STORED_DATA_FILE } from '../appLibs/constants/constants';
+import { route } from '../appLibs/routing/routing'
 import { Helpers } from '../window/helpers'
 import fs = require('fs');
 
@@ -80,7 +81,6 @@ async function askForSecrets<T extends keyof SecretsMap>(key: T): Promise<Secret
 
 							resolve(secrets[key]);
 
-							await Helpers.wait(200);
 							promptContainer.classList.remove('visible');
 							await Helpers.wait(500);
 
@@ -96,7 +96,7 @@ async function askForSecrets<T extends keyof SecretsMap>(key: T): Promise<Secret
 }
 
 export async function getSecret<T extends keyof SecretsMap>(key: T): Promise<SecretsMap[T]> {
-	const tryRequire = optionalRequire<SecretsMap>('./secrets') || null;
+	const tryRequire = optionalRequire<SecretsMap>(await route('./genericJs/secrets')) || null;
 	if (tryRequire) {
 		return tryRequire[key];
 	} else {
