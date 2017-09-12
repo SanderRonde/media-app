@@ -3,6 +3,9 @@
   "version": "3.0.0",
   "description": "Media App",
   "main": "./out/app.js",
+  "scripts": {
+    "release": "tsc && grunt move && electron-builder"
+  },
   "build": {
     "appId": "com.sanderronde.mediaapp",
     "productName": "Media App",
