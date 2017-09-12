@@ -25,8 +25,8 @@ install:
 - npm install typescript@latest electron-builder grunt -g
 
 script:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then yarn release; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then yarn release -- --mac --win; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tsc && grunt move && electron-builder -p "onTagOrRelease"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tsc && grunt move && electron-builder -p "onTagOrRelease" -mw; fi
 
 branches:
   except:

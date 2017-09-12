@@ -4,7 +4,7 @@ install:
   - npm install typescript@latest electron-builder grunt -g
 
 build_script:
-  - yarn release
+  - tsc && grunt move && electron-builder -p "onTagOrRelease"
 
 environment:
   GH_TOKEN:
