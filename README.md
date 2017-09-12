@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/SanderRonde/media-app.svg?branch=master)](https://travis-ci.org/SanderRonde/media-app)
+
 # Media App
 
 Plays your watch later playlist and keeps your progress.
