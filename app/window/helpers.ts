@@ -281,12 +281,12 @@ export namespace Helpers {
 			}
 		}
 		if (config.files) {
+			console.log('Running files', config.files, 'on url', view.getURL());
 			Promise.all<string>(config.files.map((filepath: string) => {
 				return new Promise<string>(async (resolve) => {
 					filepath = await route(filepath);
 					fs.readFile(filepath, 'utf8', (err, data) => {
 						if (err) {
-							debugger;
 							console.error('Error loading file', filepath, err);
 						} else {
 							resolve(data);
@@ -307,7 +307,7 @@ export namespace Helpers {
 
 	async function runScripts(url: string, view: Electron.WebviewTag, config: ContentScriptDetails) {
 		if (config.run_at === 'document_start') {
-			await Helpers.wait(150);
+			await Helpers.wait(500);
 		}
 		
 		if (url.indexOf('example.com') > -1) {
