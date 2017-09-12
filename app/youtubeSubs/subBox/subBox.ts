@@ -15,6 +15,11 @@ interface HTMLAnchorElement {
 	hasListener?: boolean;
 }
 
+interface YoutubeIconElement extends HTMLElement {
+	iconName_: string;
+	icon: string;
+}
+
 window.videos = null;
 const PODCAST_VIDS = [
 	'No Xcuses',
@@ -419,13 +424,16 @@ class SelectedVideo {
 	}
 }
 
-const toWatchLater: HTMLElement[] = [];
+const toWatchLater: YoutubeIconElement[] = [];
 let isHandlingWatchLater = false;
 function clickWatchLater(deadline: {
 	timeRemaining(): number;
 }) {
 	while (deadline.timeRemaining() > 0 && toWatchLater.length > 0 && toWatchLater[toWatchLater.length - 1]) {
-		toWatchLater.pop().click();
+		const firstButton = toWatchLater.shift();
+		if (firstButton.icon === 'WATCH_LATER') {
+			firstButton.click();
+		}
 	}
 
 	if (toWatchLater.length > 0) {
@@ -437,7 +445,7 @@ function clickWatchLater(deadline: {
 	}
 }
 
-function addVideoToWatchLater(button: HTMLElement) {
+function addVideoToWatchLater(button: YoutubeIconElement) {
 	if (button) {
 		toWatchLater.push(button);
 	}
@@ -613,7 +621,7 @@ class VideoIdentifier {
 			video.isPodcast = true;
 			this._hideVideo(video);
 			video.isHidden = true;
-			addVideoToWatchLater(video.element.querySelector('ytd-thumbnail-overlay-toggle-button-renderer').querySelector('yt-icon') as HTMLElement);
+			addVideoToWatchLater(video.element.querySelector('ytd-thumbnail-overlay-toggle-button-renderer').querySelector('yt-icon') as YoutubeIconElement);
 			return video;
 		}
 		video.isPodcast = false;
