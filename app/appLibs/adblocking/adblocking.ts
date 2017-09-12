@@ -89,7 +89,7 @@ export namespace AdBlocking {
 				} else {
 					filterParser.parse(easylistTxt, rules);
 				}
-				resolve()
+				resolve();
 			});
 		});
 	}
