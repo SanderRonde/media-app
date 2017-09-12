@@ -316,9 +316,14 @@ export namespace AppWindow {
 		$('#spinner').classList.remove('active');
 	}
 
-	function handleKeyboardEvent(event: MappedKeyboardEvent) {
+	async function handleKeyboardEvent(event: MappedKeyboardEvent) {
 		if (event.key === 'Escape') {
-			Exiting.handleEscapePress();
+			const isFullscreen = await sendBackgroundPageMessage('isFullscreen')
+			if (isFullscreen) {
+				sendBackgroundPageMessage('exitFullscreen');
+			} else {
+				Exiting.handleEscapePress();
+			}
 		} else if (event.key === 'F11') {
 			sendBackgroundPageMessage('isFullscreen').then((isFullscreen) => {
 				sendBackgroundPageMessage(isFullscreen ? 'exitFullscreen' : 'enterFullscreen');
@@ -420,7 +425,13 @@ export namespace AppWindow {
 		getActiveViewClass().onFocus();
 	}
 
+	let lastEventTimestamp: number = null;
 	export function onKeyPress(event: MappedKeyboardEvent) {
+		if (lastEventTimestamp && lastEventTimestamp === event.timeStamp) {
+			return;
+		}
+
+		lastEventTimestamp = event.timeStamp;
 		getActiveViewClass().onKeyPress(event);
 	}
 
