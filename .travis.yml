@@ -5,44 +5,37 @@ sudo: false
 
 language: node_js
 node_js: "8"
-branches:
-  only:
-  - master
 
-before_install:
-  - mkdir -p /tmp/git-lfs && curl -L https://github.com/github/git-lfs/releases/download/v2.2.0/git-lfs-$([ "$TRAVIS_OS_NAME" == "linux" ] && echo "linux" || echo "darwin")-amd64-2.2.0.tar.gz | tar -xz -C /tmp/git-lfs --strip-components 1 && /tmp/git-lfs/git-lfs pull
-  - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-* $HOME/.yarn
-  - export PATH="$HOME/.yarn/bin:$PATH"
-install:
-- yarn install --ignore-engines
-- npm install typescript@latest electron-builder grunt -g
-os: 
+os:
   - linux
   - osx
-script:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then yarn release; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then yarn release -- --mac --win; fi
-notifications:
-  email:
-    on_success: change
-    on_failure: change
-env:
-  global:
-    - ELECTRON_CACHE=$HOME/.cache/electron
-    - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
-    secure: k3lzot/TS6SubnRLMNjJ4ca1dm8vwUXLHmLGP7oGc9bhKxcF2uZNv8BuV2EeX6yNkE3zlzopvo5ulliHzXYoeM6rMmKeQoUmchuvOlxxOv0KYV8NWxGlVtydRl6ZvoKtYGCCIEqsviR/3GRgFNs3WRW9W14pJXHCc4dZ8n0wsxU9FutuPluVVu5z3YKL6ehqU3Oh4LbaMkN3xWjhqLFWNi/2oK+fwoZ1ZXfcVktsO/jp/0AXIkkr0WaJ45TVQSg2MAzlfa6hQGJfDm8INDsxpiJm12w9C8c3YLUJPx2w8aI+t7FJfXlSkanAItHUBFBaXDMeXackHtzgusNI2+cPz5vfTm0AcbAUXNZeURPJKwQwT6ycmgSTeX0sFk47griJZBEi/re75SURb8KsNEfldZxswG6OmA742orAKoj9Fj2edUdLOmYtU/7dvUWWyIFFJzclCxgw8Pm+NRSkwp7Rn22XFNMrTY+U8pCONvO5CDlRknWvLCsHqfqx5EJF+CKxa+IS2yCjwmq6rvbdlV974jmtHFdTPhOIC4RzmolidaAUnGc5VTknrzTshtMPF0Aq4ksfI766BhiTsekoFpxi90Ffkz+VQMOgK9cp9B/nYAd3rop8+KsuJfmOvLpw2SFTZgPtsi5J/Wenu5faQ195646PDGvv2tNESob0eW0fNT0=
-
-cache:
-  directories:
-  - node_modules
-  - $HOME/.cache/electron
-  - $HOME/.cache/electron-builder
-  - $HOME/.npm/_prebuilds
 
 addons:
   apt:
     packages:
       - libsecret-1-0
 
-before_cache:
-  - rm -rf $HOME/.cache/electron-builder/wine
+before_install:
+  - mkdir -p /tmp/git-lfs && curl -L https://github.com/github/git-lfs/releases/download/v2.2.0/git-lfs-$([ "$TRAVIS_OS_NAME" == "linux" ] && echo "linux" || echo "darwin")-amd64-2.2.0.tar.gz | tar -xz -C /tmp/git-lfs --strip-components 1 && /tmp/git-lfs/git-lfs pull
+  - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-* $HOME/.yarn
+  - export PATH="$HOME/.yarn/bin:$PATH"
+
+install:
+- yarn install --ignore-engines
+- npm install typescript@latest electron-builder grunt -g
+
+script:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then yarn release; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then yarn release -- --mac --win; fi
+
+branches:
+  except:
+    - "/^v\\d+\\.\\d+\\.\\d+$/"
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+env:
+  global:
+    secure: k3lzot/TS6SubnRLMNjJ4ca1dm8vwUXLHmLGP7oGc9bhKxcF2uZNv8BuV2EeX6yNkE3zlzopvo5ulliHzXYoeM6rMmKeQoUmchuvOlxxOv0KYV8NWxGlVtydRl6ZvoKtYGCCIEqsviR/3GRgFNs3WRW9W14pJXHCc4dZ8n0wsxU9FutuPluVVu5z3YKL6ehqU3Oh4LbaMkN3xWjhqLFWNi/2oK+fwoZ1ZXfcVktsO/jp/0AXIkkr0WaJ45TVQSg2MAzlfa6hQGJfDm8INDsxpiJm12w9C8c3YLUJPx2w8aI+t7FJfXlSkanAItHUBFBaXDMeXackHtzgusNI2+cPz5vfTm0AcbAUXNZeURPJKwQwT6ycmgSTeX0sFk47griJZBEi/re75SURb8KsNEfldZxswG6OmA742orAKoj9Fj2edUdLOmYtU/7dvUWWyIFFJzclCxgw8Pm+NRSkwp7Rn22XFNMrTY+U8pCONvO5CDlRknWvLCsHqfqx5EJF+CKxa+IS2yCjwmq6rvbdlV974jmtHFdTPhOIC4RzmolidaAUnGc5VTknrzTshtMPF0Aq4ksfI766BhiTsekoFpxi90Ffkz+VQMOgK9cp9B/nYAd3rop8+KsuJfmOvLpw2SFTZgPtsi5J/Wenu5faQ195646PDGvv2tNESob0eW0fNT0=
