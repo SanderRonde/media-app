@@ -1,5 +1,6 @@
 import { MessageReasons } from '../../window/appWindow'
 import { globalShortcut } from 'electron'
+import { log } from '../log/log'
 
 type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
@@ -33,6 +34,7 @@ export function registerShortcuts(activeWindowContainer: {
 			const keyCommand = Array.isArray(key) ? key.join('+') : key;
 
 			globalShortcut.register(keyCommand as any, () => {
+				log(`Key ${keyCommand} was pressed, launching command ${command}`);
 				sendMessage(activeWindowContainer.activeWindow, command);
 			});
 		}

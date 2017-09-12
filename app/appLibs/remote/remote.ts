@@ -5,6 +5,7 @@ import {
 	ARG_EVENTS, ARG_EVENT
 } from '../constants/constants'
 
+import { log, error } from '../log/log';
 import ws = require('websocket');
 import urlLib = require('url');
 import http = require('http');
@@ -181,12 +182,12 @@ export class RemoteServer {
 		const port = await this.findUnusedPort(REMOTE_PORT);
 		if (port !== null) {
 			this.httpServer.listen(port, async () => {
-				console.log(`HTTP server listening on ${await this.getIp()}:${port}`)
+				log(`HTTP server listening on ${await this.getIp()}:${port}`)
 			});
 
 			this.wsHandler = new WSHandler(this.httpServer);		
 		} else {
-			console.error('No valid port could be found, not hosting');
+			error('No valid port could be found, not hosting');
 			this.wsHandler = new WSHandler(null);
 		}
 	}
