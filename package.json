@@ -4,7 +4,8 @@
   "description": "Media App",
   "main": "./out/app.js",
   "scripts": {
-    "release": "tsc && grunt move && electron-builder -p \"onTagOrRelease\""
+    "release": "tsc && grunt move && electron-builder -p \"onTagOrRelease\"",
+    "postinstall": "electron-builder install-app-deps && grunt preBuild"
   },
   "build": {
     "appId": "com.sanderronde.mediaapp",
@@ -54,9 +55,6 @@
       "./appLibs/adblocking/easylist.txt",
       "./appLibs/remote/client/**.*"
     ]
-  },
-  "scripts": {
-    "postinstall": "electron-builder install-app-deps && grunt preBuild"
   },
   "repository": {
     "type": "git",
