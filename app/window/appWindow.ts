@@ -469,16 +469,16 @@ export namespace AppWindow {
 			const { type, args } = message;
 			switch (type) {
 				case 'info':
-					console.info('[BGPAGE] - ', ...args);
+					console.info('[BGPAGE] -', ...args);
 					break;
 				case 'log':
-					console.log('[BGPAGE] - ', ...args);
+					console.log('[BGPAGE] -', ...args);
 					break;
 				case 'warn':
-					console.warn('[BGPAGE] - ', ...args);
+					console.warn('[BGPAGE] -', ...args);
 					break;
 				case 'error':
-					console.error('[BGPAGE] - ', ...args);
+					console.error('[BGPAGE] -', ...args);
 					break;
 			}
 		});
