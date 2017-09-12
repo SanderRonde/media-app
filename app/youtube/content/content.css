@@ -39,6 +39,10 @@ video, #player {
 	background-color: white;
 }
 
+video {
+	top: -8px!important;
+}
+
 #player {
 	position: absolute!important;
 }
