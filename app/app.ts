@@ -127,6 +127,9 @@ const DEBUG = process.argv.filter((arg) => {
 	}) => {
 		const { identifier, type, data } = msg;
 		switch (type) {
+			case 'openDevTools':
+				activeWindowContainer.activeWindow.webContents.openDevTools();
+				break;
 			case 'messageServer':
 				activeServer.sendMessage(data as {
 					type: 'statusUpdate';

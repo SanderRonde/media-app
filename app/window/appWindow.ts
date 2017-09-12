@@ -18,11 +18,12 @@ export interface MessageReasons {
 	onRestored: void;
 	onMinimized: void;
 
-	restore: void;
 	exitFullscreen: void;
 	enterFullscreen: void;
+	openDevTools: void;
 	minimize: void;
 	maximize: void;
+	restore: void;
 	close: void;
 
 	magicButton: void;
@@ -330,6 +331,8 @@ export namespace AppWindow {
 			switchToview('youtubesearch');
 		} else if (event.key === 'F4') {
 			switchToview('netflix');
+		} else if (event.key === 'F12') {
+			sendBackgroundPageMessage('openDevTools');
 		}
 	}
 
