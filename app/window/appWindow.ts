@@ -462,6 +462,18 @@ export namespace AppWindow {
 	}
 
 	function listenForMessages() {
+		ipcRenderer.on('log', (event: Event, message: {
+			type: string;
+			args: any[]
+		}) => {
+			const { type, args } = message;
+			switch (type) {
+				case 'log':
+					console.log('[BGPAGE] - ', ...args);
+					break;
+			}
+		});
+
 		ipcRenderer.on('fromBgPage', (event: Event, message: {
 			identifier: string;
 			data: MessageReasons[keyof MessageReasons];
