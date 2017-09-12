@@ -10,7 +10,12 @@ import urlLib = require('url');
 import http = require('http');
 import path = require('path');
 import jade = require('jade');
+import net = require('net');
 import fs = require('fs');
+
+interface NodeError extends Error {
+	code: string;
+}
 
 type WSMessage = {
 	type: 'statusUpdate';
@@ -52,7 +57,11 @@ class WSHandler {
 	private wsServer: ws.server;
 	private connections: ws.WebSocketConnection[] = [];
 
-	constructor(server: http.Server) {
+	constructor(server?: http.Server) {
+		if (!server) {
+			return;
+		}
+
 		this.wsServer = new ws.server({
 			httpServer: server,
 			autoAcceptConnections: false
@@ -123,7 +132,40 @@ export class RemoteServer {
 		}
 	}
 
-	constructor(activeWindowContainer: {
+	private isPortAvailable(port: number): Promise<boolean> {
+		return new Promise<boolean>((resolve) => {
+			const server = net.createServer().once('error', (err: NodeError) => {
+				if (err.code === 'EADDRINUSE') {
+					resolve(false);
+				} else {
+					resolve(true);
+				}
+			}).once('listening', () => {
+				server.once('close', () => {
+					resolve(true);
+				});
+				server.close();
+			}).listen(port);
+		});
+	}
+
+	private async findUnusedPort(base: number): Promise<number> {
+		let currentPort = base;
+
+		while (!await this.isPortAvailable(currentPort)) {
+			if (currentPort === 9999) {
+				currentPort = 0;
+			} else if (currentPort === base - 1) {
+				return null;
+			} else {
+				currentPort++;
+			}
+		}
+
+		return currentPort;
+	}
+
+	private async initServer(activeWindowContainer: {
 		activeWindow: Electron.BrowserWindow
 	}) {
 		this.httpServer = http.createServer(async (req, res) => {
@@ -135,11 +177,24 @@ export class RemoteServer {
 				this.handleFileRequest(url, res);
 			}
 		});
-		this.httpServer.listen(REMOTE_PORT, async () => {
-			console.log(`HTTP server listening on ${await this.getIp()}:${REMOTE_PORT}`)
-		});
 
-		this.wsHandler = new WSHandler(this.httpServer);
+		const port = await this.findUnusedPort(REMOTE_PORT);
+		if (port !== null) {
+			this.httpServer.listen(port, async () => {
+				console.log(`HTTP server listening on ${await this.getIp()}:${port}`)
+			});
+
+			this.wsHandler = new WSHandler(this.httpServer);		
+		} else {
+			console.error('No valid port could be found, not hosting');
+			this.wsHandler = new WSHandler(null);
+		}
+	}
+
+	constructor(activeWindowContainer: {
+		activeWindow: Electron.BrowserWindow
+	}) {
+		this.initServer(activeWindowContainer);
 	}
 
 	private getIp() {
