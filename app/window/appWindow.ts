@@ -1,12 +1,10 @@
 import { EXTERNAL_EVENT, ARG_EVENT } from '../appLibs/constants/constants'
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
 import { MappedKeyboardEvent, Helpers, $ } from './helpers'
-import { route } from '../appLibs/routing/routing'
 import { ipcRenderer, clipboard } from 'electron'
 import { YoutubeSearch } from './youtubeSearch'
 import { YoutubeMusic } from './youtubeMusic'
 import { Netflix } from './netflix'
-import fs = require('fs');
 
 export type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions'|'youtubesearch';
 
