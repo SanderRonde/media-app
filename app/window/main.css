@@ -356,9 +356,10 @@ body {
 }
 
 .toast {
-	position: absolute;
+position: absolute;
 	bottom: -100px;
 	left: 0;
+	z-index: 10000000;
 	background-color: rgb(50, 50, 50);
 	color: rgb(241, 241, 241);
 	font-size: 14px;
