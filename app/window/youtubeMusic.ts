@@ -322,11 +322,7 @@ export namespace YoutubeMusic {
 					findOn1001Tracklists(timestamps.data.name, timestamps.data.url).then((found) => {
 						if (!found) {
 							//Show not found toast
-							const toast = $('#mainToast');
-							toast.classList.add('visible');
-							window.setTimeout(() => {
-								toast.classList.remove('visible');
-							}, 5000);
+							Helpers.showToast('Could not find the current song 😞');
 						}
 					});
 				}
