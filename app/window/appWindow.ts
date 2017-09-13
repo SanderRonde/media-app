@@ -425,14 +425,50 @@ export namespace AppWindow {
 		getActiveViewClass().onFocus();
 	}
 
-	let lastEventTimestamp: number = null;
+	namespace KeyPress {
+		let lastEventData: {
+			time: Date;
+			key: string;
+		} = {
+			time: new Date(),
+			key: null
+		}
+
+		function isSameEvent(): boolean {
+			const time = new Date();
+			if (time.valueOf() - lastEventData.time.valueOf() > 50) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+
+		function registerLastEvent(event: MappedKeyboardEvent) {
+			lastEventData.time = new Date();
+			lastEventData.key = event.key;
+		}
+
+		export function wasPressed(event: MappedKeyboardEvent): boolean {
+			if (isSameEvent() && event.key === lastEventData.key) {
+				return false;
+			} else {
+				registerLastEvent(event);
+				return true;
+			}
+		}
+	}
+
 	export function onKeyPress(event: MappedKeyboardEvent) {
-		if (lastEventTimestamp && lastEventTimestamp === event.timeStamp) {
+		if (KeyPress.wasPressed(event)) {
+			console.log(`Key '${event.key}' was pressed but ignored`);
 			return;
 		}
 
-		lastEventTimestamp = event.timeStamp;
-		getActiveViewClass().onKeyPress(event);
+		if (getActiveViewClass().onKeyPress(event)) {
+			console.log(`Key '${event.key}' was pressed and activated`);
+		} else {
+			console.log(`Key '${event.key}' was pressed but activated no command`);
+		}
 	}
 
 	const channels: {
