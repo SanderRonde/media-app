@@ -5,7 +5,7 @@ import {
 	ARG_EVENTS, ARG_EVENT
 } from '../constants/constants'
 
-import { log, error } from '../log/log';
+import { log, error, toast } from '../log/log';
 import ws = require('websocket');
 import urlLib = require('url');
 import http = require('http');
@@ -182,6 +182,9 @@ export class RemoteServer {
 		const port = await this.findUnusedPort(REMOTE_PORT);
 		if (port !== null) {
 			this.httpServer.listen(port, async () => {
+				if (port !== REMOTE_PORT) {
+					toast(`Hosting server on ${await this.getIp()}:${port} instead`)
+				}
 				log(`HTTP server listening on ${await this.getIp()}:${port}`)
 			});
 
