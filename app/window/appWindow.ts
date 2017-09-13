@@ -500,7 +500,7 @@ export namespace AppWindow {
 	function listenForMessages() {
 		ipcRenderer.on('log', (event: Event, message: {
 			type: string;
-			args: any[]
+			args: any[]|string
 		}) => {
 			const { type, args } = message;
 			switch (type) {
@@ -515,6 +515,9 @@ export namespace AppWindow {
 					break;
 				case 'error':
 					console.error('[BGPAGE] -', ...args);
+					break;
+				case 'toast':
+					Helpers.showToast(args as string);
 					break;
 			}
 		});

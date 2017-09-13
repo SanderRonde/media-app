@@ -36,3 +36,11 @@ export function error(...args: any[]) {
 		args: args
 	});
 }
+
+export function toast(message: string) {
+	const win = getWindow();
+	win && win.webContents.send('log', {
+		type: 'toast',
+		args: message
+	});
+}

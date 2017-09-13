@@ -850,4 +850,14 @@ export namespace Helpers {
 
 			return element;
 		}
+
+	export async function showToast(message: string) {
+		const toast = $('#mainToast');
+		const content = toast.querySelector('#toastContent') as HTMLElement;
+		content.innerText = message;
+
+		toast.classList.add('visible');
+		await wait(5000);
+		toast.classList.remove('visible');
+	}
 }
