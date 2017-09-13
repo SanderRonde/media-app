@@ -439,6 +439,10 @@ position: absolute;
 	justify-content: center;
 }
 
+#spinnerHorizontalCenterer {
+	height: 100vh;
+}
+
 #netflixFullPageView {
 	position: absolute;
 	top: 0;
@@ -857,4 +861,17 @@ position: absolute;
 
 .promptOkButton:active {
     font-weight: bold;
+}
+
+.hideTagline #loadingPageBottomText {
+	display: none;
+}
+
+#loadingPageBottomText {
+	display: flex;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 200%;
+	margin-top: 20px;
+	user-select: none;
 }

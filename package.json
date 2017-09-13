@@ -51,6 +51,7 @@
     ],
     "asarUnpack": [
       "./**/*",
+      "./package.json",
       "!./appLibs/**/*",
       "./appLibs/adblocking/easylist.txt",
       "./appLibs/remote/client/**.*"

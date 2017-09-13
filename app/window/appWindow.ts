@@ -1,10 +1,12 @@
 import { EXTERNAL_EVENT, ARG_EVENT } from '../appLibs/constants/constants'
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
 import { MappedKeyboardEvent, Helpers, $ } from './helpers'
+import { route } from '../appLibs/routing/routing'
 import { ipcRenderer, clipboard } from 'electron'
 import { YoutubeSearch } from './youtubeSearch'
 import { YoutubeMusic } from './youtubeMusic'
 import { Netflix } from './netflix'
+import fs = require('fs');
 
 export type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions'|'youtubesearch';
 
@@ -311,9 +313,15 @@ export namespace AppWindow {
 		$('#spinnerCont').classList.remove('hidden');
 	}
 	
-	function hideSpinner() {
+	async function hideSpinner() {
 		$('#spinnerCont').classList.add('hidden');
 		$('#spinner').classList.remove('active');
+		await Helpers.wait(500);
+		hideTagline();		
+	}
+
+	function hideTagline() {
+		$('#spinnerCont').classList.add('hideTagline');
 	}
 
 	async function handleKeyboardEvent(event: MappedKeyboardEvent) {
@@ -392,12 +400,18 @@ export namespace AppWindow {
 		}
 	}
 
+	function initTagline() {
+		const versionNumber = require('electron').remote.app.getVersion();
+		$('#versionNumber').innerText = versionNumber;
+	}
+
 	export async function init(startView: ViewNames, isDebug: boolean) {
 		debug = isDebug;
 
 		activeView = startView;
 		$('#views').classList.add(startView);
 
+		initTagline();
 		listenForMessages();
 		prepareEventListeners();
 		setupListeners();
