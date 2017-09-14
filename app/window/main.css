@@ -874,4 +874,5 @@ position: absolute;
     font-size: 200%;
 	margin-top: 20px;
 	user-select: none;
+	cursor: default;
 }
