@@ -156,16 +156,14 @@ export namespace YoutubeSearch {
 							});
 						}
 
-						(async () => {
-							const player: YoutubeVideoPlayer = await getPlayer();
-
+						getPlayer().then((player: YoutubeVideoPlayer) => {
 							REPLACE.playPauseListeners();
 							REPLACE.volumeManager(player);
 							REPLACE.initialSizing(player, 'youtubesearch');
 							REPLACE.handleResize(player);
 							REPLACE.handleToggleHiddens('k');
 							REPLACE.detectOnEnd();
-						})();
+						});
 					}, {
 						volumeManager: Helpers.YoutubeVideoFunctions.volumeManager,
 						playPauseListeners: Helpers.YoutubeVideoFunctions.playPauseListeners,
