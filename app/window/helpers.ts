@@ -818,7 +818,9 @@ export namespace Helpers {
 			init?(): void;
 		} = {}): HTMLElementTagNameMap[T] {
 			const element = document.createElement(tagName);
-			element.classList.add(className);
+			if (className && className.length > 0) {
+				element.classList.add(className);
+			}
 
 			let childrenArr: (HTMLElement|string)[] = Array.isArray(children) ?
 				children : [children];
