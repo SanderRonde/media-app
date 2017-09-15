@@ -92,11 +92,13 @@ export namespace YoutubeSearch {
 		let videoPromise: Promise<Electron.WebviewTag> = null;
 
 		export async function getView(): Promise<Electron.WebviewTag> {
-			return new Promise<Electron.WebviewTag>((resolve) => {
+			return new Promise<Electron.WebviewTag>(async (resolve) => {
 				if (videoView) {
 					resolve(videoView);
-				} else {
+				} else if (videoPromise) {
 					videoPromise.then(resolve);
+				} else {
+					resolve(await setup());
 				}
 			});
 		}
@@ -107,7 +109,11 @@ export namespace YoutubeSearch {
 			});
 		}
 
-		export async function setup() {
+		export async function setup(): Promise<Electron.WebviewTag> {
+			if (videoPromise || videoView) {
+				return await getView()
+			}
+
 			videoPromise = Helpers.createWebview({
 				id: 'youtubeSearchVideoView',
 				partition: 'youtubeSearch',
@@ -136,7 +142,8 @@ export namespace YoutubeSearch {
 					run_at: 'document_start'
 				}]);
 
-				videoView.addEventListener('did-finish-load', () => {
+				videoView.addEventListener('did-finish-load', async () => {
+					await Helpers.wait(500);
 					Helpers.hacksecute(videoView, (REPLACE) => {
 						function getPlayer() {
 							return new Promise<YoutubeVideoPlayer>((resolve) => {
@@ -169,6 +176,8 @@ export namespace YoutubeSearch {
 					});
 				});
 			}, 10);
+
+			return videoView;
 		}
 
 		export function navTo(url: string) {
