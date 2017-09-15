@@ -67,7 +67,7 @@ function mapKeyEvent(e: KeyboardEvent): KeyboardEvent & {
 }
 
 document.body.addEventListener('keydown', (e) => {
-	if (e.srcElement.tagName !== 'INPUT') {
+	if (e.srcElement.tagName !== 'INPUT' && location.href.indexOf('accounts.google') === -1) {
 		ipcRenderer.send('toBgPage', {
 			type: 'passAlong',
 			data: {
@@ -79,7 +79,7 @@ document.body.addEventListener('keydown', (e) => {
 });
 
 document.body.addEventListener('paste', (e) => {
-	if (e.srcElement.tagName !== 'INPUT') {
+	if (e.srcElement.tagName !== 'INPUT' && location.href.indexOf('accounts.google') === -1) {
 		ipcRenderer.send('toBgPage', {
 			type: 'passAlong',
 			data: {
