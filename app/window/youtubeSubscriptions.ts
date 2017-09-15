@@ -124,7 +124,6 @@ export namespace YoutubeSubscriptions {
 				}]);
 
 				videoView.addEventListener('did-finish-load', async () => {
-					await Helpers.wait(500);
 					window.setTimeout(() => {
 						Helpers.hacksecute(videoView, (REPLACE) => {
 							const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;

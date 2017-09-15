@@ -143,7 +143,6 @@ export namespace YoutubeSearch {
 				}]);
 
 				videoView.addEventListener('did-finish-load', async () => {
-					await Helpers.wait(500);
 					Helpers.hacksecute(videoView, (REPLACE) => {
 						function getPlayer() {
 							return new Promise<YoutubeVideoPlayer>((resolve) => {

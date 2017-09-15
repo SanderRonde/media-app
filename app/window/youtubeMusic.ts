@@ -89,7 +89,6 @@ export namespace YoutubeMusic {
 
 	namespace Content {
 		export async function init() {
-			await Helpers.wait(500);
 			Helpers.hacksecute(view, (REPLACE) => {
 				if ((window as any).executedYTCA) {
 					return;
