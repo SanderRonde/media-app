@@ -1,6 +1,6 @@
 import { Helpers, $, MappedKeyboardEvent } from './helpers'
 import { YoutubeVideoPlayer } from './youtubeMusic'
-import { AppWindow } from './appWindow'
+import { AppWindow, ViewNames } from './appWindow'
 
 export namespace YoutubeSubscriptions {
 	export namespace Commands {
@@ -187,6 +187,18 @@ export namespace YoutubeSubscriptions {
 						files: ['youtubeSubs/subBox/subBox.css']
 					},
 					run_at: 'document_start'
+				}, {
+					name: 'googleAccJs',
+					matches: [
+						'*://accounts.google.com/*',
+						'*://www.accounts.google.com/*'
+					],
+					js: {
+						code: Helpers.inlineFn(() => {
+							localStorage.setItem('loaded', 'youtubeSubscriptions' as ViewNames);
+						})
+					},
+					run_at: 'document_end'
 				}]);
 			}, 10);
 		}

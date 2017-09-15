@@ -385,6 +385,10 @@ export namespace Helpers {
 		});
 	}
 
+	export function inlineFn(fn: () => void): string {
+		return `(${fn.toString()})()`;
+	}
+
 	export function createWebview(settings: {
 		id: string;
 		partition: string;
