@@ -78,6 +78,10 @@ export namespace YoutubeMusic {
 					await init();
 				}
 
+				if (AppWindow.isDebug()) {
+					return;
+				}
+
 				const db = firebase.database()
 				const ref = db.ref(key);
 				ref.update({
