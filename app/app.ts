@@ -1,9 +1,11 @@
 ///<reference path="window/main.ts"/>
 import {
-	app, BrowserWindow, ipcMain, dialog
+	app, BrowserWindow, ipcMain, dialog, Tray, Menu
 } from 'electron';
-import * as url from 'url';
-import * as path from 'path';
+import fs = require('fs');
+import url = require('url');
+import path = require('path');
+import AutoLaunch = require('auto-launch');
 import { handleUpdates } from './appLibs/updater/updater'
 import { RemoteServer }  from './appLibs/remote/remote';
 import { AdBlocking } from './appLibs/adblocking/adblocking';
@@ -15,8 +17,100 @@ interface ActiveWindowContainer {
 }
 
 namespace MusicApp {
-	const activeWindowContainer: ActiveWindowContainer = {
-		activeWindow: null
+	namespace Refs {
+		export const activeWindowContainer: ActiveWindowContainer = {
+			activeWindow: null
+		}
+		export let tray: Electron.Tray = null;
+	}
+
+	async function launch () {		
+		const DEBUG = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length;
+
+		if (Refs.activeWindowContainer.activeWindow) {
+			Refs.activeWindowContainer.activeWindow.show();
+			return;
+		}
+
+		Refs.activeWindowContainer.activeWindow = new BrowserWindow({
+			width: 1024,
+			height: 740,
+			icon: path.join(__dirname, 'icons/32.png'),
+			frame: false,
+			titleBarStyle: 'hidden',
+			title: 'Media App',
+			webPreferences: {
+				nodeIntegration: true,
+				plugins: true
+			}
+		});
+
+		Refs.activeWindowContainer.activeWindow.loadURL(url.format({
+			pathname: path.join(__dirname, 'window/main.html'),
+			protocol: 'file:',
+			slashes: true,
+			hash: DEBUG ? 'DEBUG' : ''
+		}));
+
+		Refs.activeWindowContainer.activeWindow.on('closed', () => {
+			Refs.activeWindowContainer.activeWindow = null;
+		});
+
+		if (DEBUG) {
+			Refs.activeWindowContainer.activeWindow.webContents.openDevTools();
+		}
+	}
+
+	namespace SystemTray {
+		export async function init() {
+			let imageLocation = path.join(__dirname, 'icons/32.png');
+			if (process.platform === 'win32') {
+				imageLocation = path.join(__dirname, 'icons/icon.ico');
+			}
+
+			const tray = Refs.tray = new Tray(imageLocation);
+			const contextMenu = Menu.buildFromTemplate([
+				{ 
+					label: 'launch', 
+					type: 'normal',
+					accelerator: 'Shift+Alt+L',
+					click: launch
+				}, { 
+					label: 'separator', 
+					type: 'separator' 
+				}, { 
+					label: 'toggleAutoBoot', 
+					type: 'checkbox', 
+					checked: await Settings.get('launchOnBoot'),
+					click: async () => {
+						const wasEnabled = await Settings.get('launchOnBoot');
+						AutoLauncher.set(!wasEnabled);
+						Settings.set('launchOnBoot', !wasEnabled);
+
+						contextMenu.items[2].checked = !wasEnabled;
+						tray.setContextMenu(contextMenu);
+					}
+				}, { 
+					label: 'separator', 
+					type: 'separator' 
+				}, { 
+					label: 'quit', 
+					type: 'normal',
+					click: () => {
+						Refs.activeWindowContainer.activeWindow.destroy();
+						app.quit();
+					}
+				}
+			]);
+
+			tray.setTitle('Media App');
+			tray.setToolTip('Media App');
+			tray.setContextMenu(contextMenu);
+
+			tray.on('click', () => {
+				launch();
+			});
+		}
 	}
 
 	namespace Setup {
@@ -57,8 +151,8 @@ namespace MusicApp {
 
 		namespace Messaging {
 			function respondToMessage<T extends keyof MessageReasons>(identifier: string, response: MessageReasons[T]) {
-				activeWindowContainer.activeWindow && 
-				activeWindowContainer.activeWindow.webContents.send('fromBgPage', {
+				Refs.activeWindowContainer.activeWindow && 
+				Refs.activeWindowContainer.activeWindow.webContents.send('fromBgPage', {
 					identifier: identifier,
 					data: response,
 					type: 'response'
@@ -83,7 +177,7 @@ namespace MusicApp {
 					const { identifier, type, data } = msg;
 					switch (type) {
 						case 'openDevTools':
-							activeWindowContainer.activeWindow.webContents.openDevTools();
+						Refs.activeWindowContainer.activeWindow.webContents.openDevTools();
 							break;
 						case 'messageServer':
 							activeServer.sendMessage(data as {
@@ -101,74 +195,74 @@ namespace MusicApp {
 							break;
 						case 'isMinimized':
 							respondToMessage(identifier, 
-								activeWindowContainer.activeWindow && 
-								activeWindowContainer.activeWindow.isMinimized());
+								Refs.activeWindowContainer.activeWindow && 
+								Refs.activeWindowContainer.activeWindow.isMinimized());
 							break;
 						case 'onFullscreened':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.addListener('enter-full-screen', () => {
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.addListener('enter-full-screen', () => {
 								respondToMessage(identifier, null);
 							});
 							break;
 						case 'onMaximized':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.addListener('maximize', () => {
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.addListener('maximize', () => {
 								respondToMessage(identifier, null);
 							});
 							break;
 						case 'onMinimized':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.addListener('minimize', () => {
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.addListener('minimize', () => {
 								respondToMessage(identifier, null);
 							});
 							break;
 						case 'onRestored':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.addListener('restore', () => {
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.addListener('restore', () => {
 								respondToMessage(identifier, null);
 							});
 							break;
 						case 'isMaximized':
 							respondToMessage(identifier,
-								activeWindowContainer.activeWindow && 
-								activeWindowContainer.activeWindow.isMaximized());
+								Refs.activeWindowContainer.activeWindow && 
+								Refs.activeWindowContainer.activeWindow.isMaximized());
 							break;
 						case 'isFullscreen':
 							respondToMessage(identifier,
-								activeWindowContainer.activeWindow && 
-								activeWindowContainer.activeWindow.isFullScreen());
+								Refs.activeWindowContainer.activeWindow && 
+								Refs.activeWindowContainer.activeWindow.isFullScreen());
 							break;
 						case 'restore':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.restore();
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.restore();
 							break;
 						case 'enterFullscreen':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.setFullScreen(true);
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.setFullScreen(true);
 							break;
 						case 'exitFullscreen':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.setFullScreen(false);
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.setFullScreen(false);
 							break;
 						case 'minimize':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.minimize();
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.minimize();
 							break;
 						case 'maximize':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.maximize();
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.maximize();
 							break;
 						case 'close':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.close();
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.close();
 							app.quit();
 							break;
 						case 'quit':
 							app.quit();
 							break;
 						case 'passAlong':
-							activeWindowContainer.activeWindow && 
-							activeWindowContainer.activeWindow.webContents.send('passedAlong', data);
+							Refs.activeWindowContainer.activeWindow && 
+							Refs.activeWindowContainer.activeWindow.webContents.send('passedAlong', data);
 							break;
 						case 'playStatus':
 							const isPlaying = data === 'play';
@@ -191,48 +285,145 @@ namespace MusicApp {
 			Messaging.setupListeners();
 			AdBlocking.blockAds();
 			handleUpdates();
-			activeServer = new RemoteServer(activeWindowContainer);
-			registerShortcuts(activeWindowContainer);
+			activeServer = new RemoteServer(Refs.activeWindowContainer);
+			registerShortcuts(Refs.activeWindowContainer);
 			await WideVine.load();
 		}
 	}
 
-	async function launch () {		
-		const DEBUG = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length;
+	namespace Settings {
+		let loaded: boolean = false;
+		let loadingPromise: Promise<void> = null;
+		const settingsPath = path.join(app.getPath('appData'), 'settings.json');
+		let settings: Settings = null;
 
-		activeWindowContainer.activeWindow = new BrowserWindow({
-			width: 1024,
-			height: 740,
-			icon: path.join(__dirname, 'icons/32.png'),
-			frame: false,
-			titleBarStyle: 'hidden',
-			title: 'Media App',
-			webPreferences: {
-				nodeIntegration: true,
-				plugins: true
+		const settingTypes: {
+			[P in keyof Settings.Settings]: "string" | "number" | "boolean" | "symbol" | "undefined" | "object" | "function";
+		} = {
+			launchOnBoot: 'boolean'
+		}
+
+		export interface Settings {
+			launchOnBoot: boolean;
+		}
+
+		const defaultSettings: Settings.Settings = {
+			launchOnBoot: true
+		}
+
+		async function assertLoaded(): Promise<void> {
+			if (loaded) {
+				return null;
+			} else {
+				return await loadingPromise;
 			}
-		});
+		}
 
-		activeWindowContainer.activeWindow.loadURL(url.format({
-			pathname: path.join(__dirname, 'window/main.html'),
-			protocol: 'file:',
-			slashes: true,
-			hash: DEBUG ? 'DEBUG' : ''
-		}));
+		function uploadSettings(settings: Settings.Settings): Promise<boolean> {
+			return new Promise<boolean>((resolve) => {
+				fs.writeFile(settingsPath, JSON.stringify(settings), (err) => {
+					if (err) {
+						resolve(false);
+					} else {
+						resolve(true);
+					}
+				});
+			});
+		}
 
-		activeWindowContainer.activeWindow.on('closed', () => {
-			activeWindowContainer.activeWindow = null;
-		});
+		function readSettings(): Promise<Settings> {
+			return new Promise<Settings>((resolve) => {
+				fs.readFile(settingsPath, 'utf8', async (err, data) => {
+					if (err) {
+						//Something went wrong, probably doesn't exist or something, write default
+						await uploadSettings(defaultSettings);
+						resolve(JSON.parse(JSON.stringify(defaultSettings)));
+					} else {
+						try {
+							resolve(JSON.parse(data));
+						} catch(e) {
+							//Corrupted, write default
+							await uploadSettings(defaultSettings);
+							resolve(JSON.parse(JSON.stringify(defaultSettings)));
+						}
+					}
+				});
+			});
+		}
 
-		if (DEBUG) {
-			activeWindowContainer.activeWindow.webContents.openDevTools();
+		export function init() {
+			loadingPromise = new Promise((resolve) => {
+				fs.stat(settingsPath, async (err, stats) => {
+					if (err) {
+						//Doesn't exist, make it
+						await uploadSettings(defaultSettings);
+						settings = JSON.parse(JSON.stringify(defaultSettings));
+					} else {
+						settings = await readSettings();
+					}
+				});
+			});
+			return loadingPromise;
+		}
+
+		async function assertType<K extends keyof Settings.Settings>(key: K, value: any): Promise<Settings.Settings[K]> {
+			if (typeof value !== settingTypes[key]) {
+				//Set that value back to the default value as some corruption has happened
+				settings[key] = JSON.parse(JSON.stringify(defaultSettings))[key];
+				await uploadSettings(settings);
+				return settings[key];
+			}
+			return value;
+		}
+
+		export async function get<K extends keyof Settings.Settings>(key: K): Promise<Settings.Settings[K]> {
+			await assertLoaded();
+
+			return await assertType(key, settings[key]);
+		}
+
+		export async function set<K extends keyof Settings.Settings>(key: K, val: Settings.Settings[K]) {
+			await assertLoaded();
+
+			settings[key] = val;
+			await uploadSettings(settings);
+		}
+	}
+
+	namespace AutoLauncher {
+		let autoLauncher: AutoLaunch = null;
+
+		export async function init() {
+			autoLauncher = new AutoLaunch({
+				name: 'MediaApp'
+			});
+
+			const shouldBeEnabled = await Settings.get('launchOnBoot');
+			const isEnabled = await autoLauncher.isEnabled();
+			if (shouldBeEnabled !== isEnabled) {
+				if (shouldBeEnabled) {
+					await autoLauncher.enable();
+				} else {
+					await autoLauncher.disable();
+				}
+			}
+		}
+
+		export async function set(enabled: boolean): Promise<void> {
+			if (enabled) {
+				autoLauncher.enable();
+			} else {
+				autoLauncher.disable();
+			}
 		}
 	}
 
 	export async function init() {
 		app.on('ready', async () => {
 			await Setup.init();
-			launch();
+			Settings.init();
+			await AutoLauncher.init();
+			SystemTray.init();
 		});
 	}
 }
