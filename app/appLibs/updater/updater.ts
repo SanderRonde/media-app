@@ -27,8 +27,8 @@ export function handleUpdates() {
 
 	autoUpdater.signals.updateDownloaded((newVersion) => {
 		new Notification({
-		title: "A new update is ready to install",
-		body: `Version ${newVersion.version} is downloaded and will be automatically installed on Quit`
+			title: "A new update is ready to install",
+			body: `Version ${newVersion.version} is downloaded and will be automatically installed on Quit`
 		}).show()
 	})
 	autoUpdater.checkForUpdates()
