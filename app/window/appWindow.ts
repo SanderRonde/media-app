@@ -35,6 +35,7 @@ export interface MessageReasons {
 	play: void;
 
 	quit: void;
+	launch: void;
 
 	messageServer: void;
 	playStatus: void;

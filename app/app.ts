@@ -9,7 +9,7 @@ import AutoLaunch = require('auto-launch');
 import { handleUpdates } from './appLibs/updater/updater'
 import { RemoteServer }  from './appLibs/remote/remote';
 import { AdBlocking } from './appLibs/adblocking/adblocking';
-import { registerShortcuts } from './appLibs/shortcuts/shortcuts';
+import { Shortcuts } from './appLibs/shortcuts/shortcuts';
 import { MessageReasons, PassedAlongMessages } from './window/appWindow';
 
 interface ActiveWindowContainer {
@@ -286,7 +286,7 @@ namespace MusicApp {
 			AdBlocking.blockAds();
 			handleUpdates();
 			activeServer = new RemoteServer(Refs.activeWindowContainer);
-			registerShortcuts(Refs.activeWindowContainer);
+			Shortcuts.init(Refs.activeWindowContainer, launch);
 			await WideVine.load();
 		}
 	}
