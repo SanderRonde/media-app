@@ -12,27 +12,21 @@ import { AdBlocking } from './appLibs/adblocking/adblocking';
 import { Shortcuts } from './appLibs/shortcuts/shortcuts';
 import { MessageReasons, PassedAlongMessages } from './window/appWindow';
 
-interface ActiveWindowContainer {
-	activeWindow: Electron.BrowserWindow;
-}
-
 namespace MusicApp {
 	namespace Refs {
-		export const activeWindowContainer: ActiveWindowContainer = {
-			activeWindow: null
-		}
+		export let activeWindow: Electron.BrowserWindow = null;
 		export let tray: Electron.Tray = null;
 	}
 
 	async function launch () {		
 		const DEBUG = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length;
 
-		if (Refs.activeWindowContainer.activeWindow) {
-			Refs.activeWindowContainer.activeWindow.show();
+		if (Refs.activeWindow) {
+			Refs.activeWindow.show();
 			return;
 		}
 
-		Refs.activeWindowContainer.activeWindow = new BrowserWindow({
+		Refs.activeWindow = new BrowserWindow({
 			width: 1024,
 			height: 740,
 			icon: path.join(__dirname, 'icons/32.png'),
@@ -45,19 +39,19 @@ namespace MusicApp {
 			}
 		});
 
-		Refs.activeWindowContainer.activeWindow.loadURL(url.format({
+		Refs.activeWindow.loadURL(url.format({
 			pathname: path.join(__dirname, 'window/main.html'),
 			protocol: 'file:',
 			slashes: true,
 			hash: DEBUG ? 'DEBUG' : ''
 		}));
 
-		Refs.activeWindowContainer.activeWindow.on('closed', () => {
-			Refs.activeWindowContainer.activeWindow = null;
+		Refs.activeWindow.on('closed', () => {
+			Refs.activeWindow = null;
 		});
 
 		if (DEBUG) {
-			Refs.activeWindowContainer.activeWindow.webContents.openDevTools();
+			Refs.activeWindow.webContents.openDevTools();
 		}
 	}
 
@@ -97,7 +91,7 @@ namespace MusicApp {
 					label: 'quit', 
 					type: 'normal',
 					click: () => {
-						Refs.activeWindowContainer.activeWindow.destroy();
+						Refs.activeWindow.destroy();
 						app.quit();
 					}
 				}
@@ -151,8 +145,8 @@ namespace MusicApp {
 
 		namespace Messaging {
 			function respondToMessage<T extends keyof MessageReasons>(identifier: string, response: MessageReasons[T]) {
-				Refs.activeWindowContainer.activeWindow && 
-				Refs.activeWindowContainer.activeWindow.webContents.send('fromBgPage', {
+				Refs.activeWindow && 
+				Refs.activeWindow.webContents.send('fromBgPage', {
 					identifier: identifier,
 					data: response,
 					type: 'response'
@@ -177,7 +171,7 @@ namespace MusicApp {
 					const { identifier, type, data } = msg;
 					switch (type) {
 						case 'openDevTools':
-						Refs.activeWindowContainer.activeWindow.webContents.openDevTools();
+						Refs.activeWindow.webContents.openDevTools();
 							break;
 						case 'messageServer':
 							activeServer.sendMessage(data as {
@@ -195,74 +189,74 @@ namespace MusicApp {
 							break;
 						case 'isMinimized':
 							respondToMessage(identifier, 
-								Refs.activeWindowContainer.activeWindow && 
-								Refs.activeWindowContainer.activeWindow.isMinimized());
+								Refs.activeWindow && 
+								Refs.activeWindow.isMinimized());
 							break;
 						case 'onFullscreened':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.addListener('enter-full-screen', () => {
+							Refs.activeWindow && 
+							Refs.activeWindow.addListener('enter-full-screen', () => {
 								respondToMessage(identifier, null);
 							});
 							break;
 						case 'onMaximized':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.addListener('maximize', () => {
+							Refs.activeWindow && 
+							Refs.activeWindow.addListener('maximize', () => {
 								respondToMessage(identifier, null);
 							});
 							break;
 						case 'onMinimized':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.addListener('minimize', () => {
+							Refs.activeWindow && 
+							Refs.activeWindow.addListener('minimize', () => {
 								respondToMessage(identifier, null);
 							});
 							break;
 						case 'onRestored':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.addListener('restore', () => {
+							Refs.activeWindow && 
+							Refs.activeWindow.addListener('restore', () => {
 								respondToMessage(identifier, null);
 							});
 							break;
 						case 'isMaximized':
 							respondToMessage(identifier,
-								Refs.activeWindowContainer.activeWindow && 
-								Refs.activeWindowContainer.activeWindow.isMaximized());
+								Refs.activeWindow && 
+								Refs.activeWindow.isMaximized());
 							break;
 						case 'isFullscreen':
 							respondToMessage(identifier,
-								Refs.activeWindowContainer.activeWindow && 
-								Refs.activeWindowContainer.activeWindow.isFullScreen());
+								Refs.activeWindow && 
+								Refs.activeWindow.isFullScreen());
 							break;
 						case 'restore':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.restore();
+							Refs.activeWindow && 
+							Refs.activeWindow.restore();
 							break;
 						case 'enterFullscreen':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.setFullScreen(true);
+							Refs.activeWindow && 
+							Refs.activeWindow.setFullScreen(true);
 							break;
 						case 'exitFullscreen':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.setFullScreen(false);
+							Refs.activeWindow && 
+							Refs.activeWindow.setFullScreen(false);
 							break;
 						case 'minimize':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.minimize();
+							Refs.activeWindow && 
+							Refs.activeWindow.minimize();
 							break;
 						case 'maximize':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.maximize();
+							Refs.activeWindow && 
+							Refs.activeWindow.maximize();
 							break;
 						case 'close':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.close();
+							Refs.activeWindow && 
+							Refs.activeWindow.close();
 							app.quit();
 							break;
 						case 'quit':
 							app.quit();
 							break;
 						case 'passAlong':
-							Refs.activeWindowContainer.activeWindow && 
-							Refs.activeWindowContainer.activeWindow.webContents.send('passedAlong', data);
+							Refs.activeWindow && 
+							Refs.activeWindow.webContents.send('passedAlong', data);
 							break;
 						case 'playStatus':
 							const isPlaying = data === 'play';
@@ -285,8 +279,8 @@ namespace MusicApp {
 			Messaging.setupListeners();
 			AdBlocking.blockAds();
 			handleUpdates();
-			activeServer = new RemoteServer(Refs.activeWindowContainer);
-			Shortcuts.init(Refs.activeWindowContainer, launch);
+			activeServer = new RemoteServer(Refs);
+			Shortcuts.init(Refs, launch);
 			await WideVine.load();
 		}
 	}

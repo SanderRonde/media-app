@@ -51,6 +51,7 @@ export namespace Shortcuts {
 
 	export function init(activeWindowContainer: {
 		activeWindow: Electron.BrowserWindow
+		tray: Electron.Tray;
 	}, launch: () => void) {
 		remote.activeWindowContainer = activeWindowContainer;
 		remote.launch = launch;

@@ -196,7 +196,8 @@ export class RemoteServer {
 	}
 
 	constructor(activeWindowContainer: {
-		activeWindow: Electron.BrowserWindow
+		activeWindow: Electron.BrowserWindow;
+		tray: Electron.Tray;
 	}) {
 		this.initServer(activeWindowContainer);
 	}
