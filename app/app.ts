@@ -418,6 +418,18 @@ namespace MusicApp {
 			Settings.init();
 			await AutoLauncher.init();
 			SystemTray.init();
+
+			if (!(await Settings.get('launchOnBoot'))) {
+				//Not launch on boot, that means that this launch should start the app
+				launch();
+			}
+
+			app.on('window-all-closed', async () => {
+				if (!(await Settings.get('launchOnBoot'))) {
+					//Not launch on boot, so close when done
+					app.quit();
+				}
+			});
 		});
 	}
 }
