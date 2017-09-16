@@ -26,7 +26,7 @@ export namespace Shortcuts {
 			[[['Shift', 'Alt', 'Right']], 'raiseVolume'],
 			[[['Shift', 'Alt', 'Down'], 'MediaPlayPause'], 'pausePlay'],
 			[[['Shift', 'Alt', 'Up'], 'MediaNextTrack'], 'magicButton'],
-			[['Shift', 'Alt', 'L'], 'launch'],
+			[[['Shift', 'Alt', 'L']], 'launch'],
 
 			[['MediaStop'], 'pause']
 		]);
