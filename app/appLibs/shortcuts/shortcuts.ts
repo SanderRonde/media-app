@@ -32,14 +32,17 @@ export namespace Shortcuts {
 		]);
 
 	function handleEvent(event: keyof MessageReasons) {
+		if (remote.launch()) {
+			return true;
+		}
+
 		switch (event) {
 			case 'focus':
 				app.focus();
 				break;
-			case 'launch':
-				remote.launch();
-				break;
 		}
+
+		return false;
 	}
 
 	function sendMessage(data: keyof MessageReasons) {
@@ -62,7 +65,9 @@ export namespace Shortcuts {
 
 				globalShortcut.register(keyCommand as any, () => {
 					log(`Key ${keyCommand} was pressed, launching command ${command}`);
-					handleEvent(command);
+					if (handleEvent(command)) {
+						return;
+					}
 					sendMessage(command);
 				});
 			}

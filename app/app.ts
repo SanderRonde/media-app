@@ -18,12 +18,12 @@ namespace MusicApp {
 		export let tray: Electron.Tray = null;
 	}
 
-	async function launch () {		
+	function launch () {		
 		const DEBUG = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length;
 
 		if (Refs.activeWindow) {
 			Refs.activeWindow.show();
-			return;
+			return false;
 		}
 
 		Refs.activeWindow = new BrowserWindow({
@@ -53,6 +53,8 @@ namespace MusicApp {
 		if (DEBUG) {
 			Refs.activeWindow.webContents.openDevTools();
 		}
+
+		return true;
 	}
 
 	namespace SystemTray {
