@@ -355,6 +355,7 @@ namespace MusicApp {
 					} else {
 						settings = await readSettings();
 					}
+					resolve();
 				});
 			});
 			return loadingPromise;
