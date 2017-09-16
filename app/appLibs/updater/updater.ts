@@ -1,5 +1,5 @@
 import { autoUpdater, GithubOptions } from 'electron-updater';
-import { Notification } from 'electron'
+import { Notification, app } from 'electron'
 import os = require('os');
 
 const DEBUG = process.argv.filter((arg) => {
@@ -26,10 +26,14 @@ export function handleUpdates() {
 	} as GithubOptions)
 
 	autoUpdater.signals.updateDownloaded((newVersion) => {
-		new Notification({
+		const notification = new Notification({
 			title: "A new update is ready to install",
-			body: `Version ${newVersion.version} is downloaded and will be automatically installed on Quit`
-		}).show()
+			body: `Version ${newVersion.version} is downloaded and will be automatically installed on quit, click to restart now`
+		});
+		notification.show();
+		notification.addListener('click', () => {
+			app.quit();
+		});
 	})
 	autoUpdater.checkForUpdates()
 }
