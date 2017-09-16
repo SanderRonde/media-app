@@ -1,5 +1,5 @@
 import { MessageReasons } from '../../window/appWindow'
-import { globalShortcut } from 'electron'
+import { globalShortcut, app } from 'electron'
 import { log } from '../log/log'
 
 type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
@@ -19,6 +19,14 @@ const map = new Map<
 		[['MediaStop'], 'pause']
 	]);
 
+function handleEvent(event: keyof MessageReasons) {
+	switch (event) {
+		case 'focus':
+			app.focus();
+			break;
+	}
+}
+
 function sendMessage(activeWindow: Electron.BrowserWindow, data: keyof MessageReasons) {
 	activeWindow && activeWindow.webContents.send('fromBgPage', {
 		cmd: data,
@@ -35,6 +43,7 @@ export function registerShortcuts(activeWindowContainer: {
 
 			globalShortcut.register(keyCommand as any, () => {
 				log(`Key ${keyCommand} was pressed, launching command ${command}`);
+				handleEvent(command);
 				sendMessage(activeWindowContainer.activeWindow, command);
 			});
 		}
