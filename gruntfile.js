@@ -14,6 +14,9 @@ module.exports = function(grunt) {
 				}, {
 					src: ['package.json'],
 					dest: 'out/'
+				}, {
+					src: ['node_modules/paper-ripple/dist/'],
+					dest: 'out/appLibs/remote/client/paper-ripple'
 				}]
 			}
 		}

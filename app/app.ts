@@ -16,11 +16,10 @@ namespace MusicApp {
 	namespace Refs {
 		export let activeWindow: Electron.BrowserWindow = null;
 		export let tray: Electron.Tray = null;
+		export const DEBUG = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length;		
 	}
 
 	function launch () {		
-		const DEBUG = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length;
-
 		if (Refs.activeWindow) {
 			Refs.activeWindow.show();
 			return false;
@@ -43,14 +42,14 @@ namespace MusicApp {
 			pathname: path.join(__dirname, 'window/main.html'),
 			protocol: 'file:',
 			slashes: true,
-			hash: DEBUG ? 'DEBUG' : ''
+			hash: Refs.DEBUG ? 'DEBUG' : ''
 		}));
 
 		Refs.activeWindow.on('closed', () => {
 			Refs.activeWindow = null;
 		});
 
-		if (DEBUG) {
+		if (Refs.DEBUG) {
 			Refs.activeWindow.webContents.openDevTools();
 		}
 

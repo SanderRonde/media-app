@@ -31,22 +31,6 @@ type WSMessage = {
 	}
 }
 
-const PATH_MAPS = {
-	'/': INDEX_PATH,
-	'/paper-ripple.css': PAPER_RIPPLE_DIR + 'paper-ripple.min.css',
-	'/paper-ripple.css.map': PAPER_RIPPLE_DIR + 'paper-ripple.css.min.map',
-	'/PaperRipple.js': PAPER_RIPPLE_DIR + 'PaperRipple.min.js',
-	'/PaperRipple.js.map': PAPER_RIPPLE_DIR + 'PaperRipple.js.min.map',
-	'/sw-toolbox.js': SW_TOOLBOX_DIR + 'sw-toolbox.js',
-	'/sw-toolbox.js.map': SW_TOOLBOX_DIR + 'sw-toolbox.js.map',
-	'/images/48.png': ICONS_DIR + '48.png',
-	'/images/72.png': ICONS_DIR + '72.png',
-	'/images/96.png': ICONS_DIR + '96.png',
-	'/images/144.png': ICONS_DIR + '144.png',
-	'/images/168.png': ICONS_DIR + '168.png',
-	'/images/192.png': ICONS_DIR + '192.png'
-}
-
 const STATUS_CODES = {
 	200: 'OK',
 	404: 'Not Found',
@@ -94,6 +78,21 @@ export class RemoteServer {
 		app: 'Music',
 		status: '',
 		playing: true
+	}
+	PATH_MAPS = {
+		'/': INDEX_PATH,
+		'/paper-ripple.css': PAPER_RIPPLE_DIR + 'paper-ripple.min.css',
+		'/paper-ripple.css.map': PAPER_RIPPLE_DIR + 'paper-ripple.css.min.map',
+		'/PaperRipple.js': PAPER_RIPPLE_DIR + 'PaperRipple.min.js',
+		'/PaperRipple.js.map': PAPER_RIPPLE_DIR + 'PaperRipple.js.min.map',
+		'/sw-toolbox.js': SW_TOOLBOX_DIR + 'sw-toolbox.js',
+		'/sw-toolbox.js.map': SW_TOOLBOX_DIR + 'sw-toolbox.js.map',
+		'/images/48.png': ICONS_DIR + '48.png',
+		'/images/72.png': ICONS_DIR + '72.png',
+		'/images/96.png': ICONS_DIR + '96.png',
+		'/images/144.png': ICONS_DIR + '144.png',
+		'/images/168.png': ICONS_DIR + '168.png',
+		'/images/192.png': ICONS_DIR + '192.png'
 	}
 
 	private OPTIONS_MAPS: {
@@ -166,14 +165,12 @@ export class RemoteServer {
 		return currentPort;
 	}
 
-	private async initServer(activeWindowContainer: {
-		activeWindow: Electron.BrowserWindow
-	}) {
+	private async initServer() {
 		this.httpServer = http.createServer(async (req, res) => {
 			const url = this.getURL(req);
 
 			if (url.startsWith('/api/')) {
-				this.handleAPIRequest(url, res, activeWindowContainer.activeWindow);
+				this.handleAPIRequest(url, res);
 			} else {
 				this.handleFileRequest(url, res);
 			}
@@ -195,11 +192,12 @@ export class RemoteServer {
 		}
 	}
 
-	constructor(activeWindowContainer: {
+	constructor(public refs: {
 		activeWindow: Electron.BrowserWindow;
 		tray: Electron.Tray;
+		DEBUG: boolean;
 	}) {
-		this.initServer(activeWindowContainer);
+		this.initServer();
 	}
 
 	private getIp() {
@@ -353,20 +351,20 @@ export class RemoteServer {
 		this.serveFile(url, res);
 	}
 	
-	private sendCommand(command: string, activeWindow: Electron.BrowserWindow, data?: string) {
-		activeWindow && activeWindow.webContents.send('fromBgPage', {
+	private sendCommand(command: string, data?: string) {
+		this.refs.activeWindow && this.refs.activeWindow.webContents.send('fromBgPage', {
 			cmd: command,
 			type: 'event',
 			data: data
 		});
 	}
 	
-	private async handleAPIRequest(url: string, res: http.ServerResponse, activeWindow: Electron.BrowserWindow) {
+	private async handleAPIRequest(url: string, res: http.ServerResponse) {
 		const command = url.split('/api/').slice(1).join('/api/');
 		const partialCommand = command.split('/')[0];
 	
 		if (EXTERNAL_EVENTS.indexOf(command as EXTERNAL_EVENT) > -1) {
-			this.sendCommand(command, activeWindow);
+			this.sendCommand(command);
 			if (LOG_REQUESTS) {
 				console.log(`👌 - [200] - ${url}`);
 			}
@@ -375,7 +373,7 @@ export class RemoteServer {
 			}));
 			res.end();
 		} else if (ARG_EVENTS.indexOf(partialCommand as ARG_EVENT) > -1) {
-			this.sendCommand(partialCommand, activeWindow, decodeURIComponent(command.split('/').slice(1).join('/')));
+			this.sendCommand(partialCommand, decodeURIComponent(command.split('/').slice(1).join('/')));
 		} else {
 			this.respondError(res, url, '500');
 		}
@@ -383,8 +381,9 @@ export class RemoteServer {
 	
 	private getURL(req: http.IncomingMessage): string {
 		const url = urlLib.parse(req.url).pathname;
-		if (url in PATH_MAPS) {
-			return PATH_MAPS[url as keyof typeof PATH_MAPS];
+		const pathMaps = this.PATH_MAPS;
+		if (url in this.PATH_MAPS) {
+			return this.PATH_MAPS[url as keyof typeof pathMaps];
 		}
 		return url;
 	}
