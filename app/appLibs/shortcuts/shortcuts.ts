@@ -7,7 +7,7 @@ export namespace Shortcuts {
 		activeWindowContainer: {
 			activeWindow: Electron.BrowserWindow;
 		}
-		launch(): void;
+		launch(focus?: boolean): void;
 	} = {
 		activeWindowContainer: null,
 		launch: null

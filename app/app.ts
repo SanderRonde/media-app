@@ -19,9 +19,9 @@ namespace MusicApp {
 		export const DEBUG = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length;		
 	}
 
-	function launch () {		
+	function launch(focus: boolean = false) {		
 		if (Refs.activeWindow) {
-			Refs.activeWindow.show();
+			focus && Refs.activeWindow.show();
 			return false;
 		}
 
@@ -69,7 +69,9 @@ namespace MusicApp {
 					label: 'launch', 
 					type: 'normal',
 					accelerator: 'Shift+Alt+L',
-					click: launch
+					click: () => {
+						launch(true);
+					}
 				}, { 
 					label: 'separator', 
 					type: 'separator' 
@@ -103,7 +105,7 @@ namespace MusicApp {
 			tray.setContextMenu(contextMenu);
 
 			tray.on('click', () => {
-				launch();
+				launch(true);
 			});
 		}
 	}
@@ -423,7 +425,7 @@ namespace MusicApp {
 
 			if (!(await Settings.get('launchOnBoot'))) {
 				//Not launch on boot, that means that this launch should start the app
-				launch();
+				launch(true);
 			}
 
 			app.on('window-all-closed', async () => {
