@@ -92,7 +92,7 @@ namespace MusicApp {
 					label: 'quit', 
 					type: 'normal',
 					click: () => {
-						Refs.activeWindow.destroy();
+						Refs.activeWindow && Refs.activeWindow.destroy();
 						app.quit();
 					}
 				}
