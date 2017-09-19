@@ -162,6 +162,7 @@ export namespace YoutubeSearch {
 							REPLACE.handleResize(player);
 							REPLACE.handleToggleHiddens('k');
 							REPLACE.detectOnEnd();
+							REPLACE.adSkipper();
 						});
 					}, {
 						volumeManager: Helpers.YoutubeVideoFunctions.volumeManager,
@@ -169,7 +170,8 @@ export namespace YoutubeSearch {
 						initialSizing: Helpers.YoutubeVideoFunctions.initialSizing,
 						handleResize: Helpers.YoutubeVideoFunctions.handleResize,
 						handleToggleHiddens: Helpers.YoutubeVideoFunctions.handleToggleHiddens,
-						detectOnEnd: Helpers.YoutubeVideoFunctions.detectOnEnd
+						detectOnEnd: Helpers.YoutubeVideoFunctions.detectOnEnd,
+						adSkipper: Helpers.YoutubeVideoFunctions.adSkipper
 					});
 				});
 			}, 10);

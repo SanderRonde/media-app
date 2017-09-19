@@ -108,6 +108,7 @@ export namespace YoutubeMusic {
 				REPLACE.handleResize(player);
 				REPLACE.handleToggleHiddens('h');
 				REPLACE.handleYoutubeMusicTasks();
+				REPLACE.adSkipper();
 			}, {
 				volumeManager: Helpers.YoutubeVideoFunctions.volumeManager,
 				playPauseListeners: Helpers.YoutubeVideoFunctions.playPauseListeners,
@@ -115,7 +116,8 @@ export namespace YoutubeMusic {
 				handleResize: Helpers.YoutubeVideoFunctions.handleResize,
 				handleToggleHiddens: Helpers.YoutubeVideoFunctions.handleToggleHiddens,
 				handleVisualizer: Helpers.YoutubeVideoFunctions.handleVisualizer,
-				handleYoutubeMusicTasks: Helpers.YoutubeVideoFunctions.handleYoutubeMusicTasks
+				handleYoutubeMusicTasks: Helpers.YoutubeVideoFunctions.handleYoutubeMusicTasks,
+				adSkipper: Helpers.YoutubeVideoFunctions.adSkipper
 			});
 		}
 	}

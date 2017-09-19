@@ -430,6 +430,17 @@ export namespace Helpers {
 	}
 
 	export namespace YoutubeVideoFunctions {
+		export function adSkipper() {
+			window.setInterval(() => {
+				let adContainer: HTMLElement = null;
+				if ((adContainer = document.querySelector('.videoAdUiSkipContainer') as HTMLElement)) {
+					if (adContainer.style.display !== 'none') {
+						(document.querySelector('.videoAdUiSkipButton') as HTMLButtonElement).click();
+					}
+				}
+			}, 500);
+		}
+
 		export function volumeManager(player: YoutubeVideoPlayer) {
 			const volumeBar = document.createElement('div');
 			const volumeBarBar = document.createElement('div');

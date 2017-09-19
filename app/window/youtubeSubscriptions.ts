@@ -133,12 +133,14 @@ export namespace YoutubeSubscriptions {
 							REPLACE.initialSizing(player, null);
 							REPLACE.handleResize(player);
 							REPLACE.handleToggleHiddens('k');
+							REPLACE.adSkipper();
 						}, {
 							volumeManager: Helpers.YoutubeVideoFunctions.volumeManager,
 							playPauseListeners: Helpers.YoutubeVideoFunctions.playPauseListeners,
 							initialSizing: Helpers.YoutubeVideoFunctions.initialSizing,
 							handleResize: Helpers.YoutubeVideoFunctions.handleResize,
-							handleToggleHiddens: Helpers.YoutubeVideoFunctions.handleToggleHiddens
+							handleToggleHiddens: Helpers.YoutubeVideoFunctions.handleToggleHiddens,
+							adSkipper: Helpers.YoutubeVideoFunctions.adSkipper
 						});
 					}, 2500);
 				});
