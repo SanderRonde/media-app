@@ -181,8 +181,10 @@ export class RemoteServer {
 			this.httpServer.listen(port, async () => {
 				if (port !== REMOTE_PORT) {
 					toast(`Hosting server on ${await this.getIp()}:${port} instead`)
+					log(`Hosting server on ${await this.getIp()}:${port} instead`)
+				} else {
+					log(`HTTP server listening on ${await this.getIp()}:${port}`)
 				}
-				log(`HTTP server listening on ${await this.getIp()}:${port}`)
 			});
 
 			this.wsHandler = new WSHandler(this.httpServer);		
