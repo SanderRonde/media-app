@@ -10,7 +10,7 @@ const queue: {
 	args: any|any[];
 }[] = [];
 
-window.setInterval(() => {
+setInterval(() => {
 	const win = getWindow();
 	if (win && queue.length > 0) {
 		for (let i = 0; i < queue.length; i++) {
