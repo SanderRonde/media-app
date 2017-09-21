@@ -28,6 +28,7 @@ window.setInterval(() => {
 
 export function info(...args: any[]) {
 	const win = getWindow();
+	console.info(...args);
 	if (win) {
 		win.webContents.send('log', {
 			type: 'info',
@@ -43,6 +44,7 @@ export function info(...args: any[]) {
 
 export function log(...args: any[]) {
 	const win = getWindow();
+	console.log(...args);
 	if (win) {
 		win.webContents.send('log', {
 			type: 'log',
@@ -58,6 +60,7 @@ export function log(...args: any[]) {
 
 export function warn(...args: any[]) {
 	const win = getWindow();
+	console.warn(...args);
 	if (win) {
 		win.webContents.send('log', {
 			type: 'warn',
@@ -73,6 +76,7 @@ export function warn(...args: any[]) {
 
 export function error(...args: any[]) {
 	const win = getWindow();
+	console.error(...args);
 	if (win) {
 		win.webContents.send('log', {
 			type: 'error',
