@@ -5,55 +5,86 @@ function getWindow(): Electron.BrowserWindow {
 	return currentWindow;
 }
 
+const queue: {
+	type: string;
+	args: any|any[];
+}[] = [];
+
+window.setInterval(() => {
+	const win = getWindow();
+	if (win && queue.length > 0) {
+		for (let i = 0; i < queue.length; i++) {
+			win.webContents.send('log', {
+				type: queue[i].type,
+				args: queue[i].args
+			});
+		}
+
+		while (queue[0]) {
+			queue.pop();
+		}
+	}
+}, 100);
+
 export function info(...args: any[]) {
 	const win = getWindow();
-	win && win.webContents.send('log', {
-		type: 'info',
-		args: args
-	});
+	if (win) {
+		win.webContents.send('log', {
+			type: 'info',
+			args: args
+		});
+	} else {
+		queue.push({
+			type: 'info',
+			args: args
+		});
+	}
 }
 
 export function log(...args: any[]) {
 	const win = getWindow();
-	win && win.webContents.send('log', {
-		type: 'log',
-		args: args
-	});
+	if (win) {
+		win.webContents.send('log', {
+			type: 'log',
+			args: args
+		});
+	} else {
+		queue.push({
+			type: 'log',
+			args: args
+		});
+	}
 }
 
 export function warn(...args: any[]) {
 	const win = getWindow();
-	win && win.webContents.send('log', {
-		type: 'warn',
-		args: args
-	});
+	if (win) {
+		win.webContents.send('log', {
+			type: 'warn',
+			args: args
+		});
+	} else {
+		queue.push({
+			type: 'warn',
+			args: args
+		});
+	}
 }
 
 export function error(...args: any[]) {
 	const win = getWindow();
-	win && win.webContents.send('log', {
-		type: 'error',
-		args: args
-	});
-}
-
-const toasts: string[] = [];
-
-window.setInterval(() => {
-	const win = getWindow();
-	if (win && toasts.length > 0) {
-		for (let i = 0; i < toasts.length; i++) {
-			win.webContents.send('log', {
-				type: 'toast',
-				args: toasts[i]
-			});
-		}
-
-		while (toasts[0]) {
-			toasts.pop();
-		}
+	if (win) {
+		win.webContents.send('log', {
+			type: 'error',
+			args: args
+		});
+	} else {
+		queue.push({
+			type: 'error',
+			args: args
+		});
 	}
-});
+}
 
 export function toast(message: string) {
 	const win = getWindow();
@@ -63,6 +94,9 @@ export function toast(message: string) {
 			args: message
 		});
 	} else {
-		toasts.push(message);
+		queue.push({
+			type: 'toast',
+			args: message
+		});
 	}
 }
