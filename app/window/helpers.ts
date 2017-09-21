@@ -868,13 +868,30 @@ export namespace Helpers {
 			return element;
 		}
 
-	export async function showToast(message: string) {
-		const toast = $('#mainToast');
-		const content = toast.querySelector('#toastContent') as HTMLElement;
-		content.innerText = message;
+	const activeToasts: Promise<void>[] = [
+		new Promise<void>((resolve) => { resolve(); })
+	];
 
-		toast.classList.add('visible');
-		await wait(5000);
-		toast.classList.remove('visible');
+	async function doShowToast(message: string): Promise<void> {
+		return new Promise<void>(async (resolve) => {
+			const toast = $('#mainToast');
+			const content = toast.querySelector('#toastContent') as HTMLElement;
+			content.innerText = message;
+
+			toast.classList.add('visible');
+			await wait(5000);
+			toast.classList.remove('visible');
+			await wait(500);
+		});
+	}
+
+	export async function showToast(message: string) {
+		const lastItem = activeToasts.slice(-1)[0];
+		activeToasts.push(new Promise<void>(async (resolve) => {
+			lastItem.then(() => {
+				doShowToast(message);
+				resolve();
+			});
+		}));
 	}
 }

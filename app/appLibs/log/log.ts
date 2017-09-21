@@ -37,10 +37,32 @@ export function error(...args: any[]) {
 	});
 }
 
+const toasts: string[] = [];
+
+window.setInterval(() => {
+	const win = getWindow();
+	if (win && toasts.length > 0) {
+		for (let i = 0; i < toasts.length; i++) {
+			win.webContents.send('log', {
+				type: 'toast',
+				args: toasts[i]
+			});
+		}
+
+		while (toasts[0]) {
+			toasts.pop();
+		}
+	}
+});
+
 export function toast(message: string) {
 	const win = getWindow();
-	win && win.webContents.send('log', {
-		type: 'toast',
-		args: message
-	});
+	if (win) {
+		win.webContents.send('log', {
+			type: 'toast',
+			args: message
+		});
+	} else {
+		toasts.push(message);
+	}
 }
