@@ -1,6 +1,7 @@
 body {
 	margin: 0;
 	user-select: none;
+	font-family: 'Segoe UI';
 	font-family: 'Roboto';
 	-webkit-tap-highlight-color: transparent;
 }
