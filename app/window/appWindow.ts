@@ -1,4 +1,4 @@
-import { EXTERNAL_EVENT, ARG_EVENT } from '../appLibs/constants/constants'
+import { EXTERNAL_EVENT, ARG_EVENT } from '../renderer/constants/constants'
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
 import { MappedKeyboardEvent, Helpers, $ } from './helpers'
 import { ipcRenderer, clipboard } from 'electron'

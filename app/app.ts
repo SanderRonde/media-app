@@ -6,10 +6,10 @@ import fs = require('fs');
 import url = require('url');
 import path = require('path');
 import AutoLaunch = require('auto-launch');
-import { handleUpdates } from './appLibs/updater/updater'
-import { RemoteServer }  from './appLibs/remote/remote';
-import { AdBlocking } from './appLibs/adblocking/adblocking';
-import { Shortcuts } from './appLibs/shortcuts/shortcuts';
+import { handleUpdates } from './renderer/updater/updater'
+import { RemoteServer }  from './renderer/remote/remote';
+import { AdBlocking } from './renderer/adblocking/adblocking';
+import { Shortcuts } from './renderer/shortcuts/shortcuts';
 import { MessageReasons, PassedAlongMessages } from './window/appWindow';
 
 namespace MusicApp {

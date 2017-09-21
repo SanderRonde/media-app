@@ -197,7 +197,7 @@ app/window/**/*.js
 **/**/main.js
 **/**/subBox.js
 **/*.js
-!app/appLibs/remote/client/paper-ripple.min.js
+!app/renderer/remote/client/paper-ripple.min.js
 
 media-app-win32-x64/**
 app/genericJs/secrets.ts

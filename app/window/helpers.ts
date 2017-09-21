@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as md5 from 'md5'
 import { shell, ipcRenderer } from 'electron'
 import { ViewNames } from '../window/appWindow'
-import { route } from '../appLibs/routing/routing'
+import { route } from '../renderer/routing/routing'
 import { YoutubeVideoPlayer } from '../window/youtubeMusic'
 
 export const EXAMPLE_STYLES = `html, body, a {
