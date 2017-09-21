@@ -194,7 +194,7 @@ export class RemoteServer {
 		activeWindow: Electron.BrowserWindow;
 		tray: Electron.Tray;
 		DEBUG: boolean;
-	}) {
+	}, public launch: (focus?: boolean) => boolean) {
 		this.initServer();
 	}
 
@@ -350,6 +350,12 @@ export class RemoteServer {
 	}
 	
 	private sendCommand(command: string, data?: string) {
+		//Launch the app if it isn't running yet
+		const didLaunch = this.launch(false);
+		if (didLaunch) {
+			return;
+		}
+		
 		this.refs.activeWindow && this.refs.activeWindow.webContents.send('fromBgPage', {
 			cmd: command,
 			type: 'event',

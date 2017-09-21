@@ -282,7 +282,7 @@ namespace MusicApp {
 			Messaging.setupListeners();
 			AdBlocking.blockAds();
 			handleUpdates();
-			activeServer = new RemoteServer(Refs);
+			activeServer = new RemoteServer(Refs, launch);
 			Shortcuts.init(Refs, launch);
 			await WideVine.load();
 		}
