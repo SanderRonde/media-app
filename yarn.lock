@@ -1961,10 +1961,6 @@ package-json@^4.0.0:
     registry-url "^3.0.3"
     semver "^5.1.0"
 
-paper-ripple@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/paper-ripple/-/paper-ripple-0.3.0.tgz#a5d207ee58777566aa7245b4a2178d079fbf4642"
-
 parse-color@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/parse-color/-/parse-color-1.0.0.tgz#7b748b95a83f03f16a94f535e52d7f3d94658619"

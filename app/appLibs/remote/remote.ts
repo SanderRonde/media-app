@@ -1,6 +1,6 @@
 import { 
 	REMOTE_PORT, INDEX_PATH, EXTERNAL_EVENTS,
-	PAPER_RIPPLE_DIR, EXTERNAL_EVENT, ICONS_DIR,
+	EXTERNAL_EVENT, ICONS_DIR,
 	SW_TOOLBOX_DIR, LOG_ERROR_REQUESTS, LOG_REQUESTS,
 	ARG_EVENTS, ARG_EVENT
 } from '../constants/constants'
@@ -81,10 +81,6 @@ export class RemoteServer {
 	}
 	PATH_MAPS = {
 		'/': INDEX_PATH,
-		'/paper-ripple.css': PAPER_RIPPLE_DIR + 'paper-ripple.min.css',
-		'/paper-ripple.css.map': PAPER_RIPPLE_DIR + 'paper-ripple.css.min.map',
-		'/PaperRipple.js': PAPER_RIPPLE_DIR + 'PaperRipple.min.js',
-		'/PaperRipple.js.map': PAPER_RIPPLE_DIR + 'PaperRipple.js.min.map',
 		'/sw-toolbox.js': SW_TOOLBOX_DIR + 'sw-toolbox.js',
 		'/sw-toolbox.js.map': SW_TOOLBOX_DIR + 'sw-toolbox.js.map',
 		'/images/48.png': ICONS_DIR + '48.png',

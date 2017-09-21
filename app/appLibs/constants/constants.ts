@@ -4,9 +4,6 @@ export const REMOTE_PORT = 1234;
 
 export const INDEX_PATH = '/page.jade';
 
-export const PAPER_RIPPLE_DIR = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length ?
-	'../../../node_modules/paper-ripple/dist/' : '../remote/client/paper-ripple/';
-
 export const SW_TOOLBOX_DIR = '../../../node_modules/sw-toolbox/'
 
 export const ICONS_DIR = '../../../icons/';
