@@ -52,9 +52,9 @@
     "asarUnpack": [
       "./**/*",
       "./package.json",
-      "!./appLibs/**/*",
-      "./appLibs/adblocking/easylist.txt",
-      "./appLibs/remote/client/**.*"
+      "!./renderer/**/*",
+      "./renderer/adblocking/easylist.txt",
+      "./renderer/remote/client/**.*"
     ]
   },
   "repository": {
