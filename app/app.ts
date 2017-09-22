@@ -8,7 +8,7 @@ import path = require('path');
 import AutoLaunch = require('auto-launch');
 import { Helpers} from './window/libs/helpers';
 import { RemoteServer }  from './renderer/remote/remote';
-import { handleUpdates } from './renderer/updater/updater'
+import { Updater } from './renderer/updater/updater'
 import { Shortcuts } from './renderer/shortcuts/shortcuts';
 import { AdBlocking } from './renderer/adblocking/adblocking';
 
@@ -275,7 +275,7 @@ namespace MusicApp {
 
 			Messaging.setupListeners();
 			AdBlocking.blockAds();
-			handleUpdates();
+			Updater.init(Refs);
 			activeServer = new RemoteServer(Refs, launch);
 			Shortcuts.init(Refs, launch);
 			await WideVine.load();

@@ -9,31 +9,88 @@ const DEBUG = process.argv.filter((arg) => {
 	return false;
 }).length > 0;
 
-export function handleUpdates() {
-	if (DEBUG) {
-		return;
+export namespace Updater {
+	let refs: {
+		activeWindow: Electron.BrowserWindow;
+		tray: Electron.Tray;
+		DEBUG: boolean;
+	} = null;
+
+	function setFeed() {
+		autoUpdater.setFeedURL({
+			provider: 'github',
+			repo: 'media-app',
+			owner: 'SanderRonde'
+		} as GithubOptions)
 	}
 
-	const platform = os.platform();
-	if (platform === 'linux') {
-		return;
-	}
-
-	autoUpdater.setFeedURL({
-		provider: 'github',
-		repo: 'media-app',
-		owner: 'SanderRonde'
-	} as GithubOptions)
-
-	autoUpdater.signals.updateDownloaded((newVersion) => {
+	function showNotification(title: string, body: string = title, listener?: () => void) {
 		const notification = new Notification({
-			title: "A new update is ready to install",
-			body: `Version ${newVersion.version} is downloaded and will be automatically installed on quit, click to restart now`
+			title: title,
+			body: body
 		});
+		
+		if (listener) {
+			notification.addListener('click', listener);
+		}
 		notification.show();
-		notification.addListener('click', () => {
-			app.quit();
+	}
+
+	function setProgress(progress: number) {
+		if (refs.activeWindow) {
+			refs.activeWindow.setProgressBar(progress / 100, {
+				mode: 'normal'
+			});
+		}
+	}
+
+	function removeProgressBar() {
+		if (refs.activeWindow) {
+			refs.activeWindow.setProgressBar(-1, {
+				mode: 'none'
+			});
+		}
+	}
+
+	function listenForUpdates() {
+		autoUpdater.on('update-available', (updateInfo) => {
+			showNotification('A new update is ready to download', 
+				`Version ${updateInfo.version} is can be downloaded, click to start download`, () => {
+					autoUpdater.downloadUpdate();
+					setProgress(1);
+					autoUpdater.signals.progress((info) => {
+						setProgress(info.percent);
+					});
+
+					autoUpdater.signals.updateDownloaded((info) => {
+						removeProgressBar();
+
+						showNotification('Done downloading update', 
+							'Click here to install and relaunch now', () => {
+								app.relaunch();
+								app.quit();
+							});
+					});
+				});
 		});
-	})
-	autoUpdater.checkForUpdates()
+	}
+
+	export function init(appRefs: {
+		activeWindow: Electron.BrowserWindow;
+		tray: Electron.Tray;
+		DEBUG: boolean;
+	}) {
+		refs = appRefs;
+		autoUpdater.autoDownload = false;		
+		if (DEBUG) {
+			return;
+		}
+		const platform = os.platform();
+		if (platform === 'linux') {
+			return;
+		}
+
+		setFeed();
+		listenForUpdates();
+	}
 }
