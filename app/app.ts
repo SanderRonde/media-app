@@ -130,19 +130,25 @@ namespace MusicApp {
 					} else {
 						await widevine.downloadAsync(app, widevinePath);
 						app.relaunch();
-						dialog.showMessageBox({
-							message: 'You need to relaunch the app to use widevineCDM',
-							buttons: [
-								'Close now',
-								'Cancel',
-							],
-							defaultId: 0,
-							cancelId: 1,
-						}, (response) => {
-							if (response === 0) {
-								app.quit();
-							}
-						});
+
+						if (!Refs.activeWindow) {
+							//No open window, the user probably won't notice a reload
+							app.quit();
+						} else {
+							dialog.showMessageBox({
+								message: 'You need to relaunch the app to use widevineCDM',
+								buttons: [
+									'Close now',
+									'Cancel',
+								],
+								defaultId: 0,
+								cancelId: 1,
+							}, (response) => {
+								if (response === 0) {
+									app.quit();
+								}
+							});
+						}
 					}
 				});
 			}
