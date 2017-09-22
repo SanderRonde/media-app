@@ -67,7 +67,7 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function magicButton() {
-			(await SubBox.getView()).executeJavaScript(Helpers.stringifyFunction(() => {
+			(await SubBox.getView()).executeJavaScript(Helpers.inlineFn(() => {
 					(window as any).videos.selected.goLeft();
 					(window as any).videos.selected.launchCurrent();
 				}), false);
