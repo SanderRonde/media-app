@@ -28,12 +28,13 @@ async function storeSecrets(secrets: SecretsMap): Promise<void> {
 	return new Promise<void>((resolve) => {
 		fs.writeFile(STORED_DATA_FILE, JSON.stringify(secrets), (err) => {
 			if (err) {
-				require('electron').remote.dialog.showMessageBox({
-					message: 'Could not store secrets',
-					type: 'info'
-				}, () => {
-					resolve(null);	
+				const Notification = require('electron').Notification;
+				const notification = new Notification({
+					title: 'Could not store secrets',
+					body: 'Could not store secrets'
 				});
+				notification.show();
+				resolve(null);
 			} else {
 				resolve(null);
 			}
