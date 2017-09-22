@@ -11,7 +11,7 @@ body {
 }
 
 ytd-search-sub-menu-renderer > #container, 
-ytd-search-pyv-renderer, #masthead-container {
+ytd-search-pyv-renderer, #masthead-container, #guide {
 	display: none!important;
 }
 
