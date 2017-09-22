@@ -1,8 +1,8 @@
 /// <reference path="../../window/views/youtube/1001tracklists/content.ts" />
 /// <reference path="../../window/views/youtube/content/content.ts" />
 
-import { Helpers } from './helpers';
 import { ViewNames } from '../views/appWindow';
+declare var sendIPCMessage: sendIPCMessage;
 
 (() => {
 	let commId = 0;
@@ -46,7 +46,7 @@ import { ViewNames } from '../views/appWindow';
 	ipcRenderer.on('task', (event, task) => {
 		if (location.href.indexOf(task.page) > -1) {
 			getTaskRunner() && getTaskRunner()(task.name, task.id, (result) => {
-				Helpers.sendIPCMessage('toBgPage', {
+				sendIPCMessage('toBgPage', {
 					type: 'passAlong',
 					data: {
 						type: 'taskResult',
@@ -67,7 +67,7 @@ import { ViewNames } from '../views/appWindow';
 			loaded = true;
 			window.clearInterval(intervalId);
 
-			Helpers.sendIPCMessage('toBgPage', {
+			sendIPCMessage('toBgPage', {
 				type: 'passAlong',
 				data: {
 					type: 'loadingCompleted',

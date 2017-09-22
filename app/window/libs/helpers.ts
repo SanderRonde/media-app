@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as md5 from 'md5'
-import { shell, ipcRenderer } from 'electron'
+import { shell } from 'electron'
 import { ViewNames } from '../../window/views/appWindow'
 import { route } from '../../renderer/routing/routing'
 import { YoutubeVideoPlayer } from '../../window/views/youtubeMusic'
@@ -108,10 +108,10 @@ export namespace Helpers {
 			});
 		}
 		return new Promise<any>((resolve) => {
-			view.executeJavaScript(replaceParameters(`(
-				const inlineFn = REPLACE.inlineFn;
-				const sendIPCMessage = REPLACE.sendIPCMessage;
-			${createTag(fn).toString()})();`, parameters), false, (result) => {
+			view.executeJavaScript(replaceParameters(`
+				var inlineFn = REPLACE.inlineFn;
+				var sendIPCMessage = REPLACE.sendIPCMessage;
+			(${createTag(fn).toString()})();`, parameters), false, (result) => {
 				resolve(result);
 			});
 		});
@@ -267,7 +267,7 @@ export namespace Helpers {
 	function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
 		if (isJS) {
 			view.executeJavaScript('var exports = exports || {}', false);		
-			view.executeJavaScript(replaceParameters('const sendIPCMessage = REPLACE.sendIPCMessage;', {
+			view.executeJavaScript(replaceParameters('var sendIPCMessage = REPLACE.sendIPCMessage;', {
 				sendIPCMessage: sendIPCMessage
 			}));
 		}
@@ -897,7 +897,7 @@ export namespace Helpers {
 	export function sendIPCMessage<T extends keyof SafeIPCRenderer.MessagePairs>(channel: T, 
 		message: SafeIPCRenderer.MessagePairs[T], target: {
 			send: (channel: string, ...args: any[]) => void;
-		} = ipcRenderer): void {
+		} = require('electron').ipcRenderer): void {
 		target.send(channel, message);
 	}
 }
