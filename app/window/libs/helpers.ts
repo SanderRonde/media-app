@@ -109,14 +109,17 @@ export namespace Helpers {
 
 	export function hacksecute<T extends {
 		[key: string]: number|string|boolean|((...args: any[]) => void);
-	}>(view: Electron.WebviewTag, fn: (REPLACE: T) => void, parameters?: T) {
+	}>(view: Electron.WebviewTag, fn: (REPLACE: T & {
+		inlineFn: typeof inlineFn;
+	}) => void, parameters: T = {} as T) {
+		parameters['inlineFn'] = inlineFn;
 		if (!view.src) {
 			return new Promise<any>((resolve) => {
 				resolve(undefined);
 			});
 		}
 		return new Promise<any>((resolve) => {
-			view.executeJavaScript(replaceParameters(`(${createTag(fn).toString()})();`, parameters || {}), false, (result) => {
+			view.executeJavaScript(replaceParameters(`(${createTag(fn).toString()})();`, parameters), false, (result) => {
 				resolve(result);
 			});
 		});
@@ -610,6 +613,10 @@ export namespace Helpers {
 				if (Array.from(document.querySelectorAll('a[is="yt-endpoint"]')).filter((a: HTMLAnchorElement) => {
 					return a.href.indexOf('accounts.google.com') > -1;
 				}).length > 0) {
+					require('electron').ipcRenderer.send('log', {
+						type: 'toast',
+						args: 'Please log in'
+					});
 					document.body.classList.toggle('showHiddens');
 				}
 			}, 5000);
