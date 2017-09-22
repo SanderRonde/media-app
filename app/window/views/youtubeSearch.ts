@@ -231,6 +231,12 @@ export namespace YoutubeSearch {
 					run_at: 'document_start'
 				}]);
 			}, 10);
+
+			searchResultsView.addEventListener('dom-ready', () => {
+				if (searchResultsView.getURL().indexOf('watch?') > -1) {
+					searchResultsView.goBack();
+				}
+			});
 		}
 
 		export function navTo(url: string) {
