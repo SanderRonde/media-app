@@ -78,14 +78,16 @@ namespace MusicApp {
 				}, { 
 					label: 'toggleAutoBoot', 
 					type: 'checkbox', 
-					checked: await Settings.get('launchOnBoot'),
+					checked: Refs.DEBUG ? false : await Settings.get('launchOnBoot'),
 					click: async () => {
-						const wasEnabled = await Settings.get('launchOnBoot');
-						AutoLauncher.set(!wasEnabled);
-						Settings.set('launchOnBoot', !wasEnabled);
+						if (!Refs.DEBUG) {
+							const wasEnabled = await Settings.get('launchOnBoot');
+							AutoLauncher.set(!wasEnabled);
+							Settings.set('launchOnBoot', !wasEnabled);
 
-						contextMenu.items[2].checked = !wasEnabled;
-						tray.setContextMenu(contextMenu);
+							contextMenu.items[2].checked = !wasEnabled;
+							tray.setContextMenu(contextMenu);
+						}
 					}
 				}, { 
 					label: 'separator', 
@@ -396,14 +398,10 @@ namespace MusicApp {
 				name: 'MediaApp'
 			});
 
-			const shouldBeEnabled = await Settings.get('launchOnBoot');
+			const shouldBeEnabled = Refs.DEBUG ? false : await Settings.get('launchOnBoot');
 			const isEnabled = await autoLauncher.isEnabled();
 			if (shouldBeEnabled !== isEnabled) {
-				if (shouldBeEnabled) {
-					await autoLauncher.enable();
-				} else {
-					await autoLauncher.disable();
-				}
+				set(shouldBeEnabled);
 			}
 		}
 
@@ -423,13 +421,13 @@ namespace MusicApp {
 			await AutoLauncher.init();
 			SystemTray.init();
 
-			if (!(await Settings.get('launchOnBoot'))) {
+			if (Refs.DEBUG || !(await Settings.get('launchOnBoot'))) {
 				//Not launch on boot, that means that this launch should start the app
 				launch(true);
 			}
 
 			app.on('window-all-closed', async () => {
-				if (!(await Settings.get('launchOnBoot'))) {
+				if (Refs.DEBUG || !(await Settings.get('launchOnBoot'))) {
 					//Not launch on boot, so close when done
 					app.quit();
 				}
