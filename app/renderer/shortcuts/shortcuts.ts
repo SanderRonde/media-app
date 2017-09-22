@@ -1,4 +1,4 @@
-import { MessageReasons } from '../../window/views/appWindow'
+import { Helpers } from '../../window/libs/helpers';
 import { globalShortcut, app } from 'electron'
 import { log } from '../log/log'
 
@@ -46,10 +46,10 @@ export namespace Shortcuts {
 	}
 
 	function sendMessage(data: keyof MessageReasons) {
-		remote.activeWindowContainer && remote.activeWindowContainer.activeWindow.webContents.send('fromBgPage', {
+		remote.activeWindowContainer && Helpers.sendIPCMessage('fromBgPage', {
 			cmd: data,
 			type: 'event'
-		});
+		}, remote.activeWindowContainer.activeWindow.webContents);
 	}
 
 	export function init(activeWindowContainer: {

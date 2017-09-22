@@ -6,11 +6,11 @@ import fs = require('fs');
 import url = require('url');
 import path = require('path');
 import AutoLaunch = require('auto-launch');
+import { Helpers} from './window/libs/helpers';
 import { RemoteServer }  from './renderer/remote/remote';
 import { handleUpdates } from './renderer/updater/updater'
 import { Shortcuts } from './renderer/shortcuts/shortcuts';
 import { AdBlocking } from './renderer/adblocking/adblocking';
-import { MessageReasons, PassedAlongMessages } from './window/views/appWindow';
 
 namespace MusicApp {
 	namespace Refs {
@@ -151,35 +151,21 @@ namespace MusicApp {
 		namespace Messaging {
 			function respondToMessage<T extends keyof MessageReasons>(identifier: string, response: MessageReasons[T]) {
 				Refs.activeWindow && 
-				Refs.activeWindow.webContents.send('fromBgPage', {
+				Helpers.sendIPCMessage('fromBgPage', {
 					identifier: identifier,
 					data: response,
 					type: 'response'
-				});
+				}, Refs.activeWindow.webContents);
 			}
 
 			export function setupListeners() {
-				ipcMain.on('toBgPage', (event: Event, msg: {
-					identifier: string;
-					type: keyof MessageReasons | 'passAlong',
-					respond: boolean;
-					data?: {
-						type: keyof PassedAlongMessages;
-					} | PassedAlongMessages[keyof PassedAlongMessages] | {
-						type: string;
-						data: {
-							app: string;
-							status: string;
-						};
-					}
-				}) => {
-					const { identifier, type, data } = msg;
-					switch (type) {
+				ipcMain.on('toBgPage', (event, msg) => {
+					switch (msg.type) {
 						case 'openDevTools':
 						Refs.activeWindow.webContents.openDevTools();
 							break;
 						case 'messageServer':
-							activeServer.sendMessage(data as {
+							activeServer.sendMessage(msg.data as {
 								type: 'statusUpdate';
 								data: {
 									app: string;
@@ -193,41 +179,41 @@ namespace MusicApp {
 							});
 							break;
 						case 'isMinimized':
-							respondToMessage(identifier, 
+							respondToMessage(msg.identifier, 
 								Refs.activeWindow && 
 								Refs.activeWindow.isMinimized());
 							break;
 						case 'onFullscreened':
 							Refs.activeWindow && 
 							Refs.activeWindow.addListener('enter-full-screen', () => {
-								respondToMessage(identifier, null);
+								respondToMessage(msg.identifier, null);
 							});
 							break;
 						case 'onMaximized':
 							Refs.activeWindow && 
 							Refs.activeWindow.addListener('maximize', () => {
-								respondToMessage(identifier, null);
+								respondToMessage(msg.identifier, null);
 							});
 							break;
 						case 'onMinimized':
 							Refs.activeWindow && 
 							Refs.activeWindow.addListener('minimize', () => {
-								respondToMessage(identifier, null);
+								respondToMessage(msg.identifier, null);
 							});
 							break;
 						case 'onRestored':
 							Refs.activeWindow && 
 							Refs.activeWindow.addListener('restore', () => {
-								respondToMessage(identifier, null);
+								respondToMessage(msg.identifier, null);
 							});
 							break;
 						case 'isMaximized':
-							respondToMessage(identifier,
+							respondToMessage(msg.identifier,
 								Refs.activeWindow && 
 								Refs.activeWindow.isMaximized());
 							break;
 						case 'isFullscreen':
-							respondToMessage(identifier,
+							respondToMessage(msg.identifier,
 								Refs.activeWindow && 
 								Refs.activeWindow.isFullScreen());
 							break;
@@ -261,10 +247,10 @@ namespace MusicApp {
 							break;
 						case 'passAlong':
 							Refs.activeWindow && 
-							Refs.activeWindow.webContents.send('passedAlong', data);
+							Helpers.sendIPCMessage('passedAlong', msg.data, Refs.activeWindow.webContents);
 							break;
 						case 'playStatus':
-							const isPlaying = data === 'play';
+							const isPlaying = msg.data === 'play';
 							activeServer.sendMessage({
 								type: 'playUpdate',
 								data: {

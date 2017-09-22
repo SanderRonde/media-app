@@ -1,4 +1,5 @@
 var ipcRenderer = require('electron').ipcRenderer;
+declare var sendIPCMessage: sendIPCMessage;
 
 interface Window {
 	videos: VideoIdentifier;
@@ -707,14 +708,14 @@ async function identifyVideos() {
 }
 
 window.navToLink = (link, video) => {
-	ipcRenderer.send('toBgPage', {
+	sendIPCMessage('toBgPage', {
 		type: 'passAlong',
 		data: {
 			type: 'changeYoutubeSubsLink',
 			data: {
 				link: link
 			}
-		}
+		} as PassedAlongMessage<'changeYoutubeSubsLink'>
 	});
 	if (video) {
 		window.videos.selected.setCurrent(video);

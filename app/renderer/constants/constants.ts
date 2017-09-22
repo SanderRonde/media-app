@@ -12,10 +12,6 @@ const isRemote = !require('electron').dialog;
 export const STORED_DATA_FILE = path.join((isRemote ? 
 	require('electron').remote.app : require('electron').app).getPath('appData'), 'data.json');
 
-export type EXTERNAL_EVENT = 'focus'|'lowerVolume'|'raiseVolume'|'pausePlay'|
-	'magicButton'|'pause'|'youtubeSubscriptions'|'youtubeMusic'|
-	'youtubeSearch'|'netflix'|'up'|'down'|'left'|'right'|'toggleVideo';
-
 export const EXTERNAL_EVENTS: EXTERNAL_EVENT[] = [
 	'focus',
 	'lowerVolume',
@@ -33,8 +29,6 @@ export const EXTERNAL_EVENTS: EXTERNAL_EVENT[] = [
 ]
 
 export type EXTERNAL_EVENTS = EXTERNAL_EVENT[];
-
-export type ARG_EVENT = 'cast'|'hiddenCast';
 
 export const ARG_EVENTS: ARG_EVENT[] = [
 	'cast',

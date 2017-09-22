@@ -1,4 +1,4 @@
-import { Helpers, $, MappedKeyboardEvent } from '../libs/helpers'
+import { Helpers, $ } from '../libs/helpers'
 import { YoutubeVideoPlayer } from './youtubeMusic'
 import { AppWindow, ViewNames } from './appWindow'
 

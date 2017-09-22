@@ -24,19 +24,6 @@ export const $$ = <K extends keyof ElementTagNameMap>(selector: K|string,
 		return base.querySelectorAll(selector) as NodeListOf<HTMLElement>;
 	}
 
-interface ReducedElement {
-	id: string;
-	classList: string[];
-	tagName: string;
-}
-
-export type MappedKeyboardEvent = KeyboardEvent & {
-	currentTarget: ReducedElement;
-	path: ReducedElement[];
-	srcElement: ReducedElement;
-	target: ReducedElement;
-}
-
 interface MatchPattern {
 	scheme: string;
 	host: string;
@@ -111,15 +98,20 @@ export namespace Helpers {
 		[key: string]: number|string|boolean|((...args: any[]) => void);
 	}>(view: Electron.WebviewTag, fn: (REPLACE: T & {
 		inlineFn: typeof inlineFn;
+		sendIPCMessage: typeof sendIPCMessage;
 	}) => void, parameters: T = {} as T) {
 		parameters['inlineFn'] = inlineFn;
+		parameters['sendIPCMessage'] = sendIPCMessage;
 		if (!view.src) {
 			return new Promise<any>((resolve) => {
 				resolve(undefined);
 			});
 		}
 		return new Promise<any>((resolve) => {
-			view.executeJavaScript(replaceParameters(`(${createTag(fn).toString()})();`, parameters), false, (result) => {
+			view.executeJavaScript(replaceParameters(`(
+				const inlineFn = REPLACE.inlineFn;
+				const sendIPCMessage = REPLACE.sendIPCMessage;
+			${createTag(fn).toString()})();`, parameters), false, (result) => {
 				resolve(result);
 			});
 		});
@@ -152,7 +144,7 @@ export namespace Helpers {
 	};
 
 	export function sendTaskToPage(name: string, page: string, callback: (result: any) => void) {
-		ipcRenderer.send('task', {
+		Helpers.sendIPCMessage('task', {
 			name: name,
 			page: page,
 			id: ++taskIds
@@ -274,7 +266,10 @@ export namespace Helpers {
 
 	function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
 		if (isJS) {
-			view.executeJavaScript('var exports = exports || {}', false);			
+			view.executeJavaScript('var exports = exports || {}', false);		
+			view.executeJavaScript(replaceParameters('const sendIPCMessage = REPLACE.sendIPCMessage;', {
+				sendIPCMessage: sendIPCMessage
+			}));
 		}
 		if (config.code) {
 			if (isJS) {
@@ -526,29 +521,27 @@ export namespace Helpers {
 		}
 		
 		export function playPauseListeners() {
-			var ipcRenderer = require('electron').ipcRenderer;			
-
 			const video = document.getElementsByTagName('video')[0];			
 			video.onplay = () => {
-				ipcRenderer.send('toBgPage', {
+				sendIPCMessage('toBgPage', {
 					type: 'passAlong',
 					data: {
 						type: 'onPlay',
 						data: {
 							view: 'youtubeSubscriptions'
 						}
-					}
+					} as PassedAlongMessage<'onPlay'>
 				});
 			}
 			video.onpause = () => {
-				ipcRenderer.send('toBgPage', {
+				sendIPCMessage('toBgPage', {
 					type: 'passAlong',
 					data: {
 						type: 'onPause',
 						data: {
 							view: 'youtubeSubscriptions'
 						}
-					}
+					} as PassedAlongMessage<'onPause'>
 				});
 			}
 		}
@@ -613,7 +606,7 @@ export namespace Helpers {
 				if (Array.from(document.querySelectorAll('a[is="yt-endpoint"]')).filter((a: HTMLAnchorElement) => {
 					return a.href.indexOf('accounts.google.com') > -1;
 				}).length > 0) {
-					require('electron').ipcRenderer.send('log', {
+					sendIPCMessage('log', {
 						type: 'toast',
 						args: 'Please log in'
 					});
@@ -816,14 +809,13 @@ export namespace Helpers {
 		}
 
 		export function detectOnEnd() {
-			const ipcRenderer = require('electron').ipcRenderer;
 			const video = document.querySelector('video');
 			video.addEventListener('ended', () => {
-				ipcRenderer.send('toBgPage', {
+				sendIPCMessage('toBgPage', {
 					type: 'passAlong',
 					data: {
 						type: 'onVideoEnded'
-					}
+					} as PassedAlongMessage<'onVideoEnded'>
 				})
 			});
 		}
@@ -901,4 +893,14 @@ export namespace Helpers {
 			});
 		}));
 	}
+
+	export function sendIPCMessage<T extends keyof SafeIPCRenderer.MessagePairs>(channel: T, 
+		message: SafeIPCRenderer.MessagePairs[T], target: {
+			send: (channel: string, ...args: any[]) => void;
+		} = ipcRenderer): void {
+		target.send(channel, message);
+	}
 }
+export default Helpers; 
+
+export type sendIPCMessage = <T extends keyof SafeIPCRenderer.MessagePairs>(channel: T, message: SafeIPCRenderer.MessagePairs[T]) => void;

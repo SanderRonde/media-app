@@ -1,4 +1,4 @@
-import { Helpers, MappedKeyboardEvent } from '../libs/helpers'
+import { Helpers } from '../libs/helpers'
 import { AppWindow } from './appWindow'
 
 export namespace Netflix {
@@ -129,14 +129,14 @@ export namespace Netflix {
 			]);
 			if (state.playing !== playing || state.title !== title) {
 				AppWindow.updateStatus(state.title);
-				ipcRenderer.send('toBgPage', {
+				Helpers.sendIPCMessage('toBgPage', {
 					type: 'passAlong',
 					data: {
 						type: playing ? 'onPlay' : 'onPause',
 						data: {
 							view: 'netflix'
 						}
-					}
+					} as PassedAlongMessage<'onPlay'|'onPause'>
 				});
 
 				state.playing = playing;

@@ -1,10 +1,10 @@
 import { 
 	REMOTE_PORT, INDEX_PATH, EXTERNAL_EVENTS,
-	EXTERNAL_EVENT, ICONS_DIR,
-	SW_TOOLBOX_DIR, LOG_ERROR_REQUESTS, LOG_REQUESTS,
-	ARG_EVENTS, ARG_EVENT
+	ICONS_DIR, SW_TOOLBOX_DIR, LOG_ERROR_REQUESTS, 
+	LOG_REQUESTS, ARG_EVENTS
 } from '../constants/constants'
 
+import { Helpers } from '../../window/libs/helpers';
 import { log, error, toast } from '../log/log';
 import ws = require('websocket');
 import urlLib = require('url');
@@ -349,25 +349,25 @@ export class RemoteServer {
 		this.serveFile(url, res);
 	}
 	
-	private sendCommand(command: string, data?: string) {
+	private sendCommand(command: keyof MessageReasons | EXTERNAL_EVENT | ARG_EVENT, data?: string) {
 		//Launch the app if it isn't running yet
 		const didLaunch = this.launch(false);
 		if (didLaunch) {
 			return;
 		}
 		
-		this.refs.activeWindow && this.refs.activeWindow.webContents.send('fromBgPage', {
+		this.refs.activeWindow && Helpers.sendIPCMessage('fromBgPage', {
 			cmd: command,
 			type: 'event',
 			data: data
-		});
+		}, this.refs.activeWindow.webContents);
 	}
 	
 	private async handleAPIRequest(url: string, res: http.ServerResponse) {
-		const command = url.split('/api/').slice(1).join('/api/');
-		const partialCommand = command.split('/')[0];
+		const command = url.split('/api/').slice(1).join('/api/') as EXTERNAL_EVENT;
+		const partialCommand = command.split('/')[0] as EXTERNAL_EVENT;
 	
-		if (EXTERNAL_EVENTS.indexOf(command as EXTERNAL_EVENT) > -1) {
+		if (EXTERNAL_EVENTS.indexOf(command) > -1) {
 			this.sendCommand(command);
 			if (LOG_REQUESTS) {
 				console.log(`👌 - [200] - ${url}`);

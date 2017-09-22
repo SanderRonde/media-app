@@ -1,4 +1,4 @@
-import { Helpers, $, MappedKeyboardEvent } from '../libs/helpers'
+import { Helpers, $ } from '../libs/helpers'
 import { FireBaseConfig, getSecret } from '../libs/getSecrets'
 import { AppWindow } from './appWindow'
 import firebase = require('firebase');
@@ -514,14 +514,14 @@ export namespace YoutubeMusic {
 			const address = 'https://www.youtube.com/watch';
 			const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
 			
-			require('electron').ipcRenderer.send('toBgPage', {
+			Helpers.sendIPCMessage('toBgPage', {
 				type: 'passAlong',
 				data: {
 					type: 'saveUrl',
 					data: {
 						url: url
 					}
-				}
+				} as PassedAlongMessage<'saveUrl'>
 			});
 		}).toString()})()`, false);
 	}

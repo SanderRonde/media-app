@@ -1,74 +1,11 @@
-import { EXTERNAL_EVENT, ARG_EVENT } from '../../renderer/constants/constants'
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
-import { MappedKeyboardEvent, Helpers, $ } from '../libs/helpers'
+import { Helpers, $ } from '../libs/helpers'
 import { ipcRenderer, clipboard } from 'electron'
 import { YoutubeSearch } from './youtubeSearch'
 import { YoutubeMusic } from './youtubeMusic'
 import { Netflix } from './netflix'
 
 export type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions'|'youtubesearch';
-
-export interface MessageReasons {
-	isMinimized: boolean;
-	isFullscreen: boolean;
-	isMaximized: boolean;
-
-	onFullscreened: void;
-	onMaximized: void;
-	onRestored: void;
-	onMinimized: void;
-
-	exitFullscreen: void;
-	enterFullscreen: void;
-	openDevTools: void;
-	minimize: void;
-	maximize: void;
-	restore: void;
-	close: void;
-
-	magicButton: void;
-	lowerVolume: void;
-	raiseVolume: void;
-	pausePlay: void;
-	focus: void;
-	pause: void;
-	play: void;
-
-	quit: void;
-	launch: void;
-
-	messageServer: void;
-	playStatus: void;
-}
-
-export interface PassedAlongMessages {
-	loadingCompleted: {
-		view: ViewNames;
-	};
-	taskResult: {
-		result: any;
-		name: string;
-		id: number;
-	};
-	saveUrl: {
-		url: string;
-	};
-	keyPress: MappedKeyboardEvent;
-	paste: string;
-	changeYoutubeSubsLink: {
-		link: string;
-	}
-	navToVideo: string;
-	youtubeSearchClick: void;
-	onVideoEnded: void;
-
-	onPause: {
-		view: ViewNames;
-	};
-	onPlay: {
-		view: ViewNames;
-	};
-}
 
 const KeyListeningViews: ViewNames[] = [
 	'ytmusic',
@@ -218,7 +155,7 @@ export namespace AppWindow {
 					YoutubeSearch.onPaste(pasteData);
 				} else {
 					//This view has no listeners itself, pass them along
-					onKeyPress(e as MappedKeyboardEvent);
+					onKeyPress(e);
 				}
 			}
 		});
@@ -408,7 +345,7 @@ export namespace AppWindow {
 		switchToview(startView, true);
 
 		window.addEventListener('keydown', (e) => {
-			handleKeyboardEvent(e as MappedKeyboardEvent)
+			handleKeyboardEvent(e)
 		});
 	}
 
@@ -501,39 +438,27 @@ export namespace AppWindow {
 	}
 
 	function listenForMessages() {
-		ipcRenderer.on('log', (event: Event, message: {
-			type: string;
-			args: any[]|string
-		}) => {
-			const { type, args } = message;
-			switch (type) {
+		ipcRenderer.on('log', (event, message) => {
+			switch (message.type) {
 				case 'info':
-					console.info('[BGPAGE] -', ...args);
+					console.info('[BGPAGE] -', ...message.args);
 					break;
 				case 'log':
-					console.log('[BGPAGE] -', ...args);
+					console.log('[BGPAGE] -', ...message.args);
 					break;
 				case 'warn':
-					console.warn('[BGPAGE] -', ...args);
+					console.warn('[BGPAGE] -', ...message.args);
 					break;
 				case 'error':
-					console.error('[BGPAGE] -', ...args);
+					console.error('[BGPAGE] -', ...message.args);
 					break;
 				case 'toast':
-					Helpers.showToast(args as string);
+					Helpers.showToast(message.args);
 					break;
 			}
 		});
 
-		ipcRenderer.on('fromBgPage', (event: Event, message: {
-			identifier: string;
-			data: MessageReasons[keyof MessageReasons];
-			type: 'response';
-		}|{
-			cmd: keyof MessageReasons | EXTERNAL_EVENT | ARG_EVENT
-			type: 'event';
-			data?: string;
-		}) => {
+		ipcRenderer.on('fromBgPage', (event, message) => {
 			if (message.type === 'response') {
 				const identifier = message.identifier;
 				channels.filter((val) => {
@@ -553,7 +478,7 @@ export namespace AppWindow {
 			data: PassedAlongMessages[T]
 		}) => {
 			const { type, data } = message;
-			switch (type) {
+			switch (type as T) {
 				case 'loadingCompleted':
 					onLoadingComplete((data as PassedAlongMessages['loadingCompleted']).view);
 					break;
@@ -587,7 +512,7 @@ export namespace AppWindow {
 				case 'onPause':
 					const onPauseData = data as PassedAlongMessages['onPause'];
 					if (onPauseData.view === getActiveViewName()) {
-						ipcRenderer.send('toBgPage', {
+						Helpers.sendIPCMessage('toBgPage', {
 							type: 'playStatus',
 							data: 'pause'
 						});
@@ -596,7 +521,7 @@ export namespace AppWindow {
 				case 'onPlay':
 					const onPlayData = data as PassedAlongMessages['onPause'];
 					if (onPlayData.view === getActiveViewName()) {
-						ipcRenderer.send('toBgPage', {
+						Helpers.sendIPCMessage('toBgPage', {
 							type: 'playStatus',
 							data: 'play'
 						});
@@ -624,7 +549,7 @@ export namespace AppWindow {
 					resolve(data);
 				}
 			});
-			ipcRenderer.send('toBgPage', {
+			Helpers.sendIPCMessage('toBgPage', {
 				identifier: identifier,
 				type: reason,
 				data: data
