@@ -272,7 +272,11 @@ export namespace AppWindow {
 			switchToview('netflix');
 		} else if (event.key === 'F12') {
 			sendBackgroundPageMessage('openDevTools');
+		} else {
+			console.log(`Key '${event.key}' was pressed but ignored`);
+			return;
 		}
+		console.log(`Key '${event.key}' was pressed and activated`);
 	}
 
 	export const loadedViews: ViewNames[] = [];
@@ -345,7 +349,7 @@ export namespace AppWindow {
 		switchToview(startView, true);
 
 		window.addEventListener('keydown', (e) => {
-			handleKeyboardEvent(e)
+			handleKeyboardEvent(e);
 		});
 	}
 
