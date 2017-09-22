@@ -225,7 +225,7 @@ export namespace YoutubeSearch {
 					matches: ['*://www.youtube.com/*'],
 					css: {
 						files: [
-							'youtubeSearch/results/results.css'
+							'./window/views/youtubeSearch/results/results.css'
 						]
 					},
 					run_at: 'document_start'
