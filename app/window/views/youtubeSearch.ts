@@ -239,13 +239,13 @@ export namespace YoutubeSearch {
 			});
 		}
 
-		export function navTo(url: string) {
-			searchResultsView.loadURL(url);
+		export async function navTo(url: string) {
+			(await searchResultsPromise).loadURL(url);
 		}
 	}
 
 	export namespace SearchBar {
-		let searchBar: HTMLInputElement = document.getElementById('searchInput') as HTMLInputElement;
+		export let searchBar: HTMLInputElement = document.getElementById('searchInput') as HTMLInputElement;
 		let currentSuggestions: Array<string> = [];
 		let selectedSuggestion: number = -1;
 		let originalInput: string = '';
@@ -286,8 +286,8 @@ export namespace YoutubeSearch {
 
 		async function doSearch(query: string) {
 			lastSearch = query;
-			const searchResultsView = await SearchResultsPage.getView();
-			searchResultsView.loadURL(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
+			SearchResultsPage.navTo(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
+			toggleVideoVisibility();
 			hideSuggestions();
 		}
 
@@ -344,8 +344,10 @@ export namespace YoutubeSearch {
 			}
 		}
 
-		export function hideSuggestions() {
+		export function hideSuggestions(): boolean {
+			const wasHidden = $('#youtubeSearchCont').classList.contains('suggestionsHidden')
 			$('#youtubeSearchCont').classList.add('suggestionsHidden');
+			return wasHidden;
 		}
 
 		export function showSuggestions() {
@@ -353,9 +355,17 @@ export namespace YoutubeSearch {
 		}
 
 		export async function setup() {
-			searchBar.addEventListener('keydown', (e) => {
+			searchBar.addEventListener('keydown', async (e) => {
 				if (e.key === 'Escape') {
-					hideSuggestions();
+					if (hideSuggestions()) {
+						//Already was hidden, hide this bar in general
+						SearchBar.hide();
+						
+						//Now focus the video
+						if (activePage === 'video') {
+							(await Video.getView()).focus();
+						}
+					}
 				} else if (e.key === ' ' && e.shiftKey) {
 					showSuggestions();
 					e.preventDefault();
@@ -406,24 +416,6 @@ export namespace YoutubeSearch {
 				return true;
 			}
 			return false;
-		}
-
-		let wasShownPreTemp = true;
-		
-		export function tempShow(first: boolean = false) {
-			if (first) {
-				wasShownPreTemp = isShown();
-			}
-
-			show();
-		}
-
-		export function undoTempShow() {
-			if (wasShownPreTemp) {
-				show();
-			} else {
-				hide();
-			}
 		}
 
 		export function isShown() {
@@ -693,7 +685,7 @@ export namespace YoutubeSearch {
 			activePage = 'results';
 			await Helpers.wait(500);
 			(await SearchResultsPage.getView()).focus();
-			SearchBar.tempShow();
+			SearchBar.show();
 			if (SearchBar.lastSearch) {
 				AppWindow.updateStatus(`Browsing search results for ${SearchBar.lastSearch}`)
 			} else {
@@ -704,7 +696,7 @@ export namespace YoutubeSearch {
 			activePage = 'video';
 			await Helpers.wait(500);
 			(await Video.getView()).focus();
-			SearchBar.undoTempShow();
+			SearchBar.hide();
 			AppWindow.updateStatus(await Video.getTitle());
 		}
 	}
@@ -716,6 +708,16 @@ export namespace YoutubeSearch {
 
 		if (event.key === 'h') {
 			toggleVideoVisibility();
+			return true;
+		}
+		if (event.key === 'ArrowLeft' && event.altKey && activePage === 'results') {
+			const searchView = (await SearchResultsPage.getView())
+			searchView.canGoBack() && searchView.goBack();
+			return true;
+		}
+		if (event.key === 'ArrowRight' && event.altKey && activePage === 'results') {
+			const searchView = (await SearchResultsPage.getView());
+			searchView.canGoForward() && searchView.goForward();
 			return true;
 		}
 		if (event.key === 's' && SearchBar.toggle()) {
@@ -732,7 +734,15 @@ export namespace YoutubeSearch {
 				return true;
 			}
 		if (event.key === 'Tab') {
-			SearchBar.focus();
+			if (document.activeElement === SearchBar.searchBar) {
+				if (activePage === 'video') {
+					(await Video.getView()).focus();
+				} else {
+					(await SearchResultsPage.getView()).focus();
+				}
+			} else {
+				SearchBar.focus();
+			}
 		}
 		return false;
 	}
