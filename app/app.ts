@@ -76,7 +76,7 @@ namespace MusicApp {
 					label: 'separator', 
 					type: 'separator' 
 				}, { 
-					label: 'toggleAutoBoot', 
+					label: 'launch on startup', 
 					type: 'checkbox', 
 					checked: Refs.DEBUG ? false : await Settings.get('launchOnBoot'),
 					click: async () => {
