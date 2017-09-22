@@ -1,6 +1,6 @@
-import { Helpers, MappedKeyboardEvent, $ } from './helpers'
+import { Helpers, MappedKeyboardEvent, $ } from '../libs/helpers'
 import { YoutubeVideoPlayer } from './youtubeMusic'
-import { getSecret } from '../genericJs/getSecrets'
+import { getSecret } from '../libs/getSecrets'
 import { AppWindow } from './appWindow'
 
 function arr(first: number, last: number): number[] {
@@ -127,7 +127,7 @@ export namespace YoutubeSearch {
 					matches: ['*://www.youtube.com/*'],
 					js: {
 						files: [
-							'genericJs/keypress.js'
+							'./window/libs/keypress.js'
 						]
 					},
 					run_at: 'document_end'
@@ -136,7 +136,7 @@ export namespace YoutubeSearch {
 					matches: ['*://www.youtube.com/*'],
 					css: {
 						files: [
-							'youtube/content/content.css'
+							'./window/views/youtube/content/content.css'
 						]
 					},
 					run_at: 'document_start'
@@ -214,9 +214,9 @@ export namespace YoutubeSearch {
 					matches: ['*://www.youtube.com/*'],
 					js: {
 						files: [
-							'genericJs/comm.js',
-							'genericJs/keypress.js',
-							'youtubeSearch/results/results.js'
+							'./window/libs/comm.js',
+							'./window/libs/keypress.js',
+							'./window/views/youtubeSearch/results/results.js'
 						]
 					},
 					run_at: 'document_end'

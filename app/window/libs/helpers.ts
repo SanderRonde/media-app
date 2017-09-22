@@ -1,9 +1,9 @@
 import * as fs from 'fs'
 import * as md5 from 'md5'
 import { shell, ipcRenderer } from 'electron'
-import { ViewNames } from '../window/appWindow'
-import { route } from '../renderer/routing/routing'
-import { YoutubeVideoPlayer } from '../window/youtubeMusic'
+import { ViewNames } from '../../window/views/appWindow'
+import { route } from '../../renderer/routing/routing'
+import { YoutubeVideoPlayer } from '../../window/views/youtubeMusic'
 
 export const EXAMPLE_STYLES = `html, body, a {
 	background-color: white!important;

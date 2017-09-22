@@ -1,9 +1,9 @@
-import { YoutubeSubscriptions } from './youtubeSubscriptions'
-import { AppWindow, ViewNames } from './appWindow'
-import { YoutubeSearch } from './youtubeSearch'
-import { YoutubeMusic } from './youtubeMusic'
-import { Helpers } from './helpers'
-import { Netflix } from './netflix'
+import { YoutubeSubscriptions } from './views/youtubeSubscriptions'
+import { AppWindow, ViewNames } from './views/appWindow'
+import { YoutubeSearch } from './views/youtubeSearch'
+import { YoutubeMusic } from './views/youtubeMusic'
+import { Helpers } from './libs/helpers'
+import { Netflix } from './views/netflix'
 
 declare let window: CustomWindow;
 

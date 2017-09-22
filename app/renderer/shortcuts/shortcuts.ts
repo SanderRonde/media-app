@@ -1,4 +1,4 @@
-import { MessageReasons } from '../../window/appWindow'
+import { MessageReasons } from '../../window/views/appWindow'
 import { globalShortcut, app } from 'electron'
 import { log } from '../log/log'
 

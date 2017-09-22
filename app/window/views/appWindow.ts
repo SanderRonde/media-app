@@ -1,6 +1,6 @@
-import { EXTERNAL_EVENT, ARG_EVENT } from '../renderer/constants/constants'
+import { EXTERNAL_EVENT, ARG_EVENT } from '../../renderer/constants/constants'
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
-import { MappedKeyboardEvent, Helpers, $ } from './helpers'
+import { MappedKeyboardEvent, Helpers, $ } from '../libs/helpers'
 import { ipcRenderer, clipboard } from 'electron'
 import { YoutubeSearch } from './youtubeSearch'
 import { YoutubeMusic } from './youtubeMusic'

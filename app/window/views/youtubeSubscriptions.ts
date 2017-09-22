@@ -1,4 +1,4 @@
-import { Helpers, $, MappedKeyboardEvent } from './helpers'
+import { Helpers, $, MappedKeyboardEvent } from '../libs/helpers'
 import { YoutubeVideoPlayer } from './youtubeMusic'
 import { AppWindow, ViewNames } from './appWindow'
 
@@ -108,7 +108,7 @@ export namespace YoutubeSubscriptions {
 					matches: ['*://www.youtube.com/*'],
 					js: {
 						files: [
-							'genericJs/keypress.js'
+							'./window/libs/keypress.js'
 						]
 					},
 					run_at: 'document_end'
@@ -117,7 +117,7 @@ export namespace YoutubeSubscriptions {
 					matches: ['*://www.youtube.com/*'],
 					css: {
 						files: [
-							'youtube/content/content.css'
+							'./window/views/youtube/content/content.css'
 						]
 					},
 					run_at: 'document_start'

@@ -1,7 +1,7 @@
 const optionalRequire = (require('optional-require') as optionalRequire)(require);
-import { STORED_DATA_FILE } from '../renderer/constants/constants';
-import { route } from '../renderer/routing/routing'
-import { Helpers } from '../window/helpers'
+import { STORED_DATA_FILE } from '../../renderer/constants/constants';
+import { route } from '../../renderer/routing/routing'
+import { Helpers } from './helpers'
 import fs = require('fs');
 
 function exists(path: string): Promise<boolean> {

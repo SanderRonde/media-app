@@ -6,11 +6,11 @@ import fs = require('fs');
 import url = require('url');
 import path = require('path');
 import AutoLaunch = require('auto-launch');
-import { handleUpdates } from './renderer/updater/updater'
 import { RemoteServer }  from './renderer/remote/remote';
-import { AdBlocking } from './renderer/adblocking/adblocking';
+import { handleUpdates } from './renderer/updater/updater'
 import { Shortcuts } from './renderer/shortcuts/shortcuts';
-import { MessageReasons, PassedAlongMessages } from './window/appWindow';
+import { AdBlocking } from './renderer/adblocking/adblocking';
+import { MessageReasons, PassedAlongMessages } from './window/views/appWindow';
 
 namespace MusicApp {
 	namespace Refs {

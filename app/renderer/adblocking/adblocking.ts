@@ -80,7 +80,7 @@ export namespace AdBlocking {
 
 	function init(): Promise<void> {
 		return new Promise<void>(async (resolve) => {
-			fs.readFile(await route('./appLibs/adblocking/easylist.txt'), 'utf8', (err, easylistTxt) => {
+			fs.readFile(await route('./renderer/adblocking/easylist.txt'), 'utf8', (err, easylistTxt) => {
 				if (err) {
 					dialog.showMessageBox({
 						message: 'Failed to find ad blocking list',

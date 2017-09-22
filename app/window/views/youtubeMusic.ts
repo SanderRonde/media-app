@@ -1,5 +1,5 @@
-import { Helpers, $, MappedKeyboardEvent } from './helpers'
-import { FireBaseConfig, getSecret } from '../genericJs/getSecrets'
+import { Helpers, $, MappedKeyboardEvent } from '../libs/helpers'
+import { FireBaseConfig, getSecret } from '../libs/getSecrets'
 import { AppWindow } from './appWindow'
 import firebase = require('firebase');
 import { shell } from 'electron';
@@ -134,15 +134,15 @@ export namespace YoutubeMusic {
 				name: 'youtubeSearchJs',
 				matches: ['*://www.youtube.com/*'],
 				js: {
-					files: ['youtube/youtubeSearch/youtubeSearch.js', 
-						'genericJs/keypress.js']
+					files: ['./window/views/youtube/youtubeSearch/youtubeSearch.js', 
+						'./window/libs/keypress.js']
 				},
 				run_at: 'document_end'
 			}, {
 				name: 'youtubeSearchCss',
 				matches: ['*://www.youtube.com/*'],
 				css: {
-					files: ['youtube/youtubeSearch/youtubeSearch.css']
+					files: ['./window/views/youtube/youtubeSearch/youtubeSearch.css']
 				},
 				run_at: "document_start"
 			}]);
@@ -201,9 +201,9 @@ export namespace YoutubeMusic {
 					matches: ['*://*/*'],
 					js: {
 						files: [
-							'/genericJs/comm.js',
-							'/genericJs/keypress.js',
-							'/youtube/1001tracklists/content.js'
+							'./window/libs/comm.js',
+							'./window/libs/keypress.js',
+							'./window/views/youtube/1001tracklists/content.js'
 						]
 					}
 				}]);
@@ -417,9 +417,9 @@ export namespace YoutubeMusic {
 			matches: ['*://www.youtube.com/*'],
 			js: {
 				files: [
-					'genericJs/comm.js',
-					'genericJs/keypress.js',
-					'youtube/content/content.js'
+					'./window/libs/comm.js',
+					'./window/libs/keypress.js',
+					'./window/views/youtube/content/content.js'
 				]
 			},
 			run_at: 'document_end'
@@ -428,8 +428,8 @@ export namespace YoutubeMusic {
 			matches: ['*://www.youtube.com/*'],
 			css: {
 				files: [
-					'youtube/content/content.css',
-					'youtube/content/youtubeVideo.css'
+					'./window/views/youtube/content/content.css',
+					'./window/views/youtube/content/youtubeVideo.css'
 				]
 			},
 			run_at: 'document_start'
