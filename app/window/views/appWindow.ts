@@ -228,19 +228,13 @@ export namespace AppWindow {
 		const activeViewView = getActiveViewClass().Commands;
 		switch (command) {
 			case 'lowerVolume':
-				activeViewView.lowerVolume();
-				break;
 			case 'raiseVolume':
-				activeViewView.raiseVolume();
+			case 'pause':
+			case 'play':
+				activeViewView[command]();
 				break;
 			case 'pausePlay':
 				activeViewView.togglePlay();
-				break;
-			case 'pause':
-				activeViewView.pause();
-				break;
-			case 'play':
-				activeViewView.play();
 				break;
 			case 'focus':
 				onFocus();
@@ -260,27 +254,6 @@ export namespace AppWindow {
 			case 'netflix':
 				switchToview('netflix');
 				break;
-			case 'up':
-				if (activeView === 'youtubeSubscriptions') {
-					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
-						window.videos.selected.goUp();
-					});
-				}
-				break;
-			case 'down':
-				if (activeView === 'youtubeSubscriptions') {
-					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
-						window.videos.selected.goDown();
-					});
-				}
-				break;
-			case 'left':
-				if (activeView === 'youtubeSubscriptions') {
-					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
-						window.videos.selected.goLeft();
-					});
-				}
-				break;
 			case 'right':
 				if (activeView === 'youtubeSubscriptions') {
 					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
@@ -288,6 +261,25 @@ export namespace AppWindow {
 					});
 				} else if (activeView === 'youtubesearch') {
 					YoutubeSearch.Queue.skip();
+				}
+				break;
+			case 'up':
+			case 'down':
+			case 'left':
+				if (activeView === 'youtubeSubscriptions') {
+					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
+						switch (command) {
+							case 'up':
+								window.videos.selected.goUp();
+								break;
+							case 'down':
+								window.videos.selected.goDown();
+								break;
+							case 'left':
+								window.videos.selected.goLeft();
+								break;
+						}
+					});
 				}
 				break;
 			case 'toggleVideo':
@@ -298,10 +290,8 @@ export namespace AppWindow {
 				}
 				break;
 			case 'cast':
-				YoutubeSearch.Queue.push(data);
-				break;
 			case 'hiddenCast':
-				YoutubeSearch.Queue.push(data, true);
+				YoutubeSearch.Queue.push(data, command === 'hiddenCast');
 				break;
 		}
 	}
@@ -557,6 +547,7 @@ export namespace AppWindow {
 				onShortcut(cmd, data);
 			}
 		});
+
 		ipcRenderer.on('passedAlong', <T extends keyof PassedAlongMessages>(event: Event, message: {
 			type: T;
 			data: PassedAlongMessages[T]
