@@ -4,12 +4,14 @@ import { log } from '../log/log'
 
 export namespace Shortcuts {
 	const remote: {
-		activeWindowContainer: {
-			activeWindow: Electron.BrowserWindow;
-		}
+		activeWindow: Electron.BrowserWindow;
+		tray: Electron.Tray;
+		DEBUG: boolean;
 		launch(focus?: boolean): void;
 	} = {
-		activeWindowContainer: null,
+		activeWindow: null,
+		tray: null,
+		DEBUG: null,
 		launch: null
 	}
 
@@ -39,6 +41,11 @@ export namespace Shortcuts {
 		switch (event) {
 			case 'focus':
 				app.focus();
+				
+				//App has already been launched before otherwise
+				//it wouldn't get to this point
+				//so just use this as a shortcut to focus
+				remote.launch(true);
 				break;
 		}
 
@@ -46,18 +53,22 @@ export namespace Shortcuts {
 	}
 
 	function sendMessage(data: keyof MessageReasons) {
-		remote.activeWindowContainer && Helpers.sendIPCMessage('fromBgPage', {
+		remote.activeWindow && Helpers.sendIPCMessage('fromBgPage', {
 			cmd: data,
 			type: 'event'
-		}, remote.activeWindowContainer.activeWindow.webContents);
+		}, remote.activeWindow.webContents);
 	}
 
-	export function init(activeWindowContainer: {
-		activeWindow: Electron.BrowserWindow
+	export function init(refs: {
+		activeWindow: Electron.BrowserWindow;
 		tray: Electron.Tray;
+		DEBUG: boolean;
 	}, launch: () => void) {
-		remote.activeWindowContainer = activeWindowContainer;
+		const {activeWindow, DEBUG, tray } = refs;
+		remote.activeWindow = activeWindow;
 		remote.launch = launch;
+		remote.DEBUG = DEBUG;
+		remote.tray = tray;
 
 		for (let [keys, command] of map.entries()) {
 			for (let key of keys) {
