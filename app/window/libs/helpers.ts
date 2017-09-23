@@ -269,7 +269,7 @@ export namespace Helpers {
 			view.executeJavaScript('var exports = exports || {}', false);		
 			view.executeJavaScript(replaceParameters('var sendIPCMessage = REPLACE.sendIPCMessage;', {
 				sendIPCMessage: sendIPCMessage
-			}));
+			}), false);
 		}
 		if (config.code) {
 			if (isJS) {
