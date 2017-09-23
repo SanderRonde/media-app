@@ -1,0 +1,65 @@
+{
+	"3.0.0": [
+		"Now uses electron as a backend",
+		"Stores your playlist data on Firebase instead",
+		"Has an accompanying mobile remote control",
+		"Can now \"cast\" videos",
+		"Added reload functionality for music view to counteract youtube randomly speeding it up or slowing it down"
+	],
+	"3.0.1": [
+		"Added the ability to open dev tools"
+	],
+	"3.0.2": [
+		"Events are no longer counted twice",
+		"Fixed main video alignment"
+	],
+	"3.0.3": [
+		"Waits for CSS to load longer",
+		"Added logs in devtools",
+		"Searches for available ports in case the default one can't be used"
+	],
+	"3.0.4": [],
+	"3.0.5": [
+		"Ensures the same command isn't interpreted twice"
+	],
+	"3.0.6": [
+		"Shows a tagline with the version number beneath the spinner",
+		"Shows a toast when the port is different"
+	],
+	"3.0.7": [
+		"Fixed suggestions on youtubeSearch view",
+		"Added delay before executing youtube video scripts"
+	],
+	"3.0.8": [
+		"Fixed youtubesearch view video scripts"
+	],
+	"3.0.9": [
+		"Added tray icon",
+		"Added auto-launch option",
+		"Can launch with the Shift+Alt+L shortcut",
+		"Ignores keypresses on login pages",
+		"Hides loading spinner when you have to log in on the youtubeSubs view",
+		"Icon should look better"
+	],
+	"3.0.10": [
+		"Launches the app when any command is triggered and it's not yet launched"
+	],
+	"3.0.11": [
+		"Fixed remote control"
+	],
+	"3.0.12": [
+		"Actually fixed remote",
+		"Pressing remote buttons launches the app if it isn't running yet",
+		"Added fallback font on remote for if Roboto isn't supported (Segoe UI)",
+		"Queues logs/toasts until the window is active",
+		"Multiple toasts will queue up"
+	],
+	"3.0.13": [
+		"Fixed a bunch of bugs in the youtubeSearch view",
+		"Made code a bit neater",
+		"Added new mobile icons",
+		"App asks before downloading update",
+		"Auto restarts if the window hasn't launched yet and it has to restart",
+		"Shows more notifications instead of dialogs (when possible)"
+	]
+}

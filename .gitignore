@@ -207,3 +207,5 @@ app/genericJs/secrets.ts
 dist/
 
 out/
+
+!scripts/**/*.js

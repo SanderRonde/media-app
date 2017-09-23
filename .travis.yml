@@ -25,8 +25,10 @@ install:
 - npm install typescript@latest electron-builder grunt -g
 
 script:
+  - ./scripts/tag.sh
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tsc && grunt move && electron-builder -p "onTagOrDraft"; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tsc && grunt move && electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw; fi
+  - node ./scripts/publishRelease.js
 
 branches:
   except:
@@ -38,4 +40,5 @@ notifications:
     on_failure: change
 env:
   global:
-    secure: k3lzot/TS6SubnRLMNjJ4ca1dm8vwUXLHmLGP7oGc9bhKxcF2uZNv8BuV2EeX6yNkE3zlzopvo5ulliHzXYoeM6rMmKeQoUmchuvOlxxOv0KYV8NWxGlVtydRl6ZvoKtYGCCIEqsviR/3GRgFNs3WRW9W14pJXHCc4dZ8n0wsxU9FutuPluVVu5z3YKL6ehqU3Oh4LbaMkN3xWjhqLFWNi/2oK+fwoZ1ZXfcVktsO/jp/0AXIkkr0WaJ45TVQSg2MAzlfa6hQGJfDm8INDsxpiJm12w9C8c3YLUJPx2w8aI+t7FJfXlSkanAItHUBFBaXDMeXackHtzgusNI2+cPz5vfTm0AcbAUXNZeURPJKwQwT6ycmgSTeX0sFk47griJZBEi/re75SURb8KsNEfldZxswG6OmA742orAKoj9Fj2edUdLOmYtU/7dvUWWyIFFJzclCxgw8Pm+NRSkwp7Rn22XFNMrTY+U8pCONvO5CDlRknWvLCsHqfqx5EJF+CKxa+IS2yCjwmq6rvbdlV974jmtHFdTPhOIC4RzmolidaAUnGc5VTknrzTshtMPF0Aq4ksfI766BhiTsekoFpxi90Ffkz+VQMOgK9cp9B/nYAd3rop8+KsuJfmOvLpw2SFTZgPtsi5J/Wenu5faQ195646PDGvv2tNESob0eW0fNT0=
+  - secure: k3lzot/TS6SubnRLMNjJ4ca1dm8vwUXLHmLGP7oGc9bhKxcF2uZNv8BuV2EeX6yNkE3zlzopvo5ulliHzXYoeM6rMmKeQoUmchuvOlxxOv0KYV8NWxGlVtydRl6ZvoKtYGCCIEqsviR/3GRgFNs3WRW9W14pJXHCc4dZ8n0wsxU9FutuPluVVu5z3YKL6ehqU3Oh4LbaMkN3xWjhqLFWNi/2oK+fwoZ1ZXfcVktsO/jp/0AXIkkr0WaJ45TVQSg2MAzlfa6hQGJfDm8INDsxpiJm12w9C8c3YLUJPx2w8aI+t7FJfXlSkanAItHUBFBaXDMeXackHtzgusNI2+cPz5vfTm0AcbAUXNZeURPJKwQwT6ycmgSTeX0sFk47griJZBEi/re75SURb8KsNEfldZxswG6OmA742orAKoj9Fj2edUdLOmYtU/7dvUWWyIFFJzclCxgw8Pm+NRSkwp7Rn22XFNMrTY+U8pCONvO5CDlRknWvLCsHqfqx5EJF+CKxa+IS2yCjwmq6rvbdlV974jmtHFdTPhOIC4RzmolidaAUnGc5VTknrzTshtMPF0Aq4ksfI766BhiTsekoFpxi90Ffkz+VQMOgK9cp9B/nYAd3rop8+KsuJfmOvLpw2SFTZgPtsi5J/Wenu5faQ195646PDGvv2tNESob0eW0fNT0=
+  - secure: mL5yNSOcCb3tCDeI+BstABsxbeoNoVnEjzA3pwqqGZr6SQ10CIdWU+i/SXeieEAs6rt0RdhcWuHqVofSzaIeV0ENnVL/UyirH+xLMtfDri71wW7SSwxYXjGMnrnTB6yjwXJFa/wnqUJQi3OTsktIms3SvNIsVrxROEpoaMnTKVwo0ZkY96DrhJEwgRmu63xGTUKFzY1ndsDpq8Y/DsRBA3Mya9+QNiCUXl+Gig1aPixEfX4TBCzIP0qkhnMaoWN6IYYe8fmLR0RpgHz7jKTFMYObZZQK+nzT2fkglb83+4WH4Kl6bDhLhiCpiehVTRLrzXARotSpoB8CjXy8ernDpYdtfem2Sz1xnzPpaerSoKhGKsS2BEZYk8GJawwSduKsyx57oZA2Y+p8xngrdND9lHCmOQqQxkNlGOZyTYs0fYywedEv4hVJimCiouuntjzFVG5xO06MLkkHOJCXyRU2Ieiu9sSBw6N3VoEWKQe6LUvSoyzT6SJ+aGqUdPHcev8hUxC00SX2wLAe3QeqYuXn74NjPQieiiAIBMfpxQqQ9qVnvujeGdkqBYyKnPZJ48h/Ut/lS5inKg4p4wy8rTzpMyz27AdQXaejqjIPGUW5gfxDBFGgcAJcX0fPiGBxspjh/XLvp+1lcoKp+3k+ANWcrAkzTnjNHs9IiD+YOWN1GeE=
