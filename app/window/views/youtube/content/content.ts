@@ -168,6 +168,7 @@ interface Window {
 		}
 	}
 
+	document.querySelector('video').style.transition = `background-color 500ms linear`;
 	window.setInterval(updateColors, 1e4);
 	updateColors();
 	window.setInterval(window.saveProgress, 5e3);
