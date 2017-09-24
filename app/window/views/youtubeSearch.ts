@@ -639,11 +639,9 @@ export namespace YoutubeSearch {
 	}
 
 	export async function setup() {
-		await Promise.all([
-			SearchResultsPage.setup(),
-			SearchBar.setup(),
-			Video.setup()
-		]);
+		await SearchResultsPage.setup();
+		await SearchBar.setup();
+		await Video.setup();
 		await Helpers.wait(15);
 		SearchResultsPage.navTo('https://www.youtube.com/');
 		AppWindow.updateStatus('Looking at search page');
