@@ -764,7 +764,7 @@ export namespace YoutubeSearch {
 			} catch (e) {
 				return;
 			}
-			if ((url.hostname === 'youtu.be' || url.hostname === 'www.youtube.com') && url.searchParams.has('v')) {
+			if ((url.hostname === 'youtu.be' && url.pathname.length > 1) || (url.hostname === 'www.youtube.com') && url.searchParams.has('v')) {
 				if (AppWindow.getActiveViewName() === 'youtubesearch' && (await Video.getView())) {
 					Video.navTo(data);
 				} else {
