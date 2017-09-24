@@ -411,29 +411,19 @@ position: absolute;
 	pointer-events: all;
 }
 
-#setupCenterer {
-	display: none;
-	z-index: 100000;
-	position: absolute;
-	width: 100vw;
-	height: 100vh;
-	left: 0;
-	top: 0;
-}
-
 #spinnerCont.hidden {
 	opacity: 0;
 	pointer-events: none;
 }
 
-#spinnerVerticalCenterer, #setupVerticalCenterer {
+#spinnerVerticalCenterer {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	height: 100%;
 }
 
-#spinnerHorizontalCenterer, #setupHorizontalCenterer {
+#spinnerHorizontalCenterer {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
@@ -477,15 +467,6 @@ position: absolute;
 
 #youtubeSearchCont.showVideo > #youtubeSearchVideoView {
 	transform: translateY(-100vh);
-}
-
-#setupCont {
-	background-color: rgba(0, 0, 0, 0.7);
-	color: white;
-	font-size: 200%;
-	padding: 10px;
-	border-radius: 5px;
-	text-align: center;
 }
 
 #setupButton {
