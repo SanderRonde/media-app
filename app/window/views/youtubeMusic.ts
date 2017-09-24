@@ -24,6 +24,7 @@ export interface YoutubeVideoPlayer extends HTMLElement {
 
 export namespace YoutubeMusic {
 	let view: Electron.WebviewTag = null;
+	let viewPromise: Promise<Electron.WebviewTag> = null;
 
 	namespace Visualization {
 		let visualizing = false;
@@ -127,10 +128,10 @@ export namespace YoutubeMusic {
 		let songFoundName = '';
 		export function downloadSong() {
 			//Search for it on youtube
-			const view = $('#youtubeSearchPageView') as Electron.WebviewTag;
+			const downloadSongView = $('#youtubeSearchPageView') as Electron.WebviewTag;
 
-			view.style.display = 'block';
-			Helpers.addContentScripts(view, [{
+			downloadSongView.style.display = 'block';
+			Helpers.addContentScripts(downloadSongView, [{
 				name: 'youtubeSearchJs',
 				matches: ['*://www.youtube.com/*'],
 				js: {
@@ -147,7 +148,7 @@ export namespace YoutubeMusic {
 				run_at: "document_start"
 			}]);
 
-			view.loadURL(`https://www.youtube.com/results?search_query=${
+			downloadSongView.loadURL(`https://www.youtube.com/results?search_query=${
 				encodeURIComponent(songFoundName.trim().replace(/ /g, '+')).replace(/%2B/g, '+')
 			}&page=&utm_source=opensearch`);
 		}
@@ -491,12 +492,12 @@ export namespace YoutubeMusic {
 	}
 
 	export async function setup() {
-		const webview = await Helpers.createWebview({
+		viewPromise = Helpers.createWebview({
 			id: 'ytmaWebview',
 			partition: 'youtubeplaylist',
 			parentId: 'youtubePlaylistCont'
 		});
-		view = webview;
+		view = await viewPromise;
 		addViewListeners();
 		addListeners();
 
@@ -539,8 +540,12 @@ export namespace YoutubeMusic {
 		updateStatus();
 	}
 
-	export function getView(): Electron.WebviewTag {
-		return view;
+	export async function getView(): Promise<Electron.WebviewTag> {
+		if (view) {
+			return view;
+		} else {
+			return await viewPromise;
+		}
 	}
 
 	export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
