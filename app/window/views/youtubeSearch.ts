@@ -693,8 +693,8 @@ export namespace YoutubeSearch {
 			subsCont.classList.add('showVideo');
 			activePage = 'video';
 			await Helpers.wait(500);
-			(await Video.getView()).focus();
 			SearchBar.hide();
+			(await Video.getView()).focus();
 			AppWindow.updateStatus(await Video.getTitle());
 		}
 	}
