@@ -402,13 +402,12 @@ export namespace AppWindow {
 		}
 	}
 
-	export function onKeyPress(event: MappedKeyboardEvent) {
+	export async function onKeyPress(event: MappedKeyboardEvent) {
 		if (KeyPress.wasPressed(event)) {
-			console.log(`Key '${event.key}' was pressed but ignored`);
 			return;
 		}
 
-		if (getActiveViewClass().onKeyPress(event)) {
+		if (await getActiveViewClass().onKeyPress(event)) {
 			console.log(`Key '${event.key}' was pressed and activated`);
 		} else {
 			console.log(`Key '${event.key}' was pressed but activated no command`);
