@@ -58,6 +58,10 @@ namespace MusicApp {
 
 	namespace SystemTray {
 		export async function init() {
+			if (Refs.DEBUG) {
+				return;
+			}
+
 			let imageLocation = path.join(__dirname, 'icons/32.png');
 			if (process.platform === 'win32') {
 				imageLocation = path.join(__dirname, 'icons/icon.ico');
