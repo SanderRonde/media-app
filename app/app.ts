@@ -250,7 +250,6 @@ namespace MusicApp {
 						case 'close':
 							Refs.activeWindow && 
 							Refs.activeWindow.close();
-							app.quit();
 							break;
 						case 'quit':
 							app.quit();
