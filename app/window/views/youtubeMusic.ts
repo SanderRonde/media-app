@@ -407,13 +407,17 @@ export namespace YoutubeMusic {
 	}
 
 	export async function getTitle(): Promise<string> {
-		return await Helpers.execute(await getView(), () => {
-			try {
-				return document.querySelector('h1.title').innerHTML;
-			} catch(e) {
-				return '?';
-			}
-		});
+		const vidView = await getView();
+		if (vidView) {
+			return await Helpers.execute(vidView, () => {
+				try {
+					return document.querySelector('h1.title').innerHTML;
+				} catch(e) {
+					return '?';
+				}
+			});
+		}
+		return '?';
 	}
 
 	function addViewListeners() {

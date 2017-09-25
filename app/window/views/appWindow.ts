@@ -1,8 +1,9 @@
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
-import { Helpers, $ } from '../libs/helpers'
 import { ipcRenderer, clipboard } from 'electron'
 import { YoutubeSearch } from './youtubeSearch'
+import { CommandBar } from '../libs/commandbar'
 import { YoutubeMusic } from './youtubeMusic'
+import { Helpers, $ } from '../libs/helpers'
 import { Netflix } from './netflix'
 
 export type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions'|'youtubesearch';
@@ -272,6 +273,8 @@ export namespace AppWindow {
 			switchToview('netflix');
 		} else if (event.key === 'F12') {
 			sendBackgroundPageMessage('openDevTools');
+		} else if (event.key === 'p' && event.ctrlKey) {
+			CommandBar.show();
 		} else {
 			console.log(`Key '${event.key}' was pressed but ignored`);
 			return;
@@ -345,6 +348,7 @@ export namespace AppWindow {
 		listenForMessages();
 		prepareEventListeners();
 		setupListeners();
+		CommandBar.setup();
 
 		switchToview(startView, true);
 

@@ -516,7 +516,7 @@ position: absolute;
 	display: none;
 }
 
-#yt_inputFORM_1 {
+.yt_inputFORM_1 {
     color: rgba(17, 17, 17, 0.4);
     display: flex;
     height: 30px;
@@ -533,9 +533,15 @@ position: absolute;
     font: normal normal normal normal 10px / normal Roboto, Arial, sans-serif;
     margin: 0px;
     outline: rgba(17, 17, 17, 0.4) none 0px;
-}/*#yt_inputFORM_1*/
+}/*.yt_inputFORM_1*/
 
-#yt_inputDIV_2 {
+#commandBarForm {
+	width: auto;
+	min-width: auto;
+	max-width: auto;
+}
+
+.yt_inputDIV_2 {
     bottom: 0px;
     box-shadow: rgb(238, 238, 238) 0px 1px 2px 0px inset;
     color: rgba(17, 17, 17, 0.4);
@@ -563,9 +569,13 @@ position: absolute;
     font: normal normal normal normal 10px / normal Roboto, Arial, sans-serif;
     outline: rgba(17, 17, 17, 0.4) none 0px;
     padding: 2px 6px;
-}/*#yt_inputDIV_2*/
+}/*.yt_inputDIV_2*/
 
-#yt_inputDIV_3 {
+.yt_inputDIV_2.withoutButton {
+	border-right: 1px solid rgb(204, 204, 204);
+}
+
+.yt_inputDIV_3 {
     color: rgba(17, 17, 17, 0.4);
     height: 24px;
     min-height: auto;
@@ -579,9 +589,9 @@ position: absolute;
     border: 0px none rgba(17, 17, 17, 0.4);
     font: normal normal normal normal 10px / normal Roboto, Arial, sans-serif;
     outline: rgba(17, 17, 17, 0.4) none 0px;
-}/*#yt_inputDIV_3*/
+}/*.yt_inputDIV_3*/
 
-#yt_inputDIV_4 {
+.yt_inputDIV_4 {
     box-sizing: border-box;
     color: rgba(17, 17, 17, 0.4);
     height: 24px;
@@ -595,9 +605,9 @@ position: absolute;
     flex: 1 1 0%;
     font: normal normal normal normal 10px / normal Roboto, Arial, sans-serif;
     outline: rgba(17, 17, 17, 0.4) none 0px;
-}/*#yt_inputDIV_4*/
+}/*.yt_inputDIV_4*/
 
-#yt_inputDIV_9 {
+.yt_inputDIV_9 {
     box-sizing: border-box;
     color: rgba(17, 17, 17, 0.4);
     height: 24px;
@@ -611,9 +621,9 @@ position: absolute;
     font: normal normal normal normal 10px / normal Roboto, Arial, sans-serif;
     outline: rgba(17, 17, 17, 0.4) none 0px;
     overflow: hidden;
-}/*#yt_inputDIV_9*/
+}/*.yt_inputDIV_9*/
 
-#searchInput {
+.searchInput {
     box-sizing: content-box;
     color: rgb(17, 17, 17);
     height: 24px;
@@ -630,9 +640,9 @@ position: absolute;
     font: normal normal normal normal 16px / 24px Roboto, Noto, sans-serif;
     outline: rgb(17, 17, 17) none 0px;
     padding: 0px;
-}/*#searchInput*/
+}/*.searchInput*/
 
-#yt_inputYT-ICON_17 {
+.yt_inputYT-ICON_17 {
     bottom: 0px;
     color: rgb(51, 51, 51);
     cursor: pointer;
@@ -663,7 +673,7 @@ position: absolute;
 	background-color: rgb(248, 248, 248);
 	border-radius: 0 2px 2px 0;
 	margin: 0;
-}/*#yt_inputYT-ICON_17*/
+}/*.yt_inputYT-ICON_17*/
 
 #searchBar {
 	margin-top: 26px;
@@ -673,7 +683,7 @@ position: absolute;
 	pointer-events: all;
 }
 
-#suggestions {
+.suggestions {
 	padding: 16px 0;
 	width: calc(100vw - 166px);
 	max-width: 590px;
@@ -727,7 +737,7 @@ position: absolute;
 	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.10);
 }
 
-.suggestionPart {
+.highlightedSuggestionPart {
 	font-weight: bold;
 }
 
@@ -856,4 +866,80 @@ position: absolute;
 	margin-top: 20px;
 	user-select: none;
 	cursor: default;
+}
+
+#commandBarCentererContainer {
+	width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+	pointer-events: none;
+	transform: translateY(-100vh);
+	transition: transform 200ms ease-in;
+	z-index: 1000000000000;
+}
+
+#commandBarHorizontalCenterer {
+	width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#commandBar {
+	top: 5vh;
+    position: absolute;
+}
+
+#commandBarCentererContainer.visible {
+	transform: translateY(0);
+}
+
+#commandBarCentererContainer.visible #commandBar {
+	pointer-events: all;
+}
+
+#commandBarInput {
+	width: 70vw;
+	max-width: 700px;
+}
+
+#commandBarSuggestions {
+	padding: 16px 0;
+	background: #fff;
+	border: 1px solid #ccc;
+	border-top-color: #d9d9d9;
+	border-top-style: solid;
+	border-top-width: 1px;
+	border-right-color: rgb(204, 204, 204);
+	border-right-style: solid;
+	border-right-width: 1px;
+	border-bottom-color: rgb(204, 204, 204);
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	border-left-color: rgb(204, 204, 204);
+	border-left-style: solid;
+	border-left-width: 1px;
+	border-image-source: initial;
+	border-image-slice: initial;
+	border-image-width: initial;
+	border-image-outset: initial;
+	border-image-repeat: initial;
+	border-top-color: #d9d9d9;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+	-webkit-box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+	cursor: default;
+}
+
+#commandBarPrefix {
+	color: rgb(17, 17, 17);
+    font-size: 20px;
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+#commandBarContainer {
+	display: flex;
+    flex-direction: row;
 }
