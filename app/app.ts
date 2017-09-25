@@ -12,7 +12,7 @@ import { Updater } from './renderer/updater/updater'
 import { Shortcuts } from './renderer/shortcuts/shortcuts';
 import { AdBlocking } from './renderer/adblocking/adblocking';
 
-namespace MusicApp {
+namespace MediaApp {
 	namespace Refs {
 		export let activeWindow: Electron.BrowserWindow = null;
 		export let tray: Electron.Tray = null;
@@ -431,4 +431,4 @@ namespace MusicApp {
 	}
 }
 
-MusicApp.init();
+MediaApp.init();
