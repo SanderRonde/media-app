@@ -29,11 +29,11 @@ export class SuggestionBar {
 
 	private updateSelectedSuggestion(index: number): string {
 		this.selectedSuggestion = index;
-		Array.from($('#suggestions').children).forEach((child) => {
+		Array.from($(`#${this.els.container}`).getElementsByClassName('suggestions')[0].children).forEach((child) => {
 			child.classList.remove('selected');
 		});
 		if (index !== -1) {
-			$('#suggestions').children.item(index).classList.add('selected');
+			$(`#${this.els.container}`).getElementsByClassName('suggestions')[0].children.item(index).classList.add('selected');
 		}
 		return this.updateInputValue();
 	}
