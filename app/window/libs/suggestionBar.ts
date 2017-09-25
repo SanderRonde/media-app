@@ -100,7 +100,6 @@ export class SuggestionBar {
 		this.originalInput = value;
 
 		const suggestions = await this.getSuggestions(value);
-		console.log('Suggestions are', suggestions)
 		const suggestionsContainer = $(`#${this.els.container}`).getElementsByClassName('suggestions')[0];
 		Array.from(suggestionsContainer.children).forEach((child: HTMLElement) => {
 			child.remove();
