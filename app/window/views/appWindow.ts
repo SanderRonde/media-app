@@ -224,9 +224,9 @@ export namespace AppWindow {
 				break;
 			case 'toggleVideo':
 				if (activeView === 'youtubeSubscriptions') {
-					YoutubeSubscriptions.toggleVideoVisibility();
+					YoutubeSubscriptions.Commands.toggleVideoVisibility();
 				} else if (activeView === 'youtubesearch') {
-					YoutubeSearch.toggleVideoVisibility();
+					YoutubeSearch.Commands.toggleVideoVisibility();
 				}
 				break;
 			case 'cast':
@@ -296,7 +296,7 @@ export namespace AppWindow {
 			getViewByName(view).Commands.pause();
 		}
 
-		getViewByName(view).updateStatus();
+		getViewByName(view).Commands.updateStatus();
 	}
 
 	export function onMagicButton() {
@@ -322,7 +322,7 @@ export namespace AppWindow {
 			getActiveViewClass().Commands.play();
 		} else {
 			await showSpinner();
-			await getViewByName(view).setup();
+			await getViewByName(view).Commands.setup();
 		}
 
 		const viewsEl = $('#views');
@@ -331,7 +331,7 @@ export namespace AppWindow {
 
 		if (isLoaded) {
 			await Helpers.wait(500);
-			getActiveViewClass().onFocus();
+			getActiveViewClass().Commands.onFocus();
 		}
 	}
 
@@ -368,11 +368,11 @@ export namespace AppWindow {
 	}
 
 	export async function getActiveViewView(): Promise<Electron.WebviewTag> {
-		return await AppWindow.getActiveViewClass().getView();
+		return await AppWindow.getActiveViewClass().Commands.getView();
 	}
 
 	export function onFocus() {
-		getActiveViewClass().onFocus();
+		getActiveViewClass().Commands.onFocus();
 	}
 
 	namespace KeyPress {
@@ -413,7 +413,7 @@ export namespace AppWindow {
 			return;
 		}
 
-		if (await getActiveViewClass().onKeyPress(event)) {
+		if (await getActiveViewClass().Commands.onKeyPress(event)) {
 			console.log(`Key '${event.key}' was pressed and activated`);
 		} else {
 			console.log(`Key '${event.key}' was pressed but activated no command`);

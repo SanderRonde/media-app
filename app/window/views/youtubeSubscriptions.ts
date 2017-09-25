@@ -72,6 +72,76 @@ export namespace YoutubeSubscriptions {
 					(window as any).videos.selected.launchCurrent();
 				}), false);
 		}
+
+		export async function setup() {
+			await Promise.all([
+				SubBox.setup(),
+				Video.setup()
+			]);
+			await Helpers.wait(15);
+			(await SubBox.getView()).loadURL('http://www.youtube.com/feed/subscriptions');
+		}
+
+		export function onClose() {
+			//Nothing really
+		}
+	
+		export async function updateStatus() {
+			if ($('#youtubeSubsCont').classList.contains('showVideo')) {
+				AppWindow.updateStatus(await Video.getTitle());
+			} else {
+				AppWindow.updateStatus('Browsing subscriptions');
+			}
+		}
+	
+		export async function onFocus() {
+			if ($('#youtubeSubsCont').classList.contains('showVideo')) {
+				(await Video.getView()).focus();
+			} else {
+				(await SubBox.getView()).focus();
+			}
+			updateStatus();
+		}
+	
+		export async function getView(): Promise<Electron.WebviewTag> {
+			if ($('#youtubeSubsCont').classList.contains('showVideo')) {
+				return (await Video.getView());
+			} else {
+				return (await SubBox.getView());
+			}
+		}
+	
+		export async function toggleVideoVisibility() {
+			const subsCont = $('#youtubeSubsCont');
+			if (subsCont.classList.contains('showVideo')) {
+				subsCont.classList.remove('showVideo');
+				await Helpers.wait(500);
+				(await SubBox.getView()).focus();
+				AppWindow.updateStatus('Browsing subscriptions');
+			} else {
+				subsCont.classList.add('showVideo');
+				await Helpers.wait(500);
+				(await Video.getView()).focus();
+				AppWindow.updateStatus(await Video.getTitle());
+			}
+		}
+	
+		export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
+			if (AppWindow.getActiveViewName() !== 'youtubeSubscriptions') {
+				return false;
+			}
+	
+			if (event.key === 'h') {
+				toggleVideoVisibility();
+				return true;
+			} else if (event.key === 'd') {
+				if ($('#youtubeSubsCont').classList.contains('showVideo')) {
+					Helpers.downloadVideo((await Video.getView()).src)
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	namespace Video {
@@ -216,75 +286,5 @@ export namespace YoutubeSubscriptions {
 	export async function changeVideo(url: string) {
 		(await Video.getView()).loadURL(url)
 		showVideo();
-	}
-
-	export async function setup() {
-		await Promise.all([
-			SubBox.setup(),
-			Video.setup()
-		]);
-		await Helpers.wait(15);
-		(await SubBox.getView()).loadURL('http://www.youtube.com/feed/subscriptions');
-	}
-
-	export function onClose() {
-		//Nothing really
-	}
-
-	export async function updateStatus() {
-		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
-			AppWindow.updateStatus(await Video.getTitle());
-		} else {
-			AppWindow.updateStatus('Browsing subscriptions');
-		}
-	}
-
-	export async function onFocus() {
-		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
-			(await Video.getView()).focus();
-		} else {
-			(await SubBox.getView()).focus();
-		}
-		updateStatus();
-	}
-
-	export async function getView(): Promise<Electron.WebviewTag> {
-		if ($('#youtubeSubsCont').classList.contains('showVideo')) {
-			return (await Video.getView());
-		} else {
-			return (await SubBox.getView());
-		}
-	}
-
-	export async function toggleVideoVisibility() {
-		const subsCont = $('#youtubeSubsCont');
-		if (subsCont.classList.contains('showVideo')) {
-			subsCont.classList.remove('showVideo');
-			await Helpers.wait(500);
-			(await SubBox.getView()).focus();
-			AppWindow.updateStatus('Browsing subscriptions');
-		} else {
-			subsCont.classList.add('showVideo');
-			await Helpers.wait(500);
-			(await Video.getView()).focus();
-			AppWindow.updateStatus(await Video.getTitle());
-		}
-	}
-
-	export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
-		if (AppWindow.getActiveViewName() !== 'youtubeSubscriptions') {
-			return false;
-		}
-
-		if (event.key === 'h') {
-			toggleVideoVisibility();
-			return true;
-		} else if (event.key === 'd') {
-			if ($('#youtubeSubsCont').classList.contains('showVideo')) {
-				Helpers.downloadVideo((await Video.getView()).src)
-				return true;
-			}
-		}
-		return false;
 	}
 }

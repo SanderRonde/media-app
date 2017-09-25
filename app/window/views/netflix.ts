@@ -114,6 +114,42 @@ export namespace Netflix {
 				video.play();
 			});
 		}
+
+		export async function setup() {
+			await Video.setup();
+			(await Video.getView()).loadURL('https://www.netflix.com/browse');
+			await Helpers.wait(5000);
+			AppWindow.onLoadingComplete('netflix');
+			AppWindow.updateStatus('Watching netflix');
+			initStateListener();
+		}
+	
+		interface ClickableElement extends Element {
+			click: () => void;
+		}
+	
+		export async function onClose() {
+			//Go for a semi-clean exit
+			Video.loaded() && 
+			(await Video.getView()).src && 
+			(await Video.getView()).canGoBack() &&
+			(await Video.getView()).goBack();
+		}
+	
+		export function updateStatus() { }
+	
+		export async function onFocus() {
+			(await Video.getView()).focus();
+			AppWindow.updateStatus('Watching netflix');
+		}
+	
+		export async function getView(): Promise<Electron.WebviewTag> {
+			return (await Video.getView());
+		}
+	
+		export async function onKeyPress(event: MappedKeyboardEvent) { 
+			return false;
+		}
 	}
 
 	const state = {
@@ -143,41 +179,5 @@ export namespace Netflix {
 				state.title = title;
 			}
 		}, 500);
-	}
-
-	export async function setup() {
-		await Video.setup();
-		(await Video.getView()).loadURL('https://www.netflix.com/browse');
-		await Helpers.wait(5000);
-		AppWindow.onLoadingComplete('netflix');
-		AppWindow.updateStatus('Watching netflix');
-		initStateListener();
-	}
-
-	interface ClickableElement extends Element {
-		click: () => void;
-	}
-
-	export async function onClose() {
-		//Go for a semi-clean exit
-		Video.loaded() && 
-		(await Video.getView()).src && 
-		(await Video.getView()).canGoBack() &&
-		(await Video.getView()).goBack();
-	}
-
-	export function updateStatus() { }
-
-	export async function onFocus() {
-		(await Video.getView()).focus();
-		AppWindow.updateStatus('Watching netflix');
-	}
-
-	export async function getView(): Promise<Electron.WebviewTag> {
-		return (await Video.getView());
-	}
-
-	export async function onKeyPress(event: MappedKeyboardEvent) { 
-		return false;
 	}
 }

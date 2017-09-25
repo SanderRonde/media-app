@@ -404,10 +404,89 @@ export namespace YoutubeMusic {
 				player && player.playVideo();
 			});
 		}
+
+		export async function setup() {
+			viewPromise = Helpers.createWebview({
+				id: 'ytmaWebview',
+				partition: 'youtubeplaylist',
+				parentId: 'youtubePlaylistCont'
+			});
+			view = await viewPromise;
+			addViewListeners();
+			addListeners();
+	
+			const url = await Firebase.get('url');
+			if (url) {
+				launch(url);
+			}
+		}
+	
+		export function onClose() {
+			//Save progress
+			view.executeJavaScript(`(${(() => {
+				const vidId = location.href.split('v=')[1].split('&')[0];
+				let vidIndex = location.href.split('index=')[1];
+				if (vidIndex.indexOf('&') > -1) {
+					vidIndex = vidIndex.split('&')[0];
+				}
+				const [mins, secs] = document.querySelector('.ytp-time-current').innerHTML.split(':');
+				const address = 'https://www.youtube.com/watch';
+				const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
+				
+				Helpers.sendIPCMessage('toBgPage', {
+					type: 'passAlong',
+					data: {
+						type: 'saveUrl',
+						data: {
+							url: url
+						}
+					} as PassedAlongMessage<'saveUrl'>
+				});
+			}).toString()})()`, false);
+		}
+	
+		export async function updateStatus() {
+			AppWindow.updateStatus(await getTitle());
+		}
+	
+		export async function onFocus() {
+			view && view.focus();
+			updateStatus();
+		}
+	
+		export async function getView(): Promise<Electron.WebviewTag> {
+			if (view) {
+				return view;
+			} else {
+				return await viewPromise;
+			}
+		}
+	
+		export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
+			if (AppWindow.getActiveViewName() !== 'ytmusic') {
+				return false;
+			}
+			if (event.key === 'd') {
+				Downloading.downloadSong();
+				return true;
+			} else if (event.key === 'v') {
+				Visualization.toggle();
+				Helpers.hacksecute(view, () => {
+					document.body.classList.toggle('showVisualizer');
+				});
+				return true;
+			} else if (event.key === '?') {
+				YoutubeMusic.getCurrentSong();
+				return true;
+			} else if (event.key === 'r') {
+				(await getView()).reload();
+			}
+			return false;
+		}
 	}
 
-	export async function getTitle(): Promise<string> {
-		const vidView = await getView();
+	async function getTitle(): Promise<string> {
+		const vidView = await Commands.getView();
 		if (vidView) {
 			return await Helpers.execute(vidView, () => {
 				try {
@@ -493,85 +572,6 @@ export namespace YoutubeMusic {
 				toastButton.parentNode.classList.remove('visible');
 			});
 		});
-	}
-
-	export async function setup() {
-		viewPromise = Helpers.createWebview({
-			id: 'ytmaWebview',
-			partition: 'youtubeplaylist',
-			parentId: 'youtubePlaylistCont'
-		});
-		view = await viewPromise;
-		addViewListeners();
-		addListeners();
-
-		const url = await Firebase.get('url');
-		if (url) {
-			launch(url);
-		}
-	}
-
-	export function onClose() {
-		//Save progress
-		view.executeJavaScript(`(${(() => {
-			const vidId = location.href.split('v=')[1].split('&')[0];
-			let vidIndex = location.href.split('index=')[1];
-			if (vidIndex.indexOf('&') > -1) {
-				vidIndex = vidIndex.split('&')[0];
-			}
-			const [mins, secs] = document.querySelector('.ytp-time-current').innerHTML.split(':');
-			const address = 'https://www.youtube.com/watch';
-			const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
-			
-			Helpers.sendIPCMessage('toBgPage', {
-				type: 'passAlong',
-				data: {
-					type: 'saveUrl',
-					data: {
-						url: url
-					}
-				} as PassedAlongMessage<'saveUrl'>
-			});
-		}).toString()})()`, false);
-	}
-
-	export async function updateStatus() {
-		AppWindow.updateStatus(await getTitle());
-	}
-
-	export async function onFocus() {
-		view && view.focus();
-		updateStatus();
-	}
-
-	export async function getView(): Promise<Electron.WebviewTag> {
-		if (view) {
-			return view;
-		} else {
-			return await viewPromise;
-		}
-	}
-
-	export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
-		if (AppWindow.getActiveViewName() !== 'ytmusic') {
-			return false;
-		}
-		if (event.key === 'd') {
-			Downloading.downloadSong();
-			return true;
-		} else if (event.key === 'v') {
-			Visualization.toggle();
-			Helpers.hacksecute(view, () => {
-				document.body.classList.toggle('showVisualizer');
-			});
-			return true;
-		} else if (event.key === '?') {
-			YoutubeMusic.getCurrentSong();
-			return true;
-		} else if (event.key === 'r') {
-			(await YoutubeMusic.getView()).reload();
-		}
-		return false;
 	}
 
 	export function saveURL(url: string) {

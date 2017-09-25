@@ -86,6 +86,113 @@ export namespace YoutubeSearch {
 		}
 
 		export function magicButton() { }
+
+		export async function setup() {
+			await SearchResultsPage.setup();
+			await SearchBar.setup();
+			await Video.setup();
+			await Helpers.wait(15);
+			SearchResultsPage.navTo('https://www.youtube.com/');
+			AppWindow.updateStatus('Looking at search page');
+		}
+	
+		export function onClose() { }
+	
+		export async function updateStatus() {
+			if (activePage === 'video') {
+				AppWindow.updateStatus(await Video.getTitle());
+			} else {
+				if (SearchBar.getLastSearch()) {
+					AppWindow.updateStatus(`Browsing search results for ${SearchBar.getLastSearch()}`);
+				} else {
+					AppWindow.updateStatus('Looking at search page');
+				}
+			}
+		}
+	
+		export async function onFocus() {
+			if (activePage === 'video') {
+				(await Video.getView()).focus();
+			}
+			updateStatus();
+		}
+	
+		export async function getView(): Promise<Electron.WebviewTag> {
+			if (activePage === 'video') {
+				return Video.getView();
+			} else {
+				return SearchResultsPage.getView();
+			}
+		}
+	
+		export async function toggleVideoVisibility() {
+			const subsCont = $('#youtubeSearchCont');
+			if (activePage === 'video') {
+				subsCont.classList.remove('showVideo');
+				activePage = 'results';
+				await Helpers.wait(500);
+				(await SearchResultsPage.getView()).focus();
+				SearchBar.show();
+				if (SearchBar.getLastSearch()) {
+					AppWindow.updateStatus(`Browsing search results for ${SearchBar.getLastSearch()}`)
+				} else {
+					AppWindow.updateStatus('Looking at search page');
+				}
+			} else {
+				subsCont.classList.add('showVideo');
+				activePage = 'video';
+				await Helpers.wait(500);
+				SearchBar.hide();
+				(await Video.getView()).focus();
+				AppWindow.updateStatus(await Video.getTitle());
+			}
+		}
+	
+		export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
+			if (AppWindow.getActiveViewName() !== 'youtubesearch') {
+				return false;
+			}
+	
+			if (event.key === 'h') {
+				toggleVideoVisibility();
+				return true;
+			}
+			if (event.key === 'ArrowLeft' && event.altKey && activePage === 'results') {
+				const searchView = (await SearchResultsPage.getView())
+				searchView.canGoBack() && searchView.goBack();
+				return true;
+			}
+			if (event.key === 'ArrowRight' && event.altKey && activePage === 'results') {
+				const searchView = (await SearchResultsPage.getView());
+				searchView.canGoForward() && searchView.goForward();
+				return true;
+			}
+			if (event.key === 's' && SearchBar.toggle()) {
+				return true;
+			}
+			if (event.key === 'd' && activePage === 'video') {
+				//Get current video URL and download it
+				Helpers.downloadVideo((await Video.getView()).src)
+				return true;
+			}
+			if (VALID_INPUT.indexOf(event.key) > -1 && 
+				!event.altKey && !event.ctrlKey) {
+					SearchBar.focus(event.key);
+					return true;
+				}
+			if (event.key === 'Tab') {
+				if (document.activeElement === SearchBar.getSearchBar()) {
+					if (activePage === 'video') {
+						(await Video.getView()).focus();
+					} else {
+						(await SearchResultsPage.getView()).focus();
+					}
+				} else {
+					SearchBar.focus();
+				}
+			}
+			return false;
+		}
 	}
 
 	export namespace Video {
@@ -254,7 +361,7 @@ export namespace YoutubeSearch {
 				exec(query: string) {
 					SearchResultsPage.navTo(
 						`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
-					toggleVideoVisibility();
+					Commands.toggleVideoVisibility();
 				},
 				async hide() {
 					SearchBar.hide();
@@ -524,113 +631,6 @@ export namespace YoutubeSearch {
 		console.log(url);
 		(await Video.getView()).loadURL(url);
 		showVideo();
-	}
-
-	export async function setup() {
-		await SearchResultsPage.setup();
-		await SearchBar.setup();
-		await Video.setup();
-		await Helpers.wait(15);
-		SearchResultsPage.navTo('https://www.youtube.com/');
-		AppWindow.updateStatus('Looking at search page');
-	}
-
-	export function onClose() { }
-
-	export async function updateStatus() {
-		if (activePage === 'video') {
-			AppWindow.updateStatus(await Video.getTitle());
-		} else {
-			if (SearchBar.getLastSearch()) {
-				AppWindow.updateStatus(`Browsing search results for ${SearchBar.getLastSearch()}`);
-			} else {
-				AppWindow.updateStatus('Looking at search page');
-			}
-		}
-	}
-
-	export async function onFocus() {
-		if (activePage === 'video') {
-			(await Video.getView()).focus();
-		}
-		updateStatus();
-	}
-
-	export async function getView(): Promise<Electron.WebviewTag> {
-		if (activePage === 'video') {
-			return Video.getView();
-		} else {
-			return SearchResultsPage.getView();
-		}
-	}
-
-	export async function toggleVideoVisibility() {
-		const subsCont = $('#youtubeSearchCont');
-		if (activePage === 'video') {
-			subsCont.classList.remove('showVideo');
-			activePage = 'results';
-			await Helpers.wait(500);
-			(await SearchResultsPage.getView()).focus();
-			SearchBar.show();
-			if (SearchBar.getLastSearch()) {
-				AppWindow.updateStatus(`Browsing search results for ${SearchBar.getLastSearch()}`)
-			} else {
-				AppWindow.updateStatus('Looking at search page');
-			}
-		} else {
-			subsCont.classList.add('showVideo');
-			activePage = 'video';
-			await Helpers.wait(500);
-			SearchBar.hide();
-			(await Video.getView()).focus();
-			AppWindow.updateStatus(await Video.getTitle());
-		}
-	}
-
-	export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {
-		if (AppWindow.getActiveViewName() !== 'youtubesearch') {
-			return false;
-		}
-
-		if (event.key === 'h') {
-			toggleVideoVisibility();
-			return true;
-		}
-		if (event.key === 'ArrowLeft' && event.altKey && activePage === 'results') {
-			const searchView = (await SearchResultsPage.getView())
-			searchView.canGoBack() && searchView.goBack();
-			return true;
-		}
-		if (event.key === 'ArrowRight' && event.altKey && activePage === 'results') {
-			const searchView = (await SearchResultsPage.getView());
-			searchView.canGoForward() && searchView.goForward();
-			return true;
-		}
-		if (event.key === 's' && SearchBar.toggle()) {
-			return true;
-		}
-		if (event.key === 'd' && activePage === 'video') {
-			//Get current video URL and download it
-			Helpers.downloadVideo((await Video.getView()).src)
-			return true;
-		}
-		if (VALID_INPUT.indexOf(event.key) > -1 && 
-			!event.altKey && !event.ctrlKey) {
-				SearchBar.focus(event.key);
-				return true;
-			}
-		if (event.key === 'Tab') {
-			if (document.activeElement === SearchBar.getSearchBar()) {
-				if (activePage === 'video') {
-					(await Video.getView()).focus();
-				} else {
-					(await SearchResultsPage.getView()).focus();
-				}
-			} else {
-				SearchBar.focus();
-			}
-		}
-		return false;
 	}
 
 	export async function onSearchBarFocus() {
