@@ -65,9 +65,10 @@ export namespace AppWindow {
 			escapePresses++;
 			if (escapePresses >= 3) {
 				//Close app
-				YoutubeMusic.onClose();
-				Netflix.onClose();
-				YoutubeSubscriptions.onClose();
+				Netflix.Commands.onClose();
+				YoutubeMusic.Commands.onClose();
+				YoutubeSearch.Commands.onClose();
+				YoutubeSubscriptions.Commands.onClose();
 
 				window.setTimeout(() => {
 					window.close();
@@ -132,9 +133,10 @@ export namespace AppWindow {
 			e.stopPropagation();
 		});
 		document.querySelector('#close').addEventListener('click', (e: MouseEvent) => {
-			YoutubeMusic.onClose();
-			Netflix.onClose();
-			YoutubeSubscriptions.onClose();
+			Netflix.Commands.onClose();
+			YoutubeMusic.Commands.onClose();
+			YoutubeSearch.Commands.onClose();
+			YoutubeSubscriptions.Commands.onClose();
 
 			window.setInterval(() => {
 				sendBackgroundPageMessage('close');
