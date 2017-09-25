@@ -508,11 +508,11 @@ position: absolute;
 	pointer-events: none;
 }
 
-#youtubeSearchCont.searchHidden #searchBarCenterer {
+.searchHidden #searchBarCenterer {
 	transform: translateY(-100%);	
 }
 
-#youtubeSearchCont.suggestionsHidden #suggestions {
+.suggestionsHidden .suggestions {
 	display: none;
 }
 
