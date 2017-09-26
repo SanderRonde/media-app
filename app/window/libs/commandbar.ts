@@ -81,13 +81,26 @@ export namespace CommandBar {
 	});
 	let lastAcronymSuggestions: SuggestionGenerationAcronymObj[] = [];	
 
+	function getArgs(fn: Function): string[] {
+		const str = fn.toString();
+		const fnStartIndex = str.indexOf('(');
+		const fnEndIndex = str.indexOf(')');
+
+		const args = str.slice(fnStartIndex + 1, fnEndIndex - 1);
+		return args.split(',').map(s => s.trim()).map(s => s.replace(/_/g, ' '));
+	}
+
 	const suggestionBar = new SuggestionBar({
 		searchBarId: 'commandBarInput',
 		container: 'commandBarCentererContainer'
 	}, () => {
 		return {
-			exec(result: string) {
-				Commands.commands[result as keyof typeof Commands.commands]();
+			async exec(result: string) {
+				const fn = Commands.commands[result as keyof typeof Commands.commands];
+				const args = await getArgs(fn);
+				if (args !== null) {
+					fn(...args);
+				}
 			},
 			hide() {
 				hide();

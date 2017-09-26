@@ -355,10 +355,11 @@ export namespace YoutubeSearch {
 	export namespace SearchBar {
 		const suggestionBar = new SuggestionBar({
 			searchBarId: 'searchInput',
-			container: 'youtubeSearchCont'
+			container: 'youtubeSearchCont',
+			searchButton: '#searchButton'
 		}, () => {
 			return {
-				exec(query: string) {
+				async exec(query: string) {
 					SearchResultsPage.navTo(
 						`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
 					Commands.toggleVideoVisibility();

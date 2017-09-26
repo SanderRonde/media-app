@@ -7,12 +7,47 @@ export class SuggestionBar {
 	private _originalInput: string = '';
 	private _lastSearch: string = '';
 
+	private _mode: 'search'|'input' = 'search';
+	private _searchPromise: {
+		resolve(value: string): void;
+		promise: Promise<string>;
+	} = null;
+
 	get searchBar() {
 		return this._searchBar;
 	}
 
 	get lastSearch() {
 		return this._lastSearch;
+	}
+
+	private async _getArg(name: string): Promise<string> {
+		this._resetSearchBar();
+		const promise = new Promise<string>((resolve) => {
+			this._searchPromise = {
+				resolve: resolve,
+				promise: promise
+			}
+		});
+		const result = await promise;
+		this._searchPromise = null;
+		return result;
+	}
+
+	public async getArgs(names: string[]): Promise<string[]> {
+		if (names.length === 0) {
+			return [];
+		}
+		const args: string[] = [];
+		for (let i = 0; i < names.length; i++) {
+			this._mode = 'input';
+			const arg = await this._getArg(names[i]);
+			if (arg === null) {
+				return [];
+			}
+			args.push(arg);
+		}
+		return args;
 	}
 
 	private _updateInputValue(): string {
@@ -51,8 +86,8 @@ export class SuggestionBar {
 
 	private async _doSearch(query: string) {
 		this._lastSearch = query;
-		this.getRef().exec(query);
 		this.hideSuggestions();
+		this.getRef().exec(query);
 	}
 
 	private _joinSuggestionParts(suggestionParts: {
@@ -130,14 +165,51 @@ export class SuggestionBar {
 		$(`#${this.els.container}`).classList.remove('suggestionsHidden');
 	}
 
+	private _resetSearchBar() {
+		this._searchBar.value = '';
+	}
+
+	private _reset() {
+		this._resetSearchBar();
+		this._currentSuggestions = [];
+		this._selectedSuggestion = -1;
+		this._originalInput = '';
+		this._mode = 'search';
+
+		if (this._searchPromise) {
+			this._searchPromise.resolve(null);
+		}
+		this._searchPromise = null;
+	}
+
+	private _submit() {
+		if (this._mode === 'search') {
+			this._doSearch(this._updateInputValue());
+		} else {
+			if (this._searchPromise) {
+				this._searchPromise.resolve(this._updateInputValue());
+			}
+		}
+	}
+
 	async setup() {
 		this._searchBar.addEventListener('keydown', async (e) => {
 			if (e.key === 'Escape') {
 				if (this.hideSuggestions()) {
 					//Already was hidden, hide this bar in general
 					this.getRef().hide();
+
+					this._reset();
 				}
-			} else if (e.key === ' ' && e.shiftKey) {
+			} else if (!this.els.searchButton && e.key === 'Enter') {
+				e.preventDefault();
+				e.stopPropagation();
+				this._submit();
+			}
+			if (this._mode === 'input') {
+				return;
+			}
+			if (e.key === ' ' && e.shiftKey) {
 				this._showSuggestions();
 				e.preventDefault();
 				e.stopPropagation();
@@ -168,11 +240,13 @@ export class SuggestionBar {
 			}
 		});
 
-		$('#searchButton').addEventListener('click', (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			this._doSearch(this._updateInputValue());
-		});
+		if (this.els.searchButton) {
+			$(this.els.searchButton).addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				this._submit();
+			});
+		}
 
 		this.hideSuggestions();
 	}
@@ -185,6 +259,7 @@ export class SuggestionBar {
 	constructor(private els: {
 		searchBarId: string;
 		container: string;
+		searchButton?: string;
 	}, private getRef: () => {
 		exec: (result: string) => void;
 		hide: () => void;
