@@ -172,6 +172,8 @@ declare namespace SafeIPCRenderer {
 		}
 		
 		'passedAlong': PassedAlongMessage<keyof PassedAlongMessages>;
+
+		'eval': string;
 	}
 }
 

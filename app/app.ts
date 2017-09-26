@@ -12,7 +12,7 @@ import { Updater } from './renderer/updater/updater'
 import { Shortcuts } from './renderer/shortcuts/shortcuts';
 import { AdBlocking } from './renderer/adblocking/adblocking';
 
-namespace MediaApp {
+export namespace MediaApp {
 	namespace Refs {
 		export let activeWindow: Electron.BrowserWindow = null;
 		export let tray: Electron.Tray = null;
@@ -268,6 +268,9 @@ namespace MediaApp {
 							})
 							break;
 					}
+				});
+				ipcMain.on('eval', (event, msg) => {
+					eval(msg);
 				});
 			}
 		}

@@ -164,7 +164,7 @@ export namespace AppWindow {
 		});
 	}
 
-	async function onShortcut(command: keyof MessageReasons | EXTERNAL_EVENT | ARG_EVENT, data?: string) {
+	export async function onShortcut(command: keyof MessageReasons | EXTERNAL_EVENT | ARG_EVENT, data?: string) {
 		const activeViewView = getActiveViewClass().Commands;
 		switch (command) {
 			case 'lowerVolume':

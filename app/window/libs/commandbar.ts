@@ -1,4 +1,34 @@
+//import { YoutubeSubscriptions } from '../views/youtubeSubscriptions';
+//import { YoutubeSearch } from '../views/youtubeSearch';
+//import { YoutubeMusic } from '../views/youtubeMusic';
 import { SuggestionBar } from './suggestionBar';
+//import { AppWindow } from '../views/appWindow';
+//import { Netflix } from '../views/netflix';
+//import { MediaApp } from '../../app';
+import { Helpers } from './helpers'
+
+type ImportNullifyingFn = (YoutubeSubscriptions: void, 
+	YoutubeSearch: void,
+	YoutubeMusic: void,
+	SuggestionBar: void,
+	AppWindow: void,
+	Netflix: void,
+	CommandBar: void) => void;
+
+export namespace Commands {
+	function runRenderer(fn: ImportNullifyingFn) {
+		Helpers.sendIPCMessage('eval', Helpers.stringifyFunction(fn));
+	}
+
+	export const commands = {
+		'test': () => {
+			runRenderer(() => {
+				
+			});
+		}	
+	}
+}
+
 
 type SuggestionObj = {
 	value: string;
@@ -36,16 +66,10 @@ enum PRIORITIES {
 	ACRONYM = 2
 }
 
-export namespace Commands {
-	export const commands = {
-		'test': () => {}
-	}
-}
-
-const MAX_SUGGESTIONS = 10;
-const MAX_ACRONYM_SHORTCUT_LENGTH = 5;
-
 export namespace CommandBar {
+	const MAX_SUGGESTIONS = 10;
+	const MAX_ACRONYM_SHORTCUT_LENGTH = 5;
+
 	const commandKeys: (keyof typeof Commands.commands)[] = Object.getOwnPropertyNames(Commands.commands) as any;
 	const splitCommands = commandKeys.map((command) => {
 		const split = command.split(' ');
