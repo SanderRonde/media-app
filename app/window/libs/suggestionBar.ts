@@ -110,12 +110,15 @@ export class SuggestionBar {
 	private _genSuggestionElement(suggestion: {
 		value: string;
 		isSuggestion: boolean;
-	}[], index: number): HTMLElement {
+	}[], index: number, original: string): HTMLElement {
+		let strIndex = 0;
 		const textElements = suggestion.map((suggestionPart) => {
 			const { isSuggestion, value } = suggestionPart;
 			const highlight = isSuggestion !== this.highlightCurrent
-			return Helpers.el('span', highlight ? 
-				'highlightedSuggestionPart' : '', value);
+			const element = Helpers.el('span', highlight ? 
+				'highlightedSuggestionPart' : '', original.slice(strIndex, value.length));
+			strIndex += value.length;
+			return element;
 		});
 
 		const joinedSuggestion = this._joinSuggestionParts(suggestion);
@@ -166,7 +169,7 @@ export class SuggestionBar {
 			child.remove();
 		});
 		suggestions.map((suggestion, index) => {
-			return this._genSuggestionElement(suggestion, index);
+			return this._genSuggestionElement(suggestion, index, value);
 		}).forEach((suggestionElement) => {
 			suggestionsContainer.appendChild(suggestionElement);
 		});

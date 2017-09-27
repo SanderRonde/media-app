@@ -1,11 +1,9 @@
-//import { YoutubeSubscriptions } from '../views/youtubeSubscriptions';
-//import { YoutubeSearch } from '../views/youtubeSearch';
-//import { YoutubeMusic } from '../views/youtubeMusic';
 import { SuggestionBar } from './suggestionBar';
-//import { AppWindow } from '../views/appWindow';
-//import { Netflix } from '../views/netflix';
-//import { MediaApp } from '../../app';
+import { AppWindow } from '../views/appWindow';
+import { MediaAppType } from '../../app';
 import { Helpers } from './helpers'
+
+declare const MediaApp: MediaAppType;
 
 type ImportNullifyingFn = (YoutubeSubscriptions: void, 
 	YoutubeSearch: void,
@@ -15,17 +13,113 @@ type ImportNullifyingFn = (YoutubeSubscriptions: void,
 	Netflix: void,
 	CommandBar: void) => void;
 
+
+interface CommandFnDescriptor {
+	fn(...args: string[]): void;
+	args: {
+		name: string;
+		enum?: string[];
+	}[];
+}
+
 export namespace Commands {
-	function runRenderer(fn: ImportNullifyingFn) {
-		Helpers.sendIPCMessage('eval', Helpers.stringifyFunction(fn));
+	function runRenderer(func: ImportNullifyingFn): () => void {
+		return () => {
+			Helpers.sendIPCMessage('eval', Helpers.stringifyFunction(func));
+		}
+	}
+
+	function sendAppWindowEvent(event: keyof MessageReasons | EXTERNAL_EVENT | ARG_EVENT) {
+		return fn(() => {
+			AppWindow.onShortcut(event);
+		})
+	}
+
+	function sendBgPageEvent(event: keyof MessageReasons) {
+		return fn(() => {
+			Helpers.sendIPCMessage('toBgPage', {
+				type: event
+			});
+		});
+	}
+
+	function fn(func: (...args: string[]) => void, ...enums: {
+		name: string;
+		enum?: string[];
+	}[]): CommandFnDescriptor {
+		return {
+			fn: func,
+			args: enums
+		}
 	}
 
 	export const commands = {
-		'test': () => {
+		'Lower Volume': sendAppWindowEvent('lowerVolume'),
+		'Raise Volume': sendAppWindowEvent('raiseVolume'),
+		'Pause': sendAppWindowEvent('pause'),
+		'Play': sendAppWindowEvent('play'),
+		'Pause/Play': sendAppWindowEvent('pausePlay'),
+		'Focus': sendAppWindowEvent('focus'),
+		'Magic Button': sendAppWindowEvent('magicButton'),
+		'Switch to view youtubeSubscriptions': sendAppWindowEvent('youtubeSubscriptions'),
+		'Switch to view youtubeMusic': sendAppWindowEvent('youtubeMusic'),
+		'Switch to view youtubeSearch': sendAppWindowEvent('youtubeSearch'),
+		'Switch to view netflix': sendAppWindowEvent('netflix'),
+		'Go right': sendAppWindowEvent('right'),
+		'Go up': sendAppWindowEvent('up'),
+		'Go down': sendAppWindowEvent('down'),
+		'Go left': sendAppWindowEvent('left'),
+		'Toggle video visibility': sendAppWindowEvent('toggleVideo'),
+		'Switch to view': fn((view: 'youtubeSubscriptions'|'youtubeMusic'|'youtubeSearch'|'netflix') => {
+			AppWindow.onShortcut(view);
+		}, {
+			name: 'view',
+			enum: ['youtubeSubscriptions', 'youtubeMusic', 'youtubeSearch', 'netflix']
+		}),
+		'Cast': fn((url: string) => {
+			AppWindow.onShortcut('cast', url);
+		}, {
+			name: 'url'
+		}),
+		'Hidden Cast': fn((url: string) => {
+			AppWindow.onShortcut('cast', url);
+		}, {
+			name: 'url'
+		}),
+		'Open window devtools': sendBgPageEvent('openDevTools'),
+		'Enter fullscreen': sendBgPageEvent('enterFullscreen'),
+		'Exit fullscreen': sendBgPageEvent('exitFullscreen'),
+		'Minimize': sendBgPageEvent('minimize'),
+		'Maximize': sendBgPageEvent('maximize'),
+		'Close window': sendBgPageEvent('close'),
+		'Quit': sendBgPageEvent('quit'),
+
+		'Relaunch': fn(() => {
+			require('electron').remote.app.relaunch();
+			require('electron').remote.app.quit();
+		}),
+		'Disable AutoLaunch': fn(() => {
 			runRenderer(() => {
-				
+				MediaApp.AutoLauncher.set(false);
 			});
-		}	
+		}),
+		'Enable AutoLaunch': fn(() => {
+			runRenderer(() => {
+				MediaApp.AutoLauncher.set(true);
+			});
+		}),
+		'Restart server': fn(() => {
+			runRenderer(() => {
+				MediaApp.Setup.activeServer.restart();
+			})
+		}),
+		'Change server port': fn((port: string) => {
+			runRenderer(() => {
+				MediaApp.Setup.activeServer.restart(~~port);
+			});
+		}, {
+			name: 'Port'
+		})
 	}
 }
 
@@ -81,25 +175,23 @@ export namespace CommandBar {
 	});
 	let lastAcronymSuggestions: SuggestionGenerationAcronymObj[] = [];	
 
-	function getArgs(fn: Function): string[] {
-		const str = fn.toString();
-		const fnStartIndex = str.indexOf('(');
-		const fnEndIndex = str.indexOf(')');
-
-		const args = str.slice(fnStartIndex + 1, fnEndIndex - 1);
-		return args.split(',').map(s => s.trim()).map(s => s.replace(/_/g, ' '));
-	}
-
 	const suggestionBar = new SuggestionBar({
 		searchBarId: 'commandBarInput',
-		container: 'commandBarCentererContainer'
+		container: 'commandBarCentererContainer',
+		placeholder: 'Command'
 	}, () => {
 		return {
-			async exec(result: string) {
-				const fn = Commands.commands[result as keyof typeof Commands.commands];
-				const args = await getArgs(fn);
-				if (args !== null) {
-					fn(...args);
+			async exec(result: string, getArgs: (names: {
+				name: string;
+				enum?: string[]
+			}[]) => Promise<string[]>) {
+				const toDo = Commands.commands[result as keyof typeof Commands.commands];
+				if (toDo) {
+					const { fn, args } = toDo;
+					const fnArgs = await getArgs(args);
+					if (fnArgs !== null) {
+						fn(...fnArgs);
+					}
 				}
 			},
 			hide() {
@@ -244,7 +336,7 @@ export namespace CommandBar {
 						suggestion.arr.push({
 							isSuggestion: true,
 							isFinal: true,
-							value: ' ' + lowercase.slice(combination.length).join(' ')
+							value: ' ' + original.slice(combination.length).join(' ')
 						});
 					}
 					suggestions.push(suggestion);
@@ -307,6 +399,7 @@ export namespace CommandBar {
 		}
 
 		export function getSuggestions(query: string): SuggestionsArr {
+			debugger;
 			let suggestions: SuggestionGenerationArr = (getAcronymSuggestions(query) as SuggestionGenerationArr)
 				.concat(getContainsSuggestions(query));
 			filter(suggestions);

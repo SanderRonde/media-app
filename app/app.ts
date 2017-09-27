@@ -116,15 +116,15 @@ export namespace MediaApp {
 		}
 	}
 
-	namespace Setup {
-		let activeServer: RemoteServer = null;	
+	export namespace Setup {
+		export let activeServer: RemoteServer = null;	
 
 		namespace WideVine {
 			export async function load() {
 				const widevine: {
 					load(app: Electron.App, dest: string): boolean;
 					downloadAsync(app: Electron.App, dest: string): Promise<void>;
-				} = require('electron-widevinecdm')
+				} = require('electron-widevinecdm');
 				const widevinePath = path.join(app.getPath('appData'), 'widevine');
 				const widevineExists = widevine.load(app, widevinePath);
 
@@ -388,7 +388,7 @@ export namespace MediaApp {
 		}
 	}
 
-	namespace AutoLauncher {
+	export namespace AutoLauncher {
 		let autoLauncher: AutoLaunch = null;
 
 		export async function init() {
@@ -433,5 +433,6 @@ export namespace MediaApp {
 		});
 	}
 }
+export type MediaAppType = typeof MediaApp;
 
 MediaApp.init();

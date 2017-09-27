@@ -356,7 +356,8 @@ export namespace YoutubeSearch {
 		const suggestionBar = new SuggestionBar({
 			searchBarId: 'searchInput',
 			container: 'youtubeSearchCont',
-			searchButton: '#searchButton'
+			searchButton: '#searchButton',
+			placeholder: 'Search'
 		}, () => {
 			return {
 				async exec(query: string) {
