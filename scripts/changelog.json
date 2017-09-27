@@ -61,5 +61,10 @@
 		"App asks before downloading update",
 		"Auto restarts if the window hasn't launched yet and it has to restart",
 		"Shows more notifications instead of dialogs (when possible)"
+	],
+	"3.0.14": [
+		"Added a command bar",
+		"Added the ability to free up memory through the command bar",
+		"Also navs to youtu.be links when pasted"
 	]
 }
