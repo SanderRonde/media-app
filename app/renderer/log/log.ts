@@ -1,9 +1,11 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, remote } from 'electron';
 import { Helpers } from '../../window/libs/helpers';
 
 function getWindow(): Electron.BrowserWindow {
-	const currentWindow = BrowserWindow.getAllWindows()[0];
-	return currentWindow;
+	if (!BrowserWindow) {
+		return remote.BrowserWindow.getAllWindows()[0];
+	}
+	return BrowserWindow.getAllWindows()[0];
 }
 
 const queue: ({
