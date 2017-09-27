@@ -7,11 +7,12 @@ export class SuggestionBar {
 	private _originalInput: string = '';
 	private _lastSearch: string = '';
 
-	private _mode: 'search'|'input' = 'search';
+	private _mode: 'search'|'input'|'enum' = 'search';
 	private _searchPromise: {
 		resolve(value: string): void;
 		promise: Promise<string>;
 	} = null;
+	private _enum: string[] = null;
 
 	get searchBar() {
 		return this._searchBar;
@@ -21,7 +22,12 @@ export class SuggestionBar {
 		return this._lastSearch;
 	}
 
-	private async _getArg(name: string): Promise<string> {
+	private async _getArg(arg: {
+		name: string;
+		enum?: string[];
+	}): Promise<string> {
+		this._mode = arg.enum ? 'enum' : 'input';
+		this.searchBar.setAttribute('placeholder', arg.name);
 		this._resetSearchBar();
 		const promise = new Promise<string>((resolve) => {
 			this._searchPromise = {
@@ -30,23 +36,27 @@ export class SuggestionBar {
 			}
 		});
 		const result = await promise;
+		this._mode = 'search';
 		this._searchPromise = null;
 		return result;
 	}
 
-	public async getArgs(names: string[]): Promise<string[]> {
-		if (names.length === 0) {
+	public async getArgs(argDescriptors: {
+		name: string;
+		enum?: string[]
+	}[]): Promise<string[]> {
+		if (argDescriptors.length === 0) {
 			return [];
 		}
 		const args: string[] = [];
-		for (let i = 0; i < names.length; i++) {
-			this._mode = 'input';
-			const arg = await this._getArg(names[i]);
+		for (let i = 0; i < argDescriptors.length; i++) {
+			const arg = await this._getArg(argDescriptors[i]);
 			if (arg === null) {
 				return [];
 			}
 			args.push(arg);
 		}
+		this._reset();
 		return args;
 	}
 
@@ -64,11 +74,11 @@ export class SuggestionBar {
 
 	private _updateSelectedSuggestion(index: number): string {
 		this._selectedSuggestion = index;
-		Array.from($(`#${this.els.container}`).getElementsByClassName('suggestions')[0].children).forEach((child) => {
+		Array.from($(`#${this.config.container}`).getElementsByClassName('suggestions')[0].children).forEach((child) => {
 			child.classList.remove('selected');
 		});
 		if (index !== -1) {
-			$(`#${this.els.container}`).getElementsByClassName('suggestions')[0].children.item(index).classList.add('selected');
+			$(`#${this.config.container}`).getElementsByClassName('suggestions')[0].children.item(index).classList.add('selected');
 		}
 		return this._updateInputValue();
 	}
@@ -87,7 +97,7 @@ export class SuggestionBar {
 	private async _doSearch(query: string) {
 		this._lastSearch = query;
 		this.hideSuggestions();
-		this.getRef().exec(query);
+		this.getRef().exec(query, this.getArgs);
 	}
 
 	private _joinSuggestionParts(suggestionParts: {
@@ -134,8 +144,24 @@ export class SuggestionBar {
 		const value = this._searchBar.value;
 		this._originalInput = value;
 
-		const suggestions = await this._getSuggestions(value);
-		const suggestionsContainer = $(`#${this.els.container}`).getElementsByClassName('suggestions')[0];
+		const suggestions = this._mode === 'enum' ?
+			this._enum.map((option) => {
+				if (option.indexOf(value) > -1) {
+					return [{
+						isSuggestion: true,
+						value: option.slice(0, option.indexOf(value))
+					}, {
+						isSuggestion: false,
+						value: value
+					}, {
+						isSuggestion: true,
+						value: option.slice(option.indexOf(value) + value.length)
+					}]
+				} else {
+					return null;
+				}
+			}).filter(val => val) :  await this._getSuggestions(value);
+		const suggestionsContainer = $(`#${this.config.container}`).getElementsByClassName('suggestions')[0];
 		Array.from(suggestionsContainer.children).forEach((child: HTMLElement) => {
 			child.remove();
 		});
@@ -156,13 +182,13 @@ export class SuggestionBar {
 	}
 
 	public hideSuggestions(): boolean {
-		const wasHidden = $(`#${this.els.container}`).classList.contains('suggestionsHidden')
-		$(`#${this.els.container}`).classList.add('suggestionsHidden');
+		const wasHidden = $(`#${this.config.container}`).classList.contains('suggestionsHidden')
+		$(`#${this.config.container}`).classList.add('suggestionsHidden');
 		return wasHidden;
 	}
 
 	private _showSuggestions() {
-		$(`#${this.els.container}`).classList.remove('suggestionsHidden');
+		$(`#${this.config.container}`).classList.remove('suggestionsHidden');
 	}
 
 	private _resetSearchBar() {
@@ -174,6 +200,7 @@ export class SuggestionBar {
 		this._currentSuggestions = [];
 		this._selectedSuggestion = -1;
 		this._originalInput = '';
+		this._searchBar.setAttribute('placeholder', this.config.placeholder);
 		this._mode = 'search';
 
 		if (this._searchPromise) {
@@ -185,8 +212,12 @@ export class SuggestionBar {
 	private _submit() {
 		if (this._mode === 'search') {
 			this._doSearch(this._updateInputValue());
-		} else {
+		} else if (this._mode === 'input') {
 			if (this._searchPromise) {
+				this._searchPromise.resolve(this._updateInputValue());
+			}
+		} else if (this._mode === 'enum') {
+			if (this._searchPromise && this._enum.indexOf(this._updateInputValue()) > -1) {
 				this._searchPromise.resolve(this._updateInputValue());
 			}
 		}
@@ -201,7 +232,7 @@ export class SuggestionBar {
 
 					this._reset();
 				}
-			} else if (!this.els.searchButton && e.key === 'Enter') {
+			} else if (!this.config.searchButton && e.key === 'Enter') {
 				e.preventDefault();
 				e.stopPropagation();
 				this._submit();
@@ -240,8 +271,8 @@ export class SuggestionBar {
 			}
 		});
 
-		if (this.els.searchButton) {
-			$(this.els.searchButton).addEventListener('click', (e) => {
+		if (this.config.searchButton) {
+			$(this.config.searchButton).addEventListener('click', (e) => {
 				e.preventDefault();
 				e.stopPropagation();
 				this._submit();
@@ -256,18 +287,22 @@ export class SuggestionBar {
 		this._searchBar.focus();
 	}
 
-	constructor(private els: {
+	constructor(private config: {
 		searchBarId: string;
 		container: string;
 		searchButton?: string;
+		placeholder: string;
 	}, private getRef: () => {
-		exec: (result: string) => void;
+		exec: (result: string, getArgs: (names: {
+			name: string;
+			enum?: string[]
+		}[]) => Promise<string[]>) => void;
 		hide: () => void;
 		getSuggestions(query: string): Promise<{
 			value: string;
 			isSuggestion: boolean;
 		}[][]>;
 	}, private highlightCurrent: boolean = true) {
-		this._searchBar = document.getElementById(els.searchBarId) as HTMLInputElement;
+		this._searchBar = document.getElementById(config.searchBarId) as HTMLInputElement;
 	}
 }
