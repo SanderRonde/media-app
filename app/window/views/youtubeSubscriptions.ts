@@ -247,7 +247,7 @@ export namespace YoutubeSubscriptions {
 					js: {
 						files: [
 							'./window/libs/comm.js',
-							'./window/libs//keypress.js',
+							'./window/libs/keypress.js',
 							'./window/views/youtubeSubs/subBox/subBox.js'
 						]
 					},
