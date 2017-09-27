@@ -1,3 +1,6 @@
+type Partitions = 'netflix'|'tracklists'|'youtubeplaylist'|
+	'youtubeSearch'|'youtubeSubscriptions'|'youtubeSubsVideoView';
+
 interface MessageReasons {
 	isMinimized: boolean;
 	isFullscreen: boolean;

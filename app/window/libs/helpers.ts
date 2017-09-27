@@ -389,7 +389,7 @@ export namespace Helpers {
 
 	export function createWebview(settings: {
 		id: string;
-		partition: string;
+		partition: Partitions;
 		parentId: string;
 		nodeIntegration?: boolean;
 		plugins?: boolean;

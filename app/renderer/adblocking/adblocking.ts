@@ -1,18 +1,22 @@
-import * as fs from 'fs';
-import { session, Notification } from 'electron'
+import filterParser = require('abp-filter-parser');
+import { session, Notification } from 'electron';
 import { route } from '../routing/routing';
-import * as filterParser from 'abp-filter-parser'
+import URL = require('url');
+import fs = require('fs');
 
 const FILTER_ALL = {
 	urls: ['*://*./*', '*://*/*']
 };
 
-const PARTITION_MAP = {
-	youtubeSubscriptions: 'www.youtube.com',
-	youtubeplaylist: 'www.youtube.com',
-	youtubeSearch: 'www.youtube.com',
-	netflix: 'www.netflix.com',
-	tracklists: 'www.1001tracklists.com'
+const PARTITION_MAP: {
+	[key in Partitions]: string;
+} = {
+	youtubeSubscriptions: 'https://www.youtube.com',
+	youtubeSubsVideoView: 'https://www.youtube.com',
+	youtubeplaylist: 'https://www.youtube.com',
+	youtubeSearch: 'https://www.youtube.com',
+	netflix: 'https://www.netflix.com',
+	tracklists: 'https://www.1001tracklists.com'
 }
 
 export namespace AdBlocking {
@@ -42,25 +46,23 @@ export namespace AdBlocking {
 		}
 	}
 
-	export async function shouldBlock(details: Electron.OnBeforeRequestDetails, pageURL: string): Promise<boolean> {
+	export async function shouldBlock(details: Electron.OnBeforeRequestDetails, domain: string): Promise<boolean> {
 		await initialization;
-
-		const domain = new URL(pageURL).hostname;
 		const requestURL = details.url;
 		const type = mapTypes(details.resourceType);
-
 		return filterParser.matches(rules, requestURL, {
 			domain: domain,
 			elementTypeMaskMap: type
 		});
 	}
 
-	async function blockForPartition(partition: string, baseUrl: string) {
+	async function blockForPartition(partition: Partitions, baseUrl: string) {
 		await initialization;
-		session.fromPartition(partition, {
+		const hostname = URL.parse(baseUrl).hostname;
+		session.fromPartition(`persist:${partition}`, {
 			cache: true
 		}).webRequest.onBeforeRequest(FILTER_ALL, async (details, callback) => {
-			const shouldBeBlocked = await shouldBlock(details, baseUrl);
+			const shouldBeBlocked = await shouldBlock(details, hostname);
 			callback({
 				cancel: shouldBeBlocked
 			});
@@ -69,7 +71,7 @@ export namespace AdBlocking {
 
 	export function blockAds() {
 		for (let key in PARTITION_MAP) {
-			blockForPartition(key, PARTITION_MAP[key as keyof typeof PARTITION_MAP]);
+			blockForPartition(key as Partitions, PARTITION_MAP[key as keyof typeof PARTITION_MAP]);
 		}
 	}
 
