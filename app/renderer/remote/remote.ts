@@ -161,7 +161,7 @@ export class RemoteServer {
 		return currentPort;
 	}
 
-	private async initServer() {
+	private async initServer(port?: number) {
 		this.httpServer = http.createServer(async (req, res) => {
 			const url = this.getURL(req);
 
@@ -172,7 +172,7 @@ export class RemoteServer {
 			}
 		});
 
-		const port = await this.findUnusedPort(REMOTE_PORT);
+		port = port || await this.findUnusedPort(REMOTE_PORT);
 		if (port !== null) {
 			this.httpServer.listen(port, async () => {
 				if (port !== REMOTE_PORT) {
@@ -188,6 +188,19 @@ export class RemoteServer {
 			error('No valid port could be found, not hosting');
 			this.wsHandler = new WSHandler(null);
 		}
+	}
+
+	private async shutdown(): Promise<void> {
+		return new Promise<void>((resolve) => {
+			this.httpServer.close(() => {
+				resolve();
+			});
+		});
+	}
+
+	public async restart(port?: number) {
+		await this.shutdown();
+		await this.initServer(port);
 	}
 
 	constructor(public refs: {
