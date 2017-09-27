@@ -63,6 +63,12 @@ export namespace Netflix {
 				}]);
 			}, 10);
 		}
+
+		export function free() {
+			videoPromise = null;
+			videoView && videoView.remove();
+			videoView = null;	
+		}
 	}
 
 	export namespace Commands {
@@ -150,6 +156,12 @@ export namespace Netflix {
 		export async function onKeyPress(event: MappedKeyboardEvent) { 
 			return false;
 		}
+
+		export function free() {
+			Video.free();
+			state.playing = false;
+			state.title = 'nothing';
+		}
 	}
 
 	const state = {
@@ -157,8 +169,12 @@ export namespace Netflix {
 		title: 'nothing'
 	}
 
+	let interval: number = null;
 	function initStateListener() {
-		window.setInterval(async () => {
+		if (interval) {
+			return;
+		}
+		interval = window.setInterval(async () => {
 			const [ playing, title ] = await Promise.all([
 				Video.getPlayStatus(),
 				Video.getVideoTitle()

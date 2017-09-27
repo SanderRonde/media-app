@@ -193,6 +193,14 @@ export namespace YoutubeSearch {
 			}
 			return false;
 		}
+
+		export function free() {
+			activePage = 'results';
+			Video.free();
+			SearchResultsPage.free();
+			Queue.clear();
+			$('#youtubeSearchCont').classList.remove('showVideo');
+		}
 	}
 
 	export namespace Video {
@@ -291,6 +299,12 @@ export namespace YoutubeSearch {
 			videoView.loadURL(url);
 			showVideo();
 		}
+
+		export function free() {
+			videoPromise = null;
+			videoView && videoView.remove();
+			videoView = null;
+		}
 	}
 
 	export namespace SearchResultsPage {
@@ -349,6 +363,12 @@ export namespace YoutubeSearch {
 
 		export async function navTo(url: string) {
 			(await searchResultsPromise).loadURL(url);
+		}
+
+		export function free() {
+			searchResultsPromise = null;
+			searchResultsView && searchResultsView.remove();
+			searchResultsView = null;
 		}
 	}
 
@@ -619,6 +639,10 @@ export namespace YoutubeSearch {
 		export function onVideoEnd() {
 			skip();
 		}
+
+		export function clear() {
+			while (queue.pop()) {}
+		}
 	}
 
 	async function showVideo() {
@@ -630,7 +654,6 @@ export namespace YoutubeSearch {
 	}
 
 	export async function changeVideo(url: string) {
-		console.log(url);
 		(await Video.getView()).loadURL(url);
 		showVideo();
 	}

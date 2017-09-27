@@ -151,6 +151,29 @@ export namespace Commands {
 				const keys = await AppWindow.sendBackgroundPageMessage('getKeyBindings');
 				return keys[command as keyof KeyCommands].join('+');
 			}
+		}),
+		'Free Memory on view': fn((view: 'youtubeSubscriptions'|'youtubeMusic'|'youtubeSearch'|'netflix') => {
+			switch (view) {
+				case 'youtubeMusic':
+					AppWindow.free('ytmusic');
+					break;
+				case 'netflix':
+					AppWindow.free('netflix');
+					break;
+				case 'youtubeSearch':
+					AppWindow.free('youtubesearch');
+					break;
+				case 'youtubeSubscriptions':
+					AppWindow.free('youtubeSubscriptions');
+					break;
+			}
+		}, {
+			name: 'View',
+			enums: ['youtubeSubscriptions', 'youtubeMusic', 'youtubeSearch', 'netflix']
+		}),
+		'Free Memory on all except current': fn(() => {
+			const current = AppWindow.getActiveViewName();
+			AppWindow.freeAllExcept(current);
 		})
 	}
 }

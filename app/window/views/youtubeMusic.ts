@@ -27,7 +27,7 @@ export namespace YoutubeMusic {
 	let viewPromise: Promise<Electron.WebviewTag> = null;
 
 	namespace Visualization {
-		let visualizing = false;
+		export let visualizing = false;
 
 		export function isVisualizing() {
 			return visualizing;
@@ -482,6 +482,13 @@ export namespace YoutubeMusic {
 				(await getView()).reload();
 			}
 			return false;
+		}
+
+		export function free() {
+			viewPromise = null;
+			view && view.remove();
+			view = null;
+			Visualization.visualizing = false;
 		}
 	}
 

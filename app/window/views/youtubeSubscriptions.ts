@@ -142,6 +142,12 @@ export namespace YoutubeSubscriptions {
 			}
 			return false;
 		}
+
+		export function free() {
+			Video.free();
+			SubBox.free();
+			$('#youtubeSubsCont').classList.remove('showVideo')
+		}
 	}
 
 	namespace Video {
@@ -216,6 +222,12 @@ export namespace YoutubeSubscriptions {
 				});
 			}, 10);
 		}
+
+		export function free() {
+			videoPromise = null;
+			videoView && videoView.remove();
+			videoView = null;
+		}
 	}
 
 	export namespace SubBox {
@@ -273,6 +285,12 @@ export namespace YoutubeSubscriptions {
 					run_at: 'document_end'
 				}]);
 			}, 10);
+		}
+
+		export function free() {
+			subBoxPromise = null;
+			subBoxView && subBoxView.remove();
+			subBoxView = null;
 		}
 	}
 

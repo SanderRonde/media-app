@@ -592,4 +592,19 @@ export namespace AppWindow {
 	export function isDebug(): boolean {
 		return debug;
 	}
+
+	export function free(view: ViewNames) {
+		getViewByName(view).Commands.free();
+		loadedViews.splice(loadedViews.indexOf(view), 1);
+	}
+
+	export function freeAllExcept(except: ViewNames) {
+		const views: ViewNames[] = ['ytmusic', 'netflix', 'youtubesearch', 'youtubeSubscriptions'];
+		for (let toRemove of views) {
+			if (toRemove !== except) {
+				getViewByName(toRemove).Commands.free();
+				loadedViews.splice(loadedViews.indexOf(toRemove), 1);
+			}
+		}
+	}
 }

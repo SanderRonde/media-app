@@ -243,6 +243,10 @@ export class SuggestionBar {
 	}
 
 	async setup() {
+		if (this._searchBar.getAttribute('registered')) {
+			return;
+		}
+		this._searchBar.setAttribute('registered', 'true');
 		this._searchBar.addEventListener('keydown', async (e) => {
 			if (e.key === 'Escape') {
 				if (this.hideSuggestions()) {
