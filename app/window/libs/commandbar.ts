@@ -399,7 +399,6 @@ export namespace CommandBar {
 		}
 
 		export function getSuggestions(query: string): SuggestionsArr {
-			debugger;
 			let suggestions: SuggestionGenerationArr = (getAcronymSuggestions(query) as SuggestionGenerationArr)
 				.concat(getContainsSuggestions(query));
 			filter(suggestions);
