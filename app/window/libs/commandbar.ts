@@ -1,8 +1,9 @@
+import { YoutubeMusic } from '../views/youtubeMusic';
+import { toast } from './../../renderer/log/log';
 import { SuggestionBar } from './suggestionBar';
 import { AppWindow } from '../views/appWindow';
 import { MediaAppType } from '../../app';
 import { Helpers } from './helpers';
-import { toast } from './../../renderer/log/log';
 
 declare const MediaApp: MediaAppType;
 
@@ -174,6 +175,9 @@ export namespace Commands {
 		'Free Memory on all except current': fn(() => {
 			const current = AppWindow.getActiveViewName();
 			AppWindow.freeAllExcept(current);
+		}),
+		'Reload YoutubeMusic video': fn(() => {
+			YoutubeMusic.reload();
 		})
 	}
 }

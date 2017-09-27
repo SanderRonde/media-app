@@ -340,6 +340,10 @@ export namespace YoutubeMusic {
 	export function getCurrentSong() {
 		Downloading.getCurrentSong();
 	}
+	
+	export async function reload() {
+		(await Commands.getView()).reload();
+	}
 
 	export namespace Commands {
 		export function lowerVolume() {
@@ -479,7 +483,7 @@ export namespace YoutubeMusic {
 				YoutubeMusic.getCurrentSong();
 				return true;
 			} else if (event.key === 'r') {
-				(await getView()).reload();
+				reload();
 			}
 			return false;
 		}
