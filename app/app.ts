@@ -172,7 +172,7 @@ export namespace MediaApp {
 				ipcMain.on('toBgPage', (event, msg) => {
 					switch (msg.type) {
 						case 'openDevTools':
-						Refs.activeWindow.webContents.openDevTools();
+							Refs.activeWindow.webContents.openDevTools();
 							break;
 						case 'messageServer':
 							activeServer.sendMessage(msg.data as {
