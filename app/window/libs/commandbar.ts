@@ -1,7 +1,8 @@
 import { SuggestionBar } from './suggestionBar';
 import { AppWindow } from '../views/appWindow';
 import { MediaAppType } from '../../app';
-import { Helpers } from './helpers'
+import { Helpers } from './helpers';
+import { toast } from './../../renderer/log/log';
 
 declare const MediaApp: MediaAppType;
 
@@ -17,8 +18,8 @@ type ImportNullifyingFn = (YoutubeSubscriptions: void,
 interface CommandFnDescriptor {
 	fn(...args: string[]): void;
 	args: {
-		name: string;
-		enum?: string[];
+		name: string|((...args: string[]) => Promise<string>);
+		enums?: string[]|((...args: string[]) => Promise<string[]>);
 	}[];
 }
 
@@ -44,14 +45,20 @@ export namespace Commands {
 	}
 
 	function fn(func: (...args: string[]) => void, ...enums: {
-		name: string;
-		enum?: string[];
+		name: string|((...args: string[]) => Promise<string>);
+		enums?: string[]|((...args: string[]) => Promise<string[]>);
 	}[]): CommandFnDescriptor {
 		return {
 			fn: func,
 			args: enums
 		}
 	}
+
+	const KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
+	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+	'W', 'X', 'Y', 'Z', 'Shift', 'Alt', 'Left', 'Right', 'Down',
+	'Up', 'MediaNextTrack', 'MediaPreviousTrack', 'MediaStop',
+	'MediaPlayPause', 'Space', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 	export const commands = {
 		'Lower Volume': sendAppWindowEvent('lowerVolume'),
@@ -74,7 +81,7 @@ export namespace Commands {
 			AppWindow.onShortcut(view);
 		}, {
 			name: 'view',
-			enum: ['youtubeSubscriptions', 'youtubeMusic', 'youtubeSearch', 'netflix']
+			enums: ['youtubeSubscriptions', 'youtubeMusic', 'youtubeSearch', 'netflix']
 		}),
 		'Cast': fn((url: string) => {
 			AppWindow.onShortcut('cast', url);
@@ -119,6 +126,31 @@ export namespace Commands {
 			});
 		}, {
 			name: 'Port'
+		}),
+		'Change key binding': fn((command: string, shortcut: string) => {
+			const keys = shortcut.split('+');
+			for (let key of keys) {
+				if (KEYS.indexOf(key) === -1) {
+					toast('Invalid key binding');
+					return;
+				}
+			}
+
+			Helpers.sendIPCMessage('toBgPage', {
+				type: 'setKeyBinding',
+				data: {
+					command: command,
+					shortcut: shortcut
+				}
+			});
+		}, {
+			name: 'Command',
+			enums: ['focus', 'lowerVolume', 'raiseVolume', 'pausePlay', 'magicButton', 'launch', 'pause']
+		}, {
+			async name(command: string) {
+				const keys = await AppWindow.sendBackgroundPageMessage('getKeyBindings');
+				return keys[command as keyof KeyCommands].join('+');
+			}
 		})
 	}
 }
@@ -182,8 +214,8 @@ export namespace CommandBar {
 	}, () => {
 		return {
 			async exec(result: string, getArgs: (names: {
-				name: string;
-				enum?: string[]
+				name: string|((...args: string[]) => Promise<string>);
+				enums?: string[]|((...args: string[]) => Promise<string[]>);
 			}[]) => Promise<string[]>) {
 				const toDo = Commands.commands[result as keyof typeof Commands.commands];
 				if (toDo) {

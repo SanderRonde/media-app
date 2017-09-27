@@ -169,7 +169,7 @@ export namespace MediaApp {
 			}
 
 			export function setupListeners() {
-				ipcMain.on('toBgPage', (event, msg) => {
+				ipcMain.on('toBgPage', async (event, msg) => {
 					switch (msg.type) {
 						case 'openDevTools':
 							Refs.activeWindow.webContents.openDevTools();
@@ -267,6 +267,23 @@ export namespace MediaApp {
 								}
 							})
 							break;
+						case 'getKeyBindings':
+							respondToMessage(msg.identifier, 
+								await Settings.get('keys'));
+							break;
+						case 'setKeyBinding':
+							const oldBindings = await Settings.get('keys');
+							const { command, shortcut } = msg.data as {
+								command: keyof KeyCommands;
+								shortcut: string;
+							};
+							const oldShortcut = oldBindings[command];
+
+							oldBindings[command] = shortcut.split('+') as any;
+							Settings.set('keys', oldBindings);
+
+							Shortcuts.changeKey(command, oldShortcut, shortcut);
+							break;
 					}
 				});
 				ipcMain.on('eval', (event, msg) => {
@@ -283,12 +300,12 @@ export namespace MediaApp {
 			AdBlocking.blockAds();
 			Updater.init(Refs);
 			activeServer = new RemoteServer(Refs, launch);
-			Shortcuts.init(Refs, launch);
+			Shortcuts.init(Refs, launch, await Settings.get('keys'));
 			await WideVine.load();
 		}
 	}
 
-	namespace Settings {
+	export namespace Settings {
 		let loaded: boolean = false;
 		let loadingPromise: Promise<void> = null;
 		const settingsPath = path.join(app.getPath('appData'), 'settings.json');
@@ -297,15 +314,28 @@ export namespace MediaApp {
 		const settingTypes: {
 			[P in keyof Settings.Settings]: "string" | "number" | "boolean" | "symbol" | "undefined" | "object" | "function";
 		} = {
-			launchOnBoot: 'boolean'
+			launchOnBoot: 'boolean',
+			keys: 'object'
 		}
 
 		export interface Settings {
 			launchOnBoot: boolean;
+			keys: {
+				[key in keyof KeyCommands]: (keys[keyof keys][]|keys[keyof keys])[]
+			}
 		}
 
 		const defaultSettings: Settings.Settings = {
-			launchOnBoot: true
+			launchOnBoot: true,
+			keys: {
+				focus: ['Shift', 'Alt', 'F'],
+				lowerVolume: ['Shift', 'Alt', 'Left'],
+				raiseVolume: ['Shift', 'Alt', 'Right'],
+				pausePlay: [['Shift', 'Alt', 'Down'], 'MediaPlayPause'],
+				magicButton:  [['Shift', 'Alt', 'Up'], 'MediaNextTrack'],
+				launch: ['Shift', 'Alt', 'L'],
+				pause: ['MediaStop']
+			}
 		}
 
 		async function assertLoaded(): Promise<void> {

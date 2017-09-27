@@ -15,24 +15,6 @@ export namespace Shortcuts {
 		launch: null
 	}
 
-	type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
-	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-	'W', 'X', 'Y', 'Z', 'Shift', 'Alt', 'Left', 'Right', 'Down',
-	'Up', 'MediaNextTrack', 'MediaPreviousTrack', 'MediaStop',
-	'MediaPlayPause', 'Space', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-	const map = new Map<
-		(keys[keyof keys]|(keys[keyof keys]|keys[keyof keys][])[])[],
-		keyof MessageReasons>([
-			[[['Shift', 'Alt', 'F']], 'focus'],
-			[[['Shift', 'Alt', 'Left']], 'lowerVolume'],
-			[[['Shift', 'Alt', 'Right']], 'raiseVolume'],
-			[[['Shift', 'Alt', 'Down'], 'MediaPlayPause'], 'pausePlay'],
-			[[['Shift', 'Alt', 'Up'], 'MediaNextTrack'], 'magicButton'],
-			[[['Shift', 'Alt', 'L']], 'launch'],
-
-			[['MediaStop'], 'pause']
-		]);
-
 	function handleEvent(event: keyof MessageReasons) {
 		if (remote.launch()) {
 			return true;
@@ -59,29 +41,45 @@ export namespace Shortcuts {
 		}, remote.activeWindow.webContents);
 	}
 
-	export function init(refs: {
+	export async function init(refs: {
 		activeWindow: Electron.BrowserWindow;
 		tray: Electron.Tray;
 		DEBUG: boolean;
-	}, launch: () => void) {
+	}, launch: () => void, bindings: {
+		[key in keyof KeyCommands]: (keys[keyof keys][]|keys[keyof keys])[]
+	}) {
 		const {activeWindow, DEBUG, tray } = refs;
 		remote.activeWindow = activeWindow;
 		remote.launch = launch;
 		remote.DEBUG = DEBUG;
 		remote.tray = tray;
 
-		for (let [keys, command] of map.entries()) {
+		for (let command in bindings) {
+			const keys = bindings[command as keyof typeof bindings];
 			for (let key of keys) {
 				const keyCommand = Array.isArray(key) ? key.join('+') : key;
 
 				globalShortcut.register(keyCommand as any, () => {
 					log(`Key ${keyCommand} was pressed, launching command ${command}`);
-					if (handleEvent(command)) {
+					if (handleEvent(command as keyof KeyCommands)) {
 						return;
 					}
-					sendMessage(command);
+					sendMessage(command as keyof KeyCommands);
 				});
 			}
 		}
 	}
+
+	export function changeKey(command: keyof MessageReasons, oldKey: any[], newKey: string) {
+		globalShortcut.unregister(oldKey.join('+'));
+		globalShortcut.register(newKey, () => {
+			log(`Key ${newKey} was pressed, launching command ${command}`);
+			if (handleEvent(command)) {
+				return;
+			}
+			sendMessage(command);
+		});
+	}
 }
+
+export type ShortcutsType = typeof Shortcuts;

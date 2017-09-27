@@ -24,9 +24,12 @@ export class SuggestionBar {
 
 	private async _getArg(arg: {
 		name: string;
-		enum?: string[];
+		enums?: string[];
 	}): Promise<string> {
-		this._mode = arg.enum ? 'enum' : 'input';
+		this._mode = arg.enums ? 'enum' : 'input';
+		if (arg.enums) {
+			this._enum = arg.enums;
+		}
 		this.searchBar.setAttribute('placeholder', arg.name);
 		this._resetSearchBar();
 		const promise = new Promise<string>((resolve) => {
@@ -42,15 +45,28 @@ export class SuggestionBar {
 	}
 
 	public async getArgs(argDescriptors: {
-		name: string;
-		enum?: string[]
+		name: string|((...args: string[]) => Promise<string>);
+		enums?: string[]|((...args: string[]) => Promise<string[]>);
 	}[]): Promise<string[]> {
 		if (argDescriptors.length === 0) {
 			return [];
 		}
 		const args: string[] = [];
-		for (let i = 0; i < argDescriptors.length; i++) {
-			const arg = await this._getArg(argDescriptors[i]);
+		for (let argDescriptor of argDescriptors) {
+			if (typeof argDescriptor === 'function') {
+				argDescriptor()
+			}
+			let { enums, name } = argDescriptor;
+			if (typeof name === 'function') {
+				name = await name(...args);
+			}
+			if (typeof enums === 'function') {
+				enums = await enums(...args);
+			}
+			const arg = await this._getArg({
+				name: name,
+				enums: enums
+			});
 			if (arg === null) {
 				return [];
 			}
@@ -297,8 +313,8 @@ export class SuggestionBar {
 		placeholder: string;
 	}, private getRef: () => {
 		exec: (result: string, getArgs: (names: {
-			name: string;
-			enum?: string[]
+			name: string|((...args: string[]) => Promise<string>);
+			enums?: string[]|((...args: string[]) => Promise<string[]>);
 		}[]) => Promise<string[]>) => void;
 		hide: () => void;
 		getSuggestions(query: string): Promise<{

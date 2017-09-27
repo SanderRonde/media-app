@@ -1,7 +1,27 @@
 type Partitions = 'netflix'|'tracklists'|'youtubeplaylist'|
 	'youtubeSearch'|'youtubeSubscriptions'|'youtubeSubsVideoView';
 
-interface MessageReasons {
+interface KeyCommands {
+	magicButton: void;
+	lowerVolume: void;
+	raiseVolume: void;
+	pausePlay: void;
+	focus: void;
+	pause: void;
+	launch: void;	
+}
+
+type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
+'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+'W', 'X', 'Y', 'Z', 'Shift', 'Alt', 'Left', 'Right', 'Down',
+'Up', 'MediaNextTrack', 'MediaPreviousTrack', 'MediaStop',
+'MediaPlayPause', 'Space', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+type KeyCombinations = {
+	[key in keyof KeyCommands]: (keys[keyof keys][]|keys[keyof keys])[]
+};
+
+type MessageReasons = KeyCommands & {
 	isMinimized: boolean;
 	isFullscreen: boolean;
 	isMaximized: boolean;
@@ -19,19 +39,15 @@ interface MessageReasons {
 	restore: void;
 	close: void;
 
-	magicButton: void;
-	lowerVolume: void;
-	raiseVolume: void;
-	pausePlay: void;
-	focus: void;
-	pause: void;
-	play: void;
+	play: void;	
 
 	quit: void;
-	launch: void;
 
 	messageServer: void;
 	playStatus: void;
+
+	getKeyBindings: KeyCombinations;
+	setKeyBinding: void;
 }
 
 type MappedKeyboardEvent = KeyboardEvent | {
