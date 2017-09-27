@@ -246,9 +246,9 @@ export namespace YoutubeSubscriptions {
 					matches: ['*://www.youtube.com/*'],
 					js: {
 						files: [
-							'genericJs/comm.js',
-							'genericJs/keypress.js',
-							'youtubeSubs/subBox/subBox.js'
+							'./window/libs/comm.js',
+							'./window/libs//keypress.js',
+							'./window/views/youtubeSubs/subBox/subBox.js'
 						]
 					},
 					run_at: 'document_end'
@@ -256,7 +256,7 @@ export namespace YoutubeSubscriptions {
 					name: 'css',
 					matches: ['*://www.youtube.com/*'],
 					css: {
-						files: ['youtubeSubs/subBox/subBox.css']
+						files: ['./window/views/youtubeSubs/subBox/subBox.css']
 					},
 					run_at: 'document_start'
 				}, {
