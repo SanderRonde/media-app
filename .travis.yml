@@ -26,8 +26,8 @@ install:
 
 script:
   - ./scripts/tag.sh
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tsc && grunt move && electron-builder -p "onTagOrDraft"; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tsc && grunt move && electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tsc ; grunt move && electron-builder -p "onTagOrDraft"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tsc ; grunt move && electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw; fi
   - node ./scripts/publishRelease.js
 
 branches:
