@@ -5,7 +5,7 @@
   "main": "./out/app.js",
   "scripts": {
     "release": "tsc && grunt move && electron-builder -p \"onTagOrRelease\"",
-    "postinstall": "electron-builder install-app-deps && grunt preBuild"
+    "postinstall": "electron-builder install-app-deps"
   },
   "build": {
     "appId": "com.sanderronde.mediaapp",
