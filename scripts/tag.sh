@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 git config user.name "Travis CI"
 git config user.email "builds@travis-ci.org"
 git config --global push.default simple
