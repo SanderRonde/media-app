@@ -19,7 +19,7 @@
     "allowJs": true,
     "compileOnSave": true,
     "include": [
-        "."
+        "./app"
     ],
     "exclude": [
         "node_modules"
