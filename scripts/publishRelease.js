@@ -30,7 +30,7 @@ function xhr(api, method = 'GET', params = {}) {
 		https.request({
 			method: method,
 			host: 'api.github.com',
-			path: `/${api}${paramStrings.join('')}`
+			path: `/${api}${paramStrings.map(encodeURIComponent).join('')}`
 		}, (res) => {
 			getData(res, (data) => {
 				try {
@@ -56,6 +56,9 @@ function main() {
 		}).then(() => {
 			console.log('Succesfully created release');
 			process.exit(0);
+		}).catch((e) => {
+			console.log('Something went wrong', e);
+			process.exit(1);
 		});
 	} else {
 		console.log('Not publishing since this is linux');	
