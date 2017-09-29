@@ -3,6 +3,19 @@ const VERSION = process.env.TRAVIS_COMMIT_MESSAGE;
 const TAG = `v${VERSION}`;
 const USER = 'SanderRonde';
 const REPO = 'media-app';
+const https = require('https');
+
+function getData(res, done) {
+	let str = '';
+
+	res.on('data', (chunk) => {
+		str += chunk;
+	});
+
+	res.on('end', () => {
+		done(str);
+	});
+}
 
 function xhr(api, method = 'GET', params = {}) {
 	const paramStrings = [];
@@ -13,23 +26,24 @@ function xhr(api, method = 'GET', params = {}) {
 			paramStrings.push(`&${key}=${params[key]}`);
 		}
 	});
-	const xhrObj = new XMLHttpRequest();
-	xhrObj.open(method, `https://api.github.com/${api}${paramStrings.join('')}`);
-	xhrObj.overrideMimeType('application/json');
 	return new Promise((resolve, reject) => {
-		xhrObj.onreadystatechange = () => {
-			if (xhrObj.readyState === xhrObj.DONE) {
+		https.request({
+			method: method,
+			host: 'api.github.com',
+			path: `/${api}${paramStrings.join('')}`
+		}, (res) => {
+			getData(res, (data) => {
 				try {
-					if (xhrObj.status > 199 && xhrObj.status < 300) {
-						resolve(JSON.parse(xhrObj.responseText));
+					if (res.statusCode > 199 && res.statusCode < 300) {
+						resolve(JSON.parse(data));
 					} else {
-						reject(JSON.parse(xhrObj.responseText));
+						reject(JSON.parse(data));
 					}
 				} catch(e) {
 					reject(new Error('Failed to parse server response'));
 				}
-			}
-		}
+			});
+		});
 	});
 }
 
