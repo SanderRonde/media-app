@@ -27,7 +27,7 @@ function xhr(api, method = 'GET', params = {}) {
 		}
 	});
 	return new Promise((resolve, reject) => {
-		https.request({
+		const req = https.request({
 			method: method,
 			host: 'api.github.com',
 			path: `/${api}${paramStrings.map(encodeURIComponent).join('')}`
@@ -44,6 +44,7 @@ function xhr(api, method = 'GET', params = {}) {
 				}
 			});
 		});
+		req.end();
 	});
 }
 
