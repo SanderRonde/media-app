@@ -40,6 +40,7 @@ function xhr(api, method = 'GET', params = {}) {
 						reject(JSON.parse(data));
 					}
 				} catch(e) {
+					console.log(data);
 					reject(new Error('Failed to parse server response'));
 				}
 			});
