@@ -66,5 +66,8 @@
 		"Added a command bar",
 		"Added the ability to free up memory through the command bar",
 		"Also navs to youtu.be links when pasted"
+	],
+	"3.0.15": [
+		"Works again"
 	]
 }
