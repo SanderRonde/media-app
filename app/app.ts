@@ -125,7 +125,7 @@ export namespace MediaApp {
 					load(app: Electron.App, dest: string): boolean;
 					downloadAsync(app: Electron.App, dest: string): Promise<void>;
 				} = require('electron-widevinecdm');
-				const widevinePath = path.join(app.getPath('appData'), 'widevine');
+				const widevinePath = path.join(app.getPath('appData'), 'media-app', 'widevine');
 				const widevineExists = widevine.load(app, widevinePath);
 
 				return new Promise(async (resolve) => {
@@ -312,7 +312,7 @@ export namespace MediaApp {
 			loadingResolve = resolve;
 		});
 
-		const settingsPath = path.join(app.getPath('appData'), 'settings.json');
+		const settingsPath = path.join(app.getPath('appData'), 'media-app', 'settings.json');
 		let settings: Settings = null;
 
 		const settingTypes: {
