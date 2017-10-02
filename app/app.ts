@@ -307,7 +307,11 @@ export namespace MediaApp {
 
 	export namespace Settings {
 		let loaded: boolean = false;
-		let loadingPromise: Promise<void> = null;
+		let loadingResolve: () => void = null;
+		const loadingPromise = new Promise<void>((resolve) => {
+			loadingResolve = resolve;
+		});
+
 		const settingsPath = path.join(app.getPath('appData'), 'settings.json');
 		let settings: Settings = null;
 
@@ -328,12 +332,12 @@ export namespace MediaApp {
 		const defaultSettings: Settings.Settings = {
 			launchOnBoot: true,
 			keys: {
-				focus: ['Shift', 'Alt', 'F'],
-				lowerVolume: ['Shift', 'Alt', 'Left'],
-				raiseVolume: ['Shift', 'Alt', 'Right'],
+				focus: [['Shift', 'Alt', 'F']],
+				lowerVolume: [['Shift', 'Alt', 'Left']],
+				raiseVolume: [['Shift', 'Alt', 'Right']],
 				pausePlay: [['Shift', 'Alt', 'Down'], 'MediaPlayPause'],
 				magicButton:  [['Shift', 'Alt', 'Up'], 'MediaNextTrack'],
-				launch: ['Shift', 'Alt', 'L'],
+				launch: [['Shift', 'Alt', 'L']],
 				pause: ['MediaStop']
 			}
 		}
@@ -379,17 +383,15 @@ export namespace MediaApp {
 		}
 
 		export function init() {
-			loadingPromise = new Promise((resolve) => {
-				fs.stat(settingsPath, async (err, stats) => {
-					if (err) {
-						//Doesn't exist, make it
-						await uploadSettings(defaultSettings);
-						settings = JSON.parse(JSON.stringify(defaultSettings));
-					} else {
-						settings = await readSettings();
-					}
-					resolve();
-				});
+			fs.stat(settingsPath, async (err, stats) => {
+				if (err) {
+					//Doesn't exist, make it
+					await uploadSettings(defaultSettings);
+					settings = JSON.parse(JSON.stringify(defaultSettings));
+				} else {
+					settings = await readSettings();
+				}
+				loadingResolve();
 			});
 			return loadingPromise;
 		}
@@ -444,8 +446,8 @@ export namespace MediaApp {
 
 	export async function init() {
 		app.on('ready', async () => {
-			await Setup.init();
 			Settings.init();
+			await Setup.init();
 			await AutoLauncher.init();
 			SystemTray.init();
 
