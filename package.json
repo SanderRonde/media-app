@@ -85,6 +85,7 @@
     "electron-widevinecdm": "^3.0.0",
     "firebase": "^4.2.0",
     "fs": "0.0.1-security",
+    "github": "^11.0.0",
     "grunt-contrib-copy": "^1.0.0",
     "jade": "^1.11.0",
     "logger": "^0.0.1",
