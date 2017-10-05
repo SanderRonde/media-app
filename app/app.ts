@@ -344,6 +344,10 @@ export namespace MediaApp {
 		}
 
 		async function assertLoaded(): Promise<void> {
+			if (settings === null) {
+				await uploadSettings(defaultSettings);
+				settings = JSON.parse(JSON.stringify(defaultSettings));
+			}
 			if (loaded) {
 				return null;
 			} else {
@@ -393,6 +397,7 @@ export namespace MediaApp {
 					settings = await readSettings();
 				}
 				loadingResolve();
+				loaded = true;
 			});
 			return loadingPromise;
 		}
@@ -447,7 +452,7 @@ export namespace MediaApp {
 
 	export async function init() {
 		app.on('ready', async () => {
-			Settings.init();
+			await Settings.init();
 			await Setup.init();
 			await AutoLauncher.init();
 			SystemTray.init();
