@@ -28,6 +28,9 @@ function xhr(api, method = 'GET', params = {}) {
 	});
 	return new Promise((resolve, reject) => {
 		const req = https.request({
+			headers: {
+				'User-Agent': 'SanderRonde'
+			},
 			method: method,
 			host: 'api.github.com',
 			path: `/${api}${paramStrings.map(encodeURIComponent).join('')}`
