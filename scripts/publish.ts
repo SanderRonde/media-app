@@ -68,7 +68,7 @@ const gh = new GithubAPI({
 
 gh.authenticate({
 	type: 'token',
-	token: process.env.GITHUB_ACCESS_TOKEN
+	token: process.env.GH_ACCESS_TOKEN
 });
 
 async function main() {

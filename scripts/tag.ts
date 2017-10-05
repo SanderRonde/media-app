@@ -34,7 +34,7 @@ async function main() {
 
 	gh.authenticate({
 		type: 'token',
-		token: process.env.GITHUB_ACCESS_TOKEN
+		token: process.env.GH_ACCESS_TOKEN
 	});
 
 	const tags: Tag[] = await gh.gitdata.getTags({
