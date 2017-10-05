@@ -88,6 +88,7 @@
     "fs": "0.0.1-security",
     "grunt-contrib-copy": "^1.0.0",
     "jade": "^1.11.0",
+    "logger": "^0.0.1",
     "md5": "^2.2.1",
     "optional-require": "^1.0.0",
     "path": "^0.12.7",

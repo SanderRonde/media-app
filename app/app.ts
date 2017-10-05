@@ -5,6 +5,7 @@ import {
 import fs = require('fs');
 import url = require('url');
 import path = require('path');
+const logger = require('logger').createLogger(path.join(app.getPath('appData'), 'media-app', 'log.log'));
 import AutoLaunch = require('auto-launch');
 import { Helpers} from './window/libs/helpers';
 import { RemoteServer }  from './renderer/remote/remote';
@@ -467,4 +468,9 @@ export namespace MediaApp {
 }
 export type MediaAppType = typeof MediaApp;
 
-MediaApp.init();
+try {
+	logger.info('initializing');
+	MediaApp.init();
+} catch(e) {
+	logger.error(e);
+}
