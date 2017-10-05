@@ -38,7 +38,6 @@
     "linux": {
       "category": "Video",
       "target": [
-        "AppImage",
         "deb",
         "tar.gz"
       ],
