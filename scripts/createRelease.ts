@@ -1,4 +1,3 @@
-const GITHUB_ACCESS_TOKEN = process.env.GITHUB_ACCESS_TOKEN;
 let VERSION = process.env.TRAVIS_COMMIT_MESSAGE;
 if (VERSION.startsWith('v')) {
 	VERSION = VERSION.slice(1);
@@ -87,7 +86,9 @@ async function main() {
 		return;
 	}
 
-	const fullChangelog = JSON.parse(fs.readFileSync(path.join(__dirname, './releases.json'), 'utf8'));
+	const fullChangelog: {
+		[key: string]: string[]
+	} = JSON.parse(fs.readFileSync(path.join(__dirname, './releases.json'), 'utf8'));
 	if (!(VERSION in fullChangelog)) {
 		throw new Error('No release notes for this version exist');
 	} else {

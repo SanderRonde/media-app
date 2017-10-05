@@ -1,4 +1,3 @@
-const GITHUB_ACCESS_TOKEN = process.env.GITHUB_ACCESS_TOKEN;
 let VERSION = process.env.TRAVIS_COMMIT_MESSAGE;
 if (VERSION.startsWith('v')) {
 	VERSION = VERSION.slice(1);
