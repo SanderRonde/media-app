@@ -21,6 +21,10 @@ export interface YoutubeVideoPlayer extends HTMLElement {
 	seekTo(seconds: number): void;
 }
 
+export interface YoutubeMusicWindow extends Window {
+	lowerVolume(): void;
+	increaseVolume(): void;
+}
 
 export namespace YoutubeMusic {
 	let view: Electron.WebviewTag = null;
@@ -348,34 +352,13 @@ export namespace YoutubeMusic {
 	export namespace Commands {
 		export function lowerVolume() {
 			Helpers.hacksecute(view, () => {
-				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
-				let vol = player.getVolume();
-				if (!player.isMuted()) {
-					if (vol <= 10) {
-						vol -= 1;
-					}
-					
-					vol = (vol < 0 ? 0 : vol);
-					player.setVolume(vol);
-				}
+				(<YoutubeMusicWindow>window).lowerVolume();
 			});
 		}
 
 		export function raiseVolume() {
 			Helpers.hacksecute(view, () => {
-				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
-				let vol = player.getVolume();
-				if (player.isMuted()) {
-					//Treat volume as 0
-					vol = 0;
-					player.unMute();
-				}
-
-				if (vol <= 10) {
-					vol += 1;
-				}
-				vol = (vol > 100 ? 100 : vol);
-				player.setVolume(vol);
+				(<YoutubeMusicWindow>window).increaseVolume();
 			});
 		}
 

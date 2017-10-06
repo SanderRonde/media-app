@@ -3,7 +3,7 @@ import * as md5 from 'md5'
 import { shell } from 'electron'
 import { ViewNames } from '../../window/views/appWindow'
 import { route } from '../../renderer/routing/routing'
-import { YoutubeVideoPlayer } from '../../window/views/youtubeMusic'
+import { YoutubeVideoPlayer, YoutubeMusicWindow } from '../../window/views/youtubeMusic'
 
 export const EXAMPLE_STYLES = `html, body, a {
 	background-color: white!important;
@@ -498,6 +498,9 @@ export namespace Helpers {
 				const newVolume = Math.max(oldVolume - getVolumeDelta(oldVolume), 0);
 				setPlayerVolume(roundVolume(newVolume, false));
 			}
+
+			(window as YoutubeMusicWindow).increaseVolume = increaseVolume;
+			(window as YoutubeMusicWindow).lowerVolume = lowerVolume;
 
 			function showVolumeBar() {
 				const volume = player.getVolume();
