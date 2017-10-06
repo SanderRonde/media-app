@@ -119,7 +119,17 @@ export namespace Commands {
 		'Restart server': fn(() => {
 			runRenderer(() => {
 				MediaApp.Setup.activeServer.restart();
-			})
+			});
+		}),
+		'Shut down server': fn(() => {
+			runRenderer(() => {
+				MediaApp.Setup.activeServer.shutdown();
+			});
+		}),
+		'Start server': fn(() => {
+			runRenderer(() => {
+				MediaApp.Setup.activeServer.start();
+			});
 		}),
 		'Change server port': fn((port: string) => {
 			runRenderer(() => {

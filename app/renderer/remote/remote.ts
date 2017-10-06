@@ -163,7 +163,9 @@ export class RemoteServer {
 	}
 
 	private _expectedShutdown: boolean = false;
+	private _running: boolean = false;
 	private async _initServer(port?: number) {
+		this._running = true;
 		this._httpServer = http.createServer(async (req, res) => {
 			const url = this._getURL(req);
 
@@ -179,6 +181,7 @@ export class RemoteServer {
 		});
 
 		this._httpServer.on('close', () => {
+			this._running = false;
 			if (this._expectedShutdown) {
 				//Ignore, the restart was on purpose
 				this._expectedShutdown = false;
@@ -206,7 +209,7 @@ export class RemoteServer {
 		}
 	}
 
-	private async _shutdown(): Promise<void> {
+	public async shutdown(): Promise<void> {
 		this._expectedShutdown = true;
 		return new Promise<void>((resolve) => {
 			this._httpServer.close(() => {
@@ -215,9 +218,16 @@ export class RemoteServer {
 		});
 	}
 
-	public async restart(port?: number) {
-		await this._shutdown();
+	public async start(port?: number): Promise<void> {
+		if (this._running) {
+			await this.shutdown();
+		}
 		await this._initServer(port);
+	}
+
+	public async restart(port?: number) {
+		await this.shutdown();
+		await this.start(port);
 	}
 
 	private _getIp() {
