@@ -1,5 +1,6 @@
 import { autoUpdater, GithubOptions } from 'electron-updater';
-import { Notification, app } from 'electron'
+import { Notification, app } from 'electron';
+import { MediaApp } from '../../app';
 import os = require('os');
 
 const DEBUG = process.argv.filter((arg) => {
@@ -10,11 +11,8 @@ const DEBUG = process.argv.filter((arg) => {
 }).length > 0;
 
 export namespace Updater {
-	let refs: {
-		activeWindow: Electron.BrowserWindow;
-		tray: Electron.Tray;
-		DEBUG: boolean;
-	} = null;
+	let refs: typeof MediaApp.Refs = null;
+	let settings: typeof MediaApp.Settings = null;
 
 	function setFeed() {
 		autoUpdater.setFeedURL({
@@ -54,6 +52,9 @@ export namespace Updater {
 
 	function listenForUpdates() {
 		autoUpdater.on('update-available', (updateInfo) => {
+			if (!settings.get('autoUpdate')) {
+				return;
+			}
 			showNotification('A new update is ready to download', 
 				`Version ${updateInfo.version} is can be downloaded, click to start download`, () => {
 					autoUpdater.downloadUpdate();
@@ -68,19 +69,26 @@ export namespace Updater {
 						showNotification('Done downloading update', 
 							'Click here to install and relaunch now', () => {
 								app.relaunch();
-								app.quit();
+								autoUpdater.quitAndInstall();
 							});
 					});
 				});
 		});
 	}
 
-	export function init(appRefs: {
-		activeWindow: Electron.BrowserWindow;
-		tray: Electron.Tray;
-		DEBUG: boolean;
-	}) {
+	export async function checkForUpdates() {
+		showNotification('Checking for updates...');
+		if (!listening) {
+			setFeed();
+		}
+		autoUpdater.checkForUpdates();
+	}
+
+	let listening: boolean = false;
+
+	export function init(appRefs: typeof MediaApp.Refs, Settings: typeof MediaApp.Settings) {
 		refs = appRefs;
+		settings = Settings;
 		autoUpdater.autoDownload = false;		
 		if (DEBUG) {
 			return;
@@ -90,7 +98,17 @@ export namespace Updater {
 			return;
 		}
 
-		setFeed();
+		if (Settings.get('autoUpdate')) {
+			setFeed();
+			listening = true;
+		}
+
 		listenForUpdates();
+
+		Settings.listen('autoUpdate', (newVal) => {
+			if (newVal && !listening) {
+				setFeed();
+			}
+		});
 	}
 }

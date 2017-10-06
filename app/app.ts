@@ -14,7 +14,7 @@ import { Shortcuts } from './renderer/shortcuts/shortcuts';
 import { AdBlocking } from './renderer/adblocking/adblocking';
 
 export namespace MediaApp {
-	namespace Refs {
+	export namespace Refs {
 		export let activeWindow: Electron.BrowserWindow = null;
 		export let tray: Electron.Tray = null;
 		export const DEBUG = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length;		
@@ -71,7 +71,7 @@ export namespace MediaApp {
 			const tray = Refs.tray = new Tray(imageLocation);
 			const contextMenu = Menu.buildFromTemplate([
 				{ 
-					label: 'launch', 
+					label: 'Launch', 
 					type: 'normal',
 					accelerator: 'Shift+Alt+L',
 					click: () => {
@@ -81,18 +81,34 @@ export namespace MediaApp {
 					label: 'separator', 
 					type: 'separator' 
 				}, { 
-					label: 'launch on startup', 
+					label: 'Launch on startup', 
 					type: 'checkbox', 
 					checked: Refs.DEBUG ? false : await Settings.get('launchOnBoot'),
 					click: async () => {
 						if (!Refs.DEBUG) {
 							const wasEnabled = await Settings.get('launchOnBoot');
-							AutoLauncher.set(!wasEnabled);
 							Settings.set('launchOnBoot', !wasEnabled);
 
 							contextMenu.items[2].checked = !wasEnabled;
 							tray.setContextMenu(contextMenu);
 						}
+					}
+				}, { 
+					label: 'Auto-update', 
+					type: 'checkbox', 
+					checked: await Settings.get('autoUpdate'),
+					click: async () => {
+						const wasEnabled = await Settings.get('autoUpdate');
+						Settings.set('launchOnBoot', !wasEnabled);
+
+						contextMenu.items[2].checked = !wasEnabled;
+						tray.setContextMenu(contextMenu);
+					}
+				}, {
+					label: 'Check for updates', 
+					type: 'normal',
+					click: async () => {
+						Updater.checkForUpdates();
 					}
 				}, { 
 					label: 'separator', 
@@ -299,7 +315,7 @@ export namespace MediaApp {
 
 			Messaging.setupListeners();
 			AdBlocking.blockAds();
-			Updater.init(Refs);
+			Updater.init(Refs, Settings);
 			activeServer = new RemoteServer(Refs, launch);
 			Shortcuts.init(Refs, launch, await Settings.get('keys'));
 			await WideVine.load();
@@ -315,19 +331,47 @@ export namespace MediaApp {
 
 		const settingsPath = path.join(app.getPath('appData'), 'media-app', 'settings.json');
 		let settings: Settings = null;
-
 		const settingTypes: {
 			[P in keyof Settings.Settings]: "string" | "number" | "boolean" | "symbol" | "undefined" | "object" | "function";
 		} = {
 			launchOnBoot: 'boolean',
-			keys: 'object'
+			keys: 'object',
+			autoUpdate: 'boolean'
 		}
 
 		export interface Settings {
 			launchOnBoot: boolean;
 			keys: {
 				[key in keyof KeyCommands]: (keys[keyof keys][]|keys[keyof keys])[]
-			}
+			};
+			autoUpdate: boolean;
+		}
+
+		namespace Listeners {
+			type ListenerObj<T extends keyof Settings.Settings = keyof Settings.Settings> = {
+				key: T;
+				listener(val: Settings.Settings[T], oldValue: Settings.Settings[T]): void
+			 }
+			const listeners: ListenerObj[] = [];
+
+			export async function addListener<K extends keyof Settings.Settings>(key: K, 
+				callback: (newVal: Settings.Settings[K], oldVal: Settings.Settings[K]) => void): Promise<Settings.Settings[K]> {
+					listeners.push({
+						key: key,
+						listener: callback
+					});
+
+					return await get(key);
+				}
+
+			export function changed<K extends keyof Settings.Settings>(key: K, 
+				newVal: Settings.Settings[K], oldVal: Settings.Settings[K]) {
+					listeners.forEach((listener) => {
+						if (listener.key === key) {
+							listener.listener(newVal, oldVal);
+						}
+					});
+				}
 		}
 
 		const defaultSettings: Settings.Settings = {
@@ -340,7 +384,8 @@ export namespace MediaApp {
 				magicButton:  [['Shift', 'Alt', 'Up'], 'MediaNextTrack'],
 				launch: [['Shift', 'Alt', 'L']],
 				pause: ['MediaStop']
-			}
+			},
+			autoUpdate: true
 		}
 
 		async function assertLoaded(): Promise<void> {
@@ -421,9 +466,21 @@ export namespace MediaApp {
 		export async function set<K extends keyof Settings.Settings>(key: K, val: Settings.Settings[K]) {
 			await assertLoaded();
 
+			const oldValue = settings[key];
 			settings[key] = val;
+
+			if (oldValue !== val) {
+				Listeners.changed(key, val, oldValue);
+			}
 			await uploadSettings(settings);
 		}
+
+		export async function listen<K extends keyof Settings.Settings>(key: K, 
+			callback: (newVal: Settings.Settings[K], oldVal: Settings.Settings[K]) => void): Promise<Settings.Settings[K]> {
+				await assertLoaded();
+				
+				return await Listeners.addListener(key, callback);
+			}
 	}
 
 	export namespace AutoLauncher {
@@ -439,9 +496,13 @@ export namespace MediaApp {
 			if (shouldBeEnabled !== isEnabled) {
 				set(shouldBeEnabled);
 			}
+
+			Settings.listen('autoUpdate', (enabled) => {
+				set(enabled);
+			});
 		}
 
-		export async function set(enabled: boolean): Promise<void> {
+		function set(enabled: boolean) {
 			if (enabled) {
 				autoLauncher.enable();
 			} else {

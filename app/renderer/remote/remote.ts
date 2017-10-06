@@ -6,6 +6,7 @@ import {
 
 import { Helpers } from '../../window/libs/helpers';
 import { log, error, toast } from '../log/log';
+import { MediaApp } from '../../app';
 import ws = require('websocket');
 import urlLib = require('url');
 import http = require('http');
@@ -203,11 +204,7 @@ export class RemoteServer {
 		await this._initServer(port);
 	}
 
-	constructor(public refs: {
-		activeWindow: Electron.BrowserWindow;
-		tray: Electron.Tray;
-		DEBUG: boolean;
-	}, public launch: (focus?: boolean) => boolean) {
+	constructor(public refs: typeof MediaApp.Refs, public launch: (focus?: boolean) => boolean) {
 		this._initServer();
 	}
 
