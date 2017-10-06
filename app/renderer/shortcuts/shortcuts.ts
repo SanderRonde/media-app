@@ -62,6 +62,7 @@ export namespace Shortcuts {
 				globalShortcut.register(keyCommand as any, () => {
 					log(`Key ${keyCommand} was pressed, launching command ${command}`);
 					if (handleEvent(command as keyof KeyCommands)) {
+						log(`Key ${keyCommand} was ignored because it launched the app`);
 						return;
 					}
 					sendMessage(command as keyof KeyCommands);
