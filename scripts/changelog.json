@@ -72,5 +72,8 @@
 	],
 	"3.0.16": [
 		"Actually works again"
+	],
+	"3.0.17": [
+		"Volume bar changes delta at lower volumes"
 	]
 }
