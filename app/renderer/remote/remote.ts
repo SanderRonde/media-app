@@ -43,6 +43,12 @@ class WSHandler {
 	private wsServer: ws.server;
 	private connections: ws.WebSocketConnection[] = [];
 
+	sendMessage(message: WSMessage) {
+		this.connections.forEach((connection) => {
+			connection.sendUTF(JSON.stringify(message));
+		});
+	}
+
 	constructor(server?: http.Server) {
 		if (!server) {
 			return;
@@ -58,12 +64,6 @@ class WSHandler {
 			connection.on('close', () => {
 				this.connections.splice(this.connections.indexOf(connection, 1));
 			});
-		});
-	}
-
-	sendMessage(message: WSMessage) {
-		this.connections.forEach((connection) => {
-			connection.sendUTF(JSON.stringify(message));
 		});
 	}
 }
@@ -202,10 +202,6 @@ export class RemoteServer {
 	public async restart(port?: number) {
 		await this._shutdown();
 		await this._initServer(port);
-	}
-
-	constructor(public refs: typeof MediaApp.Refs, public launch: (focus?: boolean) => boolean) {
-		this._initServer();
 	}
 
 	private _getIp() {
@@ -414,5 +410,9 @@ export class RemoteServer {
 	public sendMessage(message: WSMessage) {
 		this._updateLastState(message);		
 		this._wsHandler.sendMessage(message);
+	}
+
+	constructor(public refs: typeof MediaApp.Refs, public launch: (focus?: boolean) => boolean) {
+		this._initServer();
 	}
 }
