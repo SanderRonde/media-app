@@ -5,7 +5,7 @@ import {
 } from '../constants/constants'
 
 import { Helpers } from '../../window/libs/helpers';
-import { log, error, toast } from '../log/log';
+import { log, error, toast, warn } from '../log/log';
 import { MediaApp } from '../../app';
 import ws = require('websocket');
 import urlLib = require('url');
@@ -162,6 +162,7 @@ export class RemoteServer {
 		return currentPort;
 	}
 
+	private _expectedShutdown: boolean = false;
 	private async _initServer(port?: number) {
 		this._httpServer = http.createServer(async (req, res) => {
 			const url = this._getURL(req);
@@ -170,6 +171,20 @@ export class RemoteServer {
 				this._handleAPIRequest(url, res);
 			} else {
 				this._handleFileRequest(url, res);
+			}
+		});
+
+		this._httpServer.on('error', (err) => {
+			warn('HTTP server threw an error', err);
+		});
+
+		this._httpServer.on('close', () => {
+			if (this._expectedShutdown) {
+				//Ignore, the restart was on purpose
+				this._expectedShutdown = false;
+			} else {
+				warn('HTTP server shut down, attempting restart in 10 seconds');
+				this._initServer(port);
 			}
 		});
 
@@ -192,6 +207,7 @@ export class RemoteServer {
 	}
 
 	private async _shutdown(): Promise<void> {
+		this._expectedShutdown = true;
 		return new Promise<void>((resolve) => {
 			this._httpServer.close(() => {
 				resolve();
