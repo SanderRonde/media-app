@@ -467,28 +467,36 @@ export namespace Helpers {
 				}));
 			}
 
+			function getVolumeDelta(volume: number): number {
+				if (volume < 10) {
+					return 1;
+				}
+				return 5;
+			}
+
+			function roundVolume(volume: number, isLouder: boolean): number {
+				if (volume > 25 && volume % 5 !== 0) {
+					//Round to nearest 5
+					if (isLouder) {
+						return volume + (5 - (volume % 5));
+					} else {
+						return volume - (volume % 5);
+					}
+				}
+				return volume;
+			}
+
 			//Code that has to be executed "inline"
 			function increaseVolume() {
-				let vol = player.getVolume();
-				if (player.isMuted()) {
-					//Treat volume as 0
-					vol = 0;
-					player.unMute();
-				}
-
-				vol += 5;
-				vol = (vol > 100 ? 100 : vol);
-				setPlayerVolume(vol);
+				const oldVolume = player.getVolume();
+				const newVolume = Math.min(oldVolume + getVolumeDelta(oldVolume), 100);
+				setPlayerVolume(roundVolume(newVolume, true));
 			}
 
 			function lowerVolume() {
-				let vol = player.getVolume();
-				if (!player.isMuted()) {
-					vol -= 5;
-					
-					vol = (vol < 0 ? 0 : vol);
-					setPlayerVolume(vol);
-				}
+				const oldVolume = player.getVolume();
+				const newVolume = Math.max(oldVolume - getVolumeDelta(oldVolume), 0);
+				setPlayerVolume(roundVolume(newVolume, false));
 			}
 
 			function showVolumeBar() {
