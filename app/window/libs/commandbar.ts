@@ -108,12 +108,12 @@ export namespace Commands {
 		}),
 		'Disable AutoLaunch': fn(() => {
 			runRenderer(() => {
-				MediaApp.AutoLauncher.set(false);
+				MediaApp.Settings.set('launchOnBoot', false);
 			});
 		}),
 		'Enable AutoLaunch': fn(() => {
 			runRenderer(() => {
-				MediaApp.AutoLauncher.set(true);
+				MediaApp.Settings.set('launchOnBoot', true);
 			});
 		}),
 		'Restart server': fn(() => {
