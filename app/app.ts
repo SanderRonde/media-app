@@ -143,7 +143,12 @@ export namespace MediaApp {
 					downloadAsync(app: Electron.App, dest: string): Promise<void>;
 				} = require('electron-widevinecdm');
 				const widevinePath = path.join(app.getPath('appData'), 'media-app', 'widevine');
-				const widevineExists = widevine.load(app, widevinePath);
+				let widevineExists = false;
+				try {
+					widevineExists = widevine.load(app, widevinePath);
+				} catch(e) {
+					logger.error('Error loading widevine', e);
+				}
 
 				return new Promise(async (resolve) => {
 					if (widevineExists) {
