@@ -9,8 +9,9 @@ export const SW_TOOLBOX_DIR = '../../../node_modules/sw-toolbox/'
 export const ICONS_DIR = '../../../icons/mobile/';
 
 const isRemote = !require('electron').dialog;
-export const STORED_DATA_FILE = path.join((isRemote ? 
-	require('electron').remote.app : require('electron').app).getPath('appData'), 'data.json');
+const app = isRemote ? require('electron').remote.app : 
+	require('electron').app
+export const STORED_DATA_FILE = path.join(app.getPath('appData'), 'media-app', 'data.json');
 
 export const EXTERNAL_EVENTS: EXTERNAL_EVENT[] = [
 	'focus',
