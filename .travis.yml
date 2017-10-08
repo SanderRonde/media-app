@@ -23,9 +23,9 @@ before_install:
 install:
 - npm install --ignore-engines
 - npm install typescript@latest electron-builder grunt -g
-- tsc
 
 script:
+  - tsc
   - node scripts/tag.js && node scripts/createRelease.js
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tsc ; grunt move && electron-builder -p "onTagOrDraft" -l; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tsc ; grunt move && electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw; fi
