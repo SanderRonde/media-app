@@ -1,17 +1,17 @@
 ///<reference path="window/main.ts"/>
 import {
-	app, BrowserWindow, ipcMain, dialog, Tray, Menu
+	app, BrowserWindow, dialog, Tray, Menu
 } from 'electron';
 import url = require('url');
 import path = require('path');
-const logger = require('logger').createLogger(path.join(app.getPath('appData'), 'media-app', 'log.log'));
 import AutoLaunch = require('auto-launch');
-import { Helpers} from './window/libs/helpers';
+import { MessageServer } from './renderer/msg/msg';
 import { Updater } from './renderer/updater/updater'
 import { Settings } from './renderer/settings/settings';
 import { RemoteServer }  from './renderer/remote/remote';
 import { Shortcuts } from './renderer/shortcuts/shortcuts';
 import { AdBlocking } from './renderer/adblocking/adblocking';
+const logger = require('logger').createLogger(path.join(app.getPath('appData'), 'media-app', 'log.log'));
 
 export namespace MediaApp {
 	export namespace Refs {
@@ -180,136 +180,99 @@ export namespace MediaApp {
 			}
 		}
 
-		namespace Messaging {
-			function respondToMessage<T extends keyof MessageReasons>(identifier: string, response: MessageReasons[T]) {
-				Refs.activeWindow && 
-				Helpers.sendIPCMessage('fromBgPage', {
-					identifier: identifier,
-					data: response,
-					type: 'response'
-				}, Refs.activeWindow.webContents);
-			}
-
+		namespace Comm {
 			export function setupListeners() {
-				ipcMain.on('toBgPage', async (event, msg) => {
-					switch (msg.type) {
-						case 'openDevTools':
-							Refs.activeWindow.webContents.openDevTools();
-							break;
-						case 'messageServer':
-							activeServer.sendMessage(msg.data as {
-								type: 'statusUpdate';
-								data: {
-									app: string;
-									status: string;
-								};
-							}|{
-								type: 'playUpdate';
-								data: {
-									playing: boolean;
-								}
-							});
-							break;
-						case 'isMinimized':
-							respondToMessage(msg.identifier, 
-								Refs.activeWindow && 
-								Refs.activeWindow.isMinimized());
-							break;
-						case 'onFullscreened':
-							Refs.activeWindow && 
-							Refs.activeWindow.addListener('enter-full-screen', () => {
-								respondToMessage(msg.identifier, null);
-							});
-							break;
-						case 'onMaximized':
-							Refs.activeWindow && 
-							Refs.activeWindow.addListener('maximize', () => {
-								respondToMessage(msg.identifier, null);
-							});
-							break;
-						case 'onMinimized':
-							Refs.activeWindow && 
-							Refs.activeWindow.addListener('minimize', () => {
-								respondToMessage(msg.identifier, null);
-							});
-							break;
-						case 'onRestored':
-							Refs.activeWindow && 
-							Refs.activeWindow.addListener('restore', () => {
-								respondToMessage(msg.identifier, null);
-							});
-							break;
-						case 'isMaximized':
-							respondToMessage(msg.identifier,
-								Refs.activeWindow && 
-								Refs.activeWindow.isMaximized());
-							break;
-						case 'isFullscreen':
-							respondToMessage(msg.identifier,
-								Refs.activeWindow && 
-								Refs.activeWindow.isFullScreen());
-							break;
-						case 'restore':
-							Refs.activeWindow && 
-							Refs.activeWindow.restore();
-							break;
-						case 'enterFullscreen':
-							Refs.activeWindow && 
-							Refs.activeWindow.setFullScreen(true);
-							break;
-						case 'exitFullscreen':
-							Refs.activeWindow && 
-							Refs.activeWindow.setFullScreen(false);
-							break;
-						case 'minimize':
-							Refs.activeWindow && 
-							Refs.activeWindow.minimize();
-							break;
-						case 'maximize':
-							Refs.activeWindow && 
-							Refs.activeWindow.maximize();
-							break;
-						case 'close':
-							Refs.activeWindow && 
-							Refs.activeWindow.close();
-							break;
-						case 'quit':
-							app.quit();
-							break;
-						case 'passAlong':
-							Refs.activeWindow && 
-							Helpers.sendIPCMessage('passedAlong', msg.data, Refs.activeWindow.webContents);
-							break;
-						case 'playStatus':
-							const isPlaying = msg.data === 'play';
-							activeServer.sendMessage({
-								type: 'playUpdate',
-								data: {
-									playing: isPlaying
-								}
-							})
-							break;
-						case 'getKeyBindings':
-							respondToMessage(msg.identifier, 
-								await Settings.get('keys'));
-							break;
-						case 'setKeyBinding':
-							const oldBindings = await Settings.get('keys');
-							const { command, shortcut } = msg.data as {
-								command: keyof KeyCommands;
-								shortcut: string;
-							};
-							const oldShortcut = oldBindings[command];
+				const settingsMessenger = new MessageServer('settings', Refs);
+				const eventMessenger = new MessageServer('toBgPage', Refs);
+				const evalMessenger = new MessageServer('eval', Refs);
 
-							oldBindings[command] = shortcut.split('+') as any;
-							Settings.set('keys', oldBindings);
-
-							Shortcuts.changeKey(command, oldShortcut, shortcut);
-							break;
-					}
+				eventMessenger.on('openDevTools', () => {
+					Refs.activeWindow.webContents.openDevTools();
 				});
-				ipcMain.on('eval', (event, msg) => {
-					eval(msg);
+				eventMessenger.on('messageServer', (data) => {
+					activeServer.sendMessage(data);
+				});
+				eventMessenger.on('isMinimized', () => {
+					return Refs.activeWindow && Refs.activeWindow.isMinimized();
+				});
+				eventMessenger.on('onFullscreened', () => {
+					return new Promise((resolve) => {
+						Refs.activeWindow && 
+						Refs.activeWindow.addListener('enter-full-screen', () => {
+							resolve();
+						});
+					});
+				});
+				eventMessenger.on('onMaximized', () => {
+					return new Promise((resolve) => {
+						Refs.activeWindow && 
+						Refs.activeWindow.addListener('maximize', () => {
+							resolve();
+						});
+					});
+				});
+				eventMessenger.on('onMinimized', () => {
+					return new Promise((resolve) => {
+						Refs.activeWindow && 
+						Refs.activeWindow.addListener('minimize', () => {
+							resolve();
+						});
+					});
+				});
+				eventMessenger.on('onRestored', () => {
+					return new Promise((resolve) => {
+						Refs.activeWindow && 
+						Refs.activeWindow.addListener('restore', () => {
+							resolve();
+						});
+					});
+				});
+				eventMessenger.on('isMaximized', () => {
+					return Refs.activeWindow && Refs.activeWindow.isMaximized();
+				});
+				eventMessenger.on('isFullscreen', () => {
+					return Refs.activeWindow && Refs.activeWindow.isFullScreen();
+				});
+				eventMessenger.on('restore', () => {
+					Refs.activeWindow && Refs.activeWindow.restore();
+				});
+				eventMessenger.on('enterFullscreen', () => {
+					Refs.activeWindow && Refs.activeWindow.setFullScreen(true);
+				});
+				eventMessenger.on('exitFullscreen', () => {
+					Refs.activeWindow && Refs.activeWindow.setFullScreen(false);
+				});
+				eventMessenger.on('minimize', () => {
+					Refs.activeWindow && Refs.activeWindow.minimize();
+				});
+				eventMessenger.on('maximize', () => {
+					Refs.activeWindow && Refs.activeWindow.maximize();
+				});
+				eventMessenger.on('close', () => {
+					Refs.activeWindow && Refs.activeWindow.close();
+				});
+				eventMessenger.on('quit', () => {
+					app.quit();
+				});
+				eventMessenger.on('updatePlayStatus', (data) => {
+					activeServer.sendMessage({
+						type: 'playUpdate',
+						data: {
+							playing: data === 'play'
+						}
+					})
+				});
+
+				evalMessenger.on('eval', (data) => {
+					eval(data);
+				});
+
+				settingsMessenger.on('getSetting', async (key) => {
+					return await Settings.get(key);
+				});
+				settingsMessenger.on('setSetting', async (data) => {
+					const { key, val } = data;
+					await Settings.set(key, val);
 				});
 			}
 		}
@@ -318,11 +281,11 @@ export namespace MediaApp {
 			//Context Menu
 			require('electron-context-menu')({});
 
-			Messaging.setupListeners();
+			Comm.setupListeners();
 			AdBlocking.blockAds();
 			Updater.init(Refs, Settings);
 			activeServer = new RemoteServer(Refs, launch);
-			Shortcuts.init(Refs, launch, await Settings.get('keys'));
+			Shortcuts.init(Refs, launch, Settings);
 			await WideVine.load();
 		}
 	}
@@ -357,6 +320,7 @@ export namespace MediaApp {
 
 	export async function init() {
 		app.on('ready', async () => {
+			
 			await Settings.init();
 			await Setup.init();
 			await AutoLauncher.init();

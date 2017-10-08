@@ -14,6 +14,73 @@ const KeyListeningViews: ViewNames[] = [
 	'youtubesearch'
 ];
 
+
+export type MappedKeyboardEvent = KeyboardEvent | {
+	readonly bubbles: boolean;
+	readonly cancelable: boolean;
+	cancelBubble: boolean;
+	readonly defaultPrevented: boolean;
+	readonly eventPhase: number;
+	readonly isTrusted: boolean;
+	returnValue: boolean;
+	readonly timeStamp: number;
+	readonly type: string;
+	readonly scoped: boolean;
+	initEvent(eventTypeArg: string, canBubbleArg: boolean, cancelableArg: boolean): void;
+	preventDefault(): void;
+	stopImmediatePropagation(): void;
+	stopPropagation(): void;
+	deepPath(): EventTarget[];
+	readonly AT_TARGET: number;
+	readonly BUBBLING_PHASE: number;
+	readonly CAPTURING_PHASE: number;
+	readonly detail: number;
+	readonly view: Window;
+	initUIEvent(typeArg: string, canBubbleArg: boolean, cancelableArg: boolean, viewArg: Window, detailArg: number): void;
+	readonly altKey: boolean;
+	readonly char: string | null;
+	readonly charCode: number;
+	readonly ctrlKey: boolean;
+	readonly key: string;
+	readonly keyCode: number;
+	readonly locale: string;
+	readonly location: number;
+	readonly metaKey: boolean;
+	readonly repeat: boolean;
+	readonly shiftKey: boolean;
+	readonly which: number;
+	readonly code: string;
+	getModifierState(keyArg: string): boolean;
+	initKeyboardEvent(typeArg: string, canBubbleArg: boolean, cancelableArg: boolean, viewArg: Window, keyArg: string, locationArg: number, modifiersListArg: string, repeat: boolean, locale: string): void;
+	readonly DOM_KEY_LOCATION_JOYSTICK: number;
+	readonly DOM_KEY_LOCATION_LEFT: number;
+	readonly DOM_KEY_LOCATION_MOBILE: number;
+	readonly DOM_KEY_LOCATION_NUMPAD: number;
+	readonly DOM_KEY_LOCATION_RIGHT: number;
+	readonly DOM_KEY_LOCATION_STANDARD: number;
+} & {
+	currentTarget: {
+		id: string;
+		classList: string[];
+		tagName: string;
+	};
+	path: {
+		id: string;
+		classList: string[];
+		tagName: string;
+	}[];
+	srcElement: {
+		id: string;
+		classList: string[];
+		tagName: string;
+	};
+	target: {
+		id: string;
+		classList: string[];
+		tagName: string;
+	};
+};
+
 export namespace AppWindow {
 	const titleBar = document.querySelector('#titleBar');
 	let debug: boolean = false;

@@ -1,11 +1,15 @@
-import { YoutubeMusic } from '../views/youtubeMusic';
-import { toast } from './../../renderer/log/log';
-import { SuggestionBar } from './suggestionBar';
-import { AppWindow } from '../views/appWindow';
-import { MediaAppType } from '../../app';
 import { Helpers } from './helpers';
+import { MediaAppType } from '../../app';
+import { AppWindow } from '../views/appWindow';
+import { SuggestionBar } from './suggestionBar';
+import { toast } from './../../renderer/log/log';
+import { YoutubeMusic } from '../views/youtubeMusic';
+import { MessageServer } from '../../renderer/msg/msg';
+import { SettingsType } from '../../renderer/settings/settings';
+import { KeyCombinations } from '../../renderer/shortcuts/shortcuts';
 
 declare const MediaApp: MediaAppType;
+declare const Settings: SettingsType;
 
 type ImportNullifyingFn = (YoutubeSubscriptions: void, 
 	YoutubeSearch: void,
@@ -25,6 +29,8 @@ interface CommandFnDescriptor {
 }
 
 export namespace Commands {
+	const settingsServer = new MessageServer('settings');
+
 	function runRenderer(func: ImportNullifyingFn): () => void {
 		return () => {
 			Helpers.sendIPCMessage('eval', Helpers.stringifyFunction(func));
@@ -108,12 +114,12 @@ export namespace Commands {
 		}),
 		'Disable AutoLaunch': fn(() => {
 			runRenderer(() => {
-				MediaApp.Settings.set('launchOnBoot', false);
+				Settings.set('launchOnBoot', false);
 			});
 		}),
 		'Enable AutoLaunch': fn(() => {
 			runRenderer(() => {
-				MediaApp.Settings.set('launchOnBoot', true);
+				Settings.set('launchOnBoot', true);
 			});
 		}),
 		'Restart server': fn(() => {
@@ -138,7 +144,7 @@ export namespace Commands {
 		}, {
 			name: 'Port'
 		}),
-		'Change key binding': fn((command: string, shortcut: string) => {
+		'Change key binding': fn(async (command: keyof KeyCombinations, shortcut: string) => {
 			const keys = shortcut.split('+');
 			for (let key of keys) {
 				if (KEYS.indexOf(key) === -1) {
@@ -147,20 +153,20 @@ export namespace Commands {
 				}
 			}
 
-			Helpers.sendIPCMessage('toBgPage', {
-				type: 'setKeyBinding',
-				data: {
-					command: command,
-					shortcut: shortcut
-				}
+			const keyMap = await settingsServer.send('getSetting', 'keys') as KeyCombinations;
+			keyMap[command] = shortcut.split('+') as any[];
+			settingsServer.send('setSetting', {
+				key: 'keys',
+				val: keyMap
 			});
+
 		}, {
 			name: 'Command',
 			enums: ['focus', 'lowerVolume', 'raiseVolume', 'pausePlay', 'magicButton', 'launch', 'pause']
 		}, {
-			async name(command: string) {
-				const keys = await AppWindow.sendBackgroundPageMessage('getKeyBindings');
-				return keys[command as keyof KeyCommands].join('+');
+			async name(command: keyof KeyCombinations) {
+				const keys = await settingsServer.send('getSetting', 'keys') as KeyCombinations;
+				return keys[command].join('+');
 			}
 		}),
 		'Free Memory on view': fn((view: 'youtubeSubscriptions'|'youtubeMusic'|'youtubeSearch'|'netflix') => {

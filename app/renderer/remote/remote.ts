@@ -4,7 +4,7 @@ import {
 	LOG_REQUESTS, ARG_EVENTS
 } from '../constants/constants'
 
-import { Helpers } from '../../window/libs/helpers';
+import { MessageServer, MessageTypes } from '../msg/msg';
 import { log, error, toast, warn } from '../log/log';
 import { MediaApp } from '../../app';
 import ws = require('websocket');
@@ -69,6 +69,7 @@ class WSHandler {
 }
 
 export class RemoteServer {
+	private _messageServer: MessageServer<'events'>;
 	private _httpServer: http.Server;
 	private _wsHandler: WSHandler;
 	private _lastState: {
@@ -381,23 +382,19 @@ export class RemoteServer {
 		this._serveFile(url, res);
 	}
 	
-	private _sendCommand(command: keyof MessageReasons | EXTERNAL_EVENT | ARG_EVENT, data?: string) {
+	private _sendCommand(command: MessageTypes.ChannelMessageName<'events'>, data?: string) {
 		//Launch the app if it isn't running yet
 		const didLaunch = this.launch(false);
 		if (didLaunch) {
 			return;
 		}
 		
-		this.refs.activeWindow && Helpers.sendIPCMessage('fromBgPage', {
-			cmd: command,
-			type: 'event',
-			data: data
-		}, this.refs.activeWindow.webContents);
+		this._messageServer.send(command, data);	
 	}
 	
 	private async _handleAPIRequest(url: string, res: http.ServerResponse) {
-		const command = url.split('/api/').slice(1).join('/api/') as EXTERNAL_EVENT;
-		const partialCommand = command.split('/')[0] as EXTERNAL_EVENT;
+		const command = url.split('/api/').slice(1).join('/api/') as keyof MessageTypes.ExternalEvents;
+		const partialCommand = command.split('/')[0] as keyof MessageTypes.ExternalEventsWithArg;
 	
 		if (EXTERNAL_EVENTS.indexOf(command) > -1) {
 			this._sendCommand(command);
@@ -408,7 +405,7 @@ export class RemoteServer {
 				success: true
 			}));
 			res.end();
-		} else if (ARG_EVENTS.indexOf(partialCommand as ARG_EVENT) > -1) {
+		} else if (ARG_EVENTS.indexOf(partialCommand) > -1) {
 			this._sendCommand(partialCommand, decodeURIComponent(command.split('/').slice(1).join('/')));
 		} else {
 			this._respondError(res, url, '500');
@@ -439,6 +436,7 @@ export class RemoteServer {
 	}
 
 	constructor(public refs: typeof MediaApp.Refs, public launch: (focus?: boolean) => boolean) {
+		this._messageServer = new MessageServer('events', refs);
 		this._initServer();
 	}
 }

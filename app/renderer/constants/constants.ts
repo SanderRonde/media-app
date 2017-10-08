@@ -1,4 +1,5 @@
 import path = require('path');
+import { MessageTypes } from '../msg/msg';
 
 export const REMOTE_PORT = 1234;
 
@@ -13,7 +14,7 @@ const app = isRemote ? require('electron').remote.app :
 	require('electron').app
 export const STORED_DATA_FILE = path.join(app.getPath('appData'), 'media-app', 'data.json');
 
-export const EXTERNAL_EVENTS: EXTERNAL_EVENT[] = [
+export const EXTERNAL_EVENTS: (keyof MessageTypes.ExternalEvents)[] = [
 	'focus',
 	'lowerVolume',
 	'raiseVolume',
@@ -29,9 +30,7 @@ export const EXTERNAL_EVENTS: EXTERNAL_EVENT[] = [
 	'toggleVideo'
 ]
 
-export type EXTERNAL_EVENTS = EXTERNAL_EVENT[];
-
-export const ARG_EVENTS: ARG_EVENT[] = [
+export const ARG_EVENTS: (keyof MessageTypes.ExternalEventsWithArg)[] = [
 	'cast',
 	'hiddenCast'
 ]

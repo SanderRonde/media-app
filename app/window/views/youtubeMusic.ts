@@ -1,6 +1,6 @@
 import { Helpers, $ } from '../libs/helpers'
 import { FireBaseConfig, getSecret } from '../libs/getSecrets'
-import { AppWindow } from './appWindow'
+import { AppWindow, MappedKeyboardEvent } from './appWindow'
 import firebase = require('firebase');
 import { shell } from 'electron';
 

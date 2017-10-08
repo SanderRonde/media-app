@@ -1,6 +1,6 @@
 import { Helpers, $ } from '../libs/helpers'
 import { YoutubeVideoPlayer } from './youtubeMusic'
-import { AppWindow, ViewNames } from './appWindow'
+import { AppWindow, ViewNames, MappedKeyboardEvent } from './appWindow'
 
 export namespace YoutubeSubscriptions {
 	export namespace Commands {

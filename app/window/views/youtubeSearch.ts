@@ -1,7 +1,7 @@
 import { YoutubeVideoPlayer } from './youtubeMusic'
 import { Helpers, $ } from '../libs/helpers'
 import { getSecret } from '../libs/getSecrets'
-import { AppWindow } from './appWindow'
+import { AppWindow, MappedKeyboardEvent } from './appWindow'
 import { SuggestionBar } from '../libs/suggestionBar';
 
 function arr(first: number, last: number): number[] {

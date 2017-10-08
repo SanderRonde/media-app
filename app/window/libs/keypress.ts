@@ -1,3 +1,5 @@
+import { MappedKeyboardEvent } from '../views/appWindow';
+
 declare var sendIPCMessage: sendIPCMessage;
 
 (() => {

@@ -1,6 +1,18 @@
-import { Helpers } from '../../window/libs/helpers';
-import { globalShortcut, app } from 'electron'
 import { log } from '../log/log'
+import { MessageTypes } from '../msg/msg';
+import { globalShortcut, app } from 'electron'
+import { SettingsType } from '../settings/settings';
+import { Helpers } from '../../window/libs/helpers';
+
+export type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
+	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+	'W', 'X', 'Y', 'Z', 'Shift', 'Alt', 'Left', 'Right', 'Down',
+	'Up', 'MediaNextTrack', 'MediaPreviousTrack', 'MediaStop',
+	'MediaPlayPause', 'Space', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+export type KeyCombinations = {
+	[key in keyof MessageTypes.KeyCommands]: (keys[keyof keys][]|keys[keyof keys])[]
+};
 
 export namespace Shortcuts {
 	const remote: {
@@ -8,14 +20,16 @@ export namespace Shortcuts {
 		tray: Electron.Tray;
 		DEBUG: boolean;
 		launch(focus?: boolean): void;
+		Settings: SettingsType;
 	} = {
-		activeWindow: null,
 		tray: null,
 		DEBUG: null,
-		launch: null
+		launch: null,
+		Settings: null,
+		activeWindow: null
 	}
 
-	function handleEvent(event: keyof MessageReasons) {
+	function handleEvent(event: keyof MessageTypes.ExternalEventsBoth) {
 		if (remote.launch()) {
 			return true;
 		}
@@ -34,44 +48,14 @@ export namespace Shortcuts {
 		return false;
 	}
 
-	function sendMessage(data: keyof MessageReasons) {
+	function sendMessage(data: keyof MessageTypes.ExternalEventsBoth) {
 		remote.activeWindow && Helpers.sendIPCMessage('fromBgPage', {
 			cmd: data,
 			type: 'event'
 		}, remote.activeWindow.webContents);
 	}
 
-	export async function init(refs: {
-		activeWindow: Electron.BrowserWindow;
-		tray: Electron.Tray;
-		DEBUG: boolean;
-	}, launch: () => void, bindings: {
-		[key in keyof KeyCommands]: (keys[keyof keys][]|keys[keyof keys])[]
-	}) {
-		const {activeWindow, DEBUG, tray } = refs;
-		remote.activeWindow = activeWindow;
-		remote.launch = launch;
-		remote.DEBUG = DEBUG;
-		remote.tray = tray;
-
-		for (let command in bindings) {
-			const keys = bindings[command as keyof typeof bindings];
-			for (let key of keys) {
-				const keyCommand = Array.isArray(key) ? key.join('+') : key;
-
-				globalShortcut.register(keyCommand as any, () => {
-					log(`Key ${keyCommand} was pressed, launching command ${command}`);
-					if (handleEvent(command as keyof KeyCommands)) {
-						log(`Key ${keyCommand} was ignored because it launched the app`);
-						return;
-					}
-					sendMessage(command as keyof KeyCommands);
-				});
-			}
-		}
-	}
-
-	export function changeKey(command: keyof MessageReasons, oldKey: any[], newKey: string) {
+	export function changeKey(command: keyof MessageTypes.ExternalEventsBoth, oldKey: any[], newKey: string) {
 		globalShortcut.unregister(oldKey.join('+'));
 		globalShortcut.register(newKey, () => {
 			log(`Key ${newKey} was pressed, launching command ${command}`);
@@ -80,6 +64,55 @@ export namespace Shortcuts {
 			}
 			sendMessage(command);
 		});
+	}
+
+	function addSettingsListener() {
+		remote.Settings.listen('keys', (newVal, oldVal) => {
+			const changedKeys: (keyof MessageTypes.ExternalEventsBoth)[] = [];
+			for (let key in newVal) {
+				const command = key as keyof MessageTypes.ExternalEventsBoth;
+				if (JSON.stringify(<any>(<any>newVal)[command]) !== JSON.stringify(<any>(<any>oldVal)[command])) {
+					changedKeys.push(command);
+				}
+			}
+
+			changedKeys.forEach((key) => {
+				changeKey(key, <any>(<any>oldVal)[key], <any>(<any>newVal)[key]);
+			});
+		});
+	};
+
+	export async function init(refs: {
+		activeWindow: Electron.BrowserWindow;
+		tray: Electron.Tray;
+		DEBUG: boolean;
+	}, launch: () => void, remoteSettings: SettingsType) {
+		const {activeWindow, DEBUG, tray } = refs;
+		remote.activeWindow = activeWindow;
+		remote.Settings = remoteSettings
+		remote.launch = launch;
+		remote.DEBUG = DEBUG;
+		remote.tray = tray;
+
+		const bindings = await remote.Settings.get('keys');
+
+		for (let command in bindings) {
+			const keys = bindings[command as keyof typeof bindings];
+			for (let key of keys) {
+				const keyCommand = Array.isArray(key) ? key.join('+') : key;
+
+				globalShortcut.register(keyCommand as any, () => {
+					log(`Key ${keyCommand} was pressed, launching command ${command}`);
+					if (handleEvent(command as keyof MessageTypes.ExternalEventsBoth)) {
+						log(`Key ${keyCommand} was ignored because it launched the app`);
+						return;
+					}
+					sendMessage(command as keyof MessageTypes.ExternalEventsBoth);
+				});
+			}
+		}
+
+		addSettingsListener();
 	}
 }
 

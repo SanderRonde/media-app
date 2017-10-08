@@ -4,6 +4,9 @@ import { route } from '../routing/routing';
 import URL = require('url');
 import fs = require('fs');
 
+export type Partitions = 'netflix'|'tracklists'|'youtubeplaylist'|
+	'youtubeSearch'|'youtubeSubscriptions'|'youtubeSubsVideoView'
+
 const FILTER_ALL = {
 	urls: ['*://*./*', '*://*/*']
 };

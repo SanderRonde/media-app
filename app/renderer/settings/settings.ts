@@ -1,6 +1,8 @@
 import fs = require('fs');
 import path = require('path');
 import { app } from 'electron';
+import { MessageTypes } from '../msg/msg';
+import { keys } from '../shortcuts/shortcuts'
 
 export namespace Settings {
 	let loaded: boolean = false;
@@ -22,7 +24,7 @@ export namespace Settings {
 	export interface Settings {
 		launchOnBoot: boolean;
 		keys: {
-			[key in keyof KeyCommands]: (keys[keyof keys][]|keys[keyof keys])[]
+			[key in keyof MessageTypes.KeyCommands]: (keys[keyof keys][]|keys[keyof keys])[]
 		};
 		autoUpdate: boolean;
 	}
@@ -162,3 +164,5 @@ export namespace Settings {
 			return await Listeners.addListener(key, callback);
 		}
 }
+
+export type SettingsType = typeof Settings;
