@@ -1,8 +1,8 @@
-import { YoutubeVideoPlayer } from './youtubeMusic'
-import { Helpers, $ } from '../libs/helpers'
-import { getSecret } from '../libs/getSecrets'
 import { AppWindow, MappedKeyboardEvent } from './appWindow'
 import { SuggestionBar } from '../libs/suggestionBar';
+import { YoutubeVideoPlayer } from './youtubeMusic'
+import { getSecret } from '../libs/getSecrets'
+import { Helpers, $ } from '../libs/helpers'
 
 function arr(first: number, last: number): number[] {
 	return Array.from(new Array(1 + last - first)).map((_, index) => {

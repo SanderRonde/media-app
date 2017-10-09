@@ -1,8 +1,8 @@
 /// <reference path="../../window/views/youtube/1001tracklists/content.ts" />
 /// <reference path="../../window/views/youtube/content/content.ts" />
 
-import { ViewNames } from '../views/appWindow';
 import { EmbeddableSendType, MessageTypes } from '../../backgroundLibs/msg/msg';
+import { ViewNames } from '../views/appWindow';
 declare var sendMessage: EmbeddableSendType;
 declare const window: CommWindow;
 

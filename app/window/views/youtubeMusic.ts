@@ -1,9 +1,9 @@
-import { shell } from 'electron';
-import firebase = require('firebase');
-import { Helpers, $ } from '../libs/helpers'
+import { FireBaseConfig, getSecret } from '../libs/getSecrets'
 import { MessageServer } from '../../backgroundLibs/msg/msg';
 import { AppWindow, MappedKeyboardEvent } from './appWindow'
-import { FireBaseConfig, getSecret } from '../libs/getSecrets'
+import { Helpers, $ } from '../libs/helpers'
+import firebase = require('firebase');
+import { shell } from 'electron';
 
 export interface YoutubeVideoPlayer extends HTMLElement {
 	getVolume(): number;

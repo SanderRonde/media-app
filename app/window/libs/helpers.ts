@@ -1,11 +1,11 @@
-import * as fs from 'fs'
-import * as md5 from 'md5'
-import { shell } from 'electron'
-import { route } from '../../backgroundLibs/routing/routing'
-import { ViewNames } from '../../window/views/appWindow'
-import { embeddableSend, onTask } from '../../backgroundLibs/msg/msg';
-import { Partitions } from '../../backgroundLibs/adblocking/adblocking';
 import { YoutubeVideoPlayer, YoutubeMusicWindow } from '../../window/views/youtubeMusic'
+import { Partitions } from '../../backgroundLibs/adblocking/adblocking';
+import { embeddableSend, onTask } from '../../backgroundLibs/msg/msg';
+import { ViewNames } from '../../window/views/appWindow'
+import { route } from '../../backgroundLibs/routing/routing'
+import { shell } from 'electron'
+import * as md5 from 'md5'
+import * as fs from 'fs'
 
 export const EXAMPLE_STYLES = `html, body, a {
 	background-color: white!important;

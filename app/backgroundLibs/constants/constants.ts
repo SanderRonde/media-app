@@ -1,5 +1,5 @@
-import path = require('path');
 import { MessageTypes } from '../msg/msg';
+import path = require('path');
 
 export const REMOTE_PORT = 1234;
 

@@ -1,8 +1,8 @@
 import { KeyCombinations } from '../../backgroundLibs/shortcuts/shortcuts';
 import { MessageServer, MessageTypes } from '../../backgroundLibs/msg/msg';
 import { SettingsType } from '../../backgroundLibs/settings/settings';
-import { YoutubeMusic } from '../views/youtubeMusic';
 import { toast } from './../../backgroundLibs/log/log';
+import { YoutubeMusic } from '../views/youtubeMusic';
 import { SuggestionBar } from './suggestionBar';
 import { AppWindow } from '../views/appWindow';
 import { MediaAppType } from '../../app';

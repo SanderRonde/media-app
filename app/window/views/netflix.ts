@@ -1,5 +1,5 @@
-import { Helpers } from '../libs/helpers'
 import { AppWindow, MappedKeyboardEvent } from './appWindow'
+import { Helpers } from '../libs/helpers'
 
 export namespace Netflix {
 	namespace Video {

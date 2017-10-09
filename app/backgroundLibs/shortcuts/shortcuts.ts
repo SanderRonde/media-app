@@ -1,8 +1,8 @@
-import { log } from '../log/log'
-import { MediaApp } from '../../app';
-import { globalShortcut, app } from 'electron'
-import { SettingsType } from '../settings/settings';
 import { MessageTypes, MessageServer, MessageServerChannel } from '../msg/msg';
+import { SettingsType } from '../settings/settings';
+import { globalShortcut, app } from 'electron'
+import { MediaApp } from '../../app';
+import { log } from '../log/log'
 
 export type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
 	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',

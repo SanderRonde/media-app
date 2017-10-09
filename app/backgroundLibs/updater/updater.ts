@@ -1,7 +1,7 @@
 import { SettingsType } from '../../backgroundLibs/settings/settings';
 import { autoUpdater, GithubOptions } from 'electron-updater';
-import { MediaApp } from '../../app';
 import { Notification, app } from 'electron';
+import { MediaApp } from '../../app';
 import os = require('os');
 
 const DEBUG = process.argv.filter((arg) => {

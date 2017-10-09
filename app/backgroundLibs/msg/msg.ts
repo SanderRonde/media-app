@@ -1,7 +1,7 @@
-import electron = require('electron');
-const ipcRenderer = electron.ipcRenderer;
-import { Settings } from '../settings/settings';
 import { MappedKeyboardEvent, ViewNames } from '../../window/views/appWindow';
+import { Settings } from '../settings/settings';
+const ipcRenderer = electron.ipcRenderer;
+import electron = require('electron');
 
 export namespace MessageTypes {
 	interface None { }

@@ -1,8 +1,8 @@
-import fs = require('fs');
-import path = require('path');
-import { app } from 'electron';
-import { MessageTypes } from '../msg/msg';
 import { keys } from '../shortcuts/shortcuts'
+import { MessageTypes } from '../msg/msg';
+import { app } from 'electron';
+import path = require('path');
+import fs = require('fs');
 
 export namespace Settings {
 	let loaded: boolean = false;

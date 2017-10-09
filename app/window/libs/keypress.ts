@@ -1,5 +1,5 @@
-import { MappedKeyboardEvent } from '../views/appWindow';
 import { EmbeddableSendType } from '../../backgroundLibs/msg/msg';
+import { MappedKeyboardEvent } from '../views/appWindow';
 declare var sendMessage: EmbeddableSendType;;
 
 (() => {
