@@ -4,7 +4,7 @@ import { SubBoxWindow } from './youtubeSubs/subBox/subBox';
 import { YoutubeSearch } from './youtubeSearch'
 import { CommandBar } from '../libs/commandbar'
 import { YoutubeMusic } from './youtubeMusic'
-import { Helpers, $ } from '../libs/helpers'
+import { Util, $ } from '../libs/util'
 import { clipboard } from 'electron'
 import { Netflix } from './netflix'
 
@@ -226,7 +226,7 @@ export namespace AppWindow {
 				break;
 			case 'right':
 				if (activeView === 'youtubeSubscriptions') {
-					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
+					Util.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
 						(<SubBoxWindow>window).videos.selected.goRight();
 					});
 				} else if (activeView === 'youtubesearch') {
@@ -237,7 +237,7 @@ export namespace AppWindow {
 			case 'down':
 			case 'left':
 				if (activeView === 'youtubeSubscriptions') {
-					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
+					Util.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
 						switch (command) {
 							case 'up':
 								(<SubBoxWindow>window).videos.selected.goUp();
@@ -267,7 +267,7 @@ export namespace AppWindow {
 	}
 
 	async function showSpinner() {
-		await Helpers.wait(100);
+		await Util.wait(100);
 		$('#spinner').classList.add('active');
 		$('#spinnerCont').classList.remove('hidden');
 	}
@@ -275,7 +275,7 @@ export namespace AppWindow {
 	async function hideSpinner() {
 		$('#spinnerCont').classList.add('hidden');
 		$('#spinner').classList.remove('active');
-		await Helpers.wait(500);
+		await Util.wait(500);
 		hideTagline();		
 	}
 
@@ -360,7 +360,7 @@ export namespace AppWindow {
 		viewsEl.classList.add(view);
 
 		if (isLoaded) {
-			await Helpers.wait(500);
+			await Util.wait(500);
 			getActiveViewClass().Commands.onFocus();
 		}
 	}
@@ -481,7 +481,7 @@ export namespace AppWindow {
 			console.error('[BGPAGE] -', ...args);
 		});
 		logChannel.on('toast', (message) => {
-			Helpers.showToast(message);
+			Util.showToast(message);
 		});
 
 		eventChannel.onAll((type, data) => {

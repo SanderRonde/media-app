@@ -3,7 +3,7 @@ import { AppWindow, ViewNames } from './views/appWindow'
 import { YoutubeSearch } from './views/youtubeSearch'
 import { YoutubeMusic } from './views/youtubeMusic'
 import { CommandBar } from './libs/commandbar'
-import { Helpers } from './libs/helpers'
+import { Util } from './libs/util'
 import { Netflix } from './views/netflix'
 
 declare let window: CustomWindow;
@@ -12,7 +12,7 @@ const DEBUG = location.hash === '#DEBUG';
 
 interface CustomWindow extends Window {
 	baseView: ViewNames;
-	Helpers: typeof Helpers;
+	Util: typeof Util;
 	Netflix: typeof Netflix;
 	AppWindow: typeof AppWindow;
 	CommandBar: typeof CommandBar;
@@ -22,7 +22,7 @@ interface CustomWindow extends Window {
 }
 
 AppWindow.init('ytmusic', DEBUG);
-window.Helpers = Helpers;
+window.Util = Util;
 window.Netflix = Netflix;
 window.AppWindow = AppWindow;
 window.CommandBar = CommandBar;

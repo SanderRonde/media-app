@@ -1,7 +1,7 @@
 import { FireBaseConfig, getSecret } from '../libs/getSecrets'
 import { MessageServer } from '../../backgroundLibs/msg/msg';
 import { AppWindow, MappedKeyboardEvent } from './appWindow'
-import { Helpers, $ } from '../libs/helpers'
+import { Util, $ } from '../libs/util'
 import firebase = require('firebase');
 import { shell } from 'electron';
 
@@ -99,7 +99,7 @@ export namespace YoutubeMusic {
 
 	namespace Content {
 		export async function init() {
-			Helpers.hacksecute(view, (REPLACE) => {
+			Util.hacksecute(view, (REPLACE) => {
 				if ((window as any).executedYTCA) {
 					return;
 				}
@@ -116,14 +116,14 @@ export namespace YoutubeMusic {
 				REPLACE.handleYoutubeMusicTasks();
 				REPLACE.adSkipper();
 			}, {
-				volumeManager: Helpers.YoutubeVideoFunctions.volumeManager,
-				playPauseListeners: Helpers.YoutubeVideoFunctions.playPauseListeners,
-				initialSizing: Helpers.YoutubeVideoFunctions.initialSizing,
-				handleResize: Helpers.YoutubeVideoFunctions.handleResize,
-				handleToggleHiddens: Helpers.YoutubeVideoFunctions.handleToggleHiddens,
-				handleVisualizer: Helpers.YoutubeVideoFunctions.handleVisualizer,
-				handleYoutubeMusicTasks: Helpers.YoutubeVideoFunctions.handleYoutubeMusicTasks,
-				adSkipper: Helpers.YoutubeVideoFunctions.adSkipper
+				volumeManager: Util.YoutubeVideoFunctions.volumeManager,
+				playPauseListeners: Util.YoutubeVideoFunctions.playPauseListeners,
+				initialSizing: Util.YoutubeVideoFunctions.initialSizing,
+				handleResize: Util.YoutubeVideoFunctions.handleResize,
+				handleToggleHiddens: Util.YoutubeVideoFunctions.handleToggleHiddens,
+				handleVisualizer: Util.YoutubeVideoFunctions.handleVisualizer,
+				handleYoutubeMusicTasks: Util.YoutubeVideoFunctions.handleYoutubeMusicTasks,
+				adSkipper: Util.YoutubeVideoFunctions.adSkipper
 			});
 		}
 	}
@@ -138,7 +138,7 @@ export namespace YoutubeMusic {
 			const downloadSongView = $('#youtubeSearchPageView') as Electron.WebviewTag;
 
 			downloadSongView.style.display = 'block';
-			Helpers.addContentScripts(downloadSongView, [{
+			Util.addContentScripts(downloadSongView, [{
 				name: 'youtubeSearchJs',
 				matches: ['*://www.youtube.com/*'],
 				js: {
@@ -198,13 +198,13 @@ export namespace YoutubeMusic {
 
 		function findOn1001Tracklists(name: string, url: string): Promise<boolean> {
 			return new Promise(async (resolve) => {
-				const websiteWebview = await Helpers.createWebview({
+				const websiteWebview = await Util.createWebview({
 					id: '1001TracklistsView',
 					parentId: '1001tracklistsContainer',
 					partition: 'tracklists'
 				});;
 				let currentPage: 'main'|'results'|'none' = 'none';
-				Helpers.addContentScripts(websiteWebview, [{
+				Util.addContentScripts(websiteWebview, [{
 					name: 'comm',
 					matches: ['*://*/*'],
 					js: {
@@ -254,7 +254,7 @@ export namespace YoutubeMusic {
 
 		function getTrackFrom1001TracklistsUrl(url: string) {
 			getUrlHTML(url).then(async (doc) => {
-				const tracks = Helpers.toArr(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
+				const tracks = Util.toArr(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
 					try {
 						const nameContainer = songContainer.querySelector('.trackFormat');
 						const namesContainers = nameContainer.querySelectorAll('.blueTxt, .blackTxt');
@@ -319,7 +319,7 @@ export namespace YoutubeMusic {
 				findOn1001Tracklists(timestamps.data.name, timestamps.data.url).then((found) => {
 					if (!found) {
 						//Show not found toast
-						Helpers.showToast('Could not find the current song 😞');
+						Util.showToast('Could not find the current song 😞');
 					}
 				});
 			}
@@ -336,19 +336,19 @@ export namespace YoutubeMusic {
 
 	export namespace Commands {
 		export function lowerVolume() {
-			Helpers.hacksecute(view, () => {
+			Util.hacksecute(view, () => {
 				(<YoutubeMusicWindow>window).lowerVolume();
 			});
 		}
 
 		export function raiseVolume() {
-			Helpers.hacksecute(view, () => {
+			Util.hacksecute(view, () => {
 				(<YoutubeMusicWindow>window).increaseVolume();
 			});
 		}
 
 		export function togglePlay() {
-			Helpers.hacksecute(view, () => {
+			Util.hacksecute(view, () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				const state = player.getPlayerState();
 				if (state === 2) {
@@ -364,21 +364,21 @@ export namespace YoutubeMusic {
 		}
 
 		export function pause() {
-			Helpers.hacksecute(view, () => {
+			Util.hacksecute(view, () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.pauseVideo();
 			});
 		}
 
 		export function play() {
-			Helpers.hacksecute(view, () => {
+			Util.hacksecute(view, () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player && player.playVideo();
 			});
 		}
 
 		export async function setup() {
-			viewPromise = Helpers.createWebview({
+			viewPromise = Util.createWebview({
 				id: 'ytmaWebview',
 				partition: 'youtubeplaylist',
 				parentId: 'youtubePlaylistCont'
@@ -440,7 +440,7 @@ export namespace YoutubeMusic {
 				return true;
 			} else if (event.key === 'v') {
 				Visualization.toggle();
-				Helpers.hacksecute(view, () => {
+				Util.hacksecute(view, () => {
 					document.body.classList.toggle('showVisualizer');
 				});
 				return true;
@@ -464,7 +464,7 @@ export namespace YoutubeMusic {
 	async function getTitle(): Promise<string> {
 		const vidView = await Commands.getView();
 		if (vidView) {
-			return await Helpers.execute(vidView, () => {
+			return await Util.execute(vidView, () => {
 				try {
 					return document.querySelector('h1.title').innerHTML;
 				} catch(e) {
@@ -476,7 +476,7 @@ export namespace YoutubeMusic {
 	}
 
 	function addViewListeners() {
-		Helpers.addContentScripts(view, [{
+		Util.addContentScripts(view, [{
 			name: 'js',
 			matches: ['*://www.youtube.com/*'],
 			js: {
@@ -535,7 +535,7 @@ export namespace YoutubeMusic {
 
 		eventChannel.on('onMinimized', () => {
 			if (Visualization.isVisualizing()) {
-				Helpers.hacksecute(view, () => {
+				Util.hacksecute(view, () => {
 					document.body.classList.remove('showVisualizer');
 				});
 			}
@@ -543,12 +543,12 @@ export namespace YoutubeMusic {
 		});
 		eventChannel.on('onRestored', async () => {
 			if (!await toBgPageChannel.send('isMinimized', null) && Visualization.isVisualizing()) {
-				Helpers.hacksecute(view, () => {
+				Util.hacksecute(view, () => {
 					document.body.classList.add('showVisualizer');
 				});
 			}
 		});
-		Helpers.toArr(document.querySelectorAll('.toast .dismissToast')).forEach((toastButton) => {
+		Util.toArr(document.querySelectorAll('.toast .dismissToast')).forEach((toastButton) => {
 			toastButton.addEventListener('click', () => {
 				toastButton.parentNode.classList.remove('visible');
 			});

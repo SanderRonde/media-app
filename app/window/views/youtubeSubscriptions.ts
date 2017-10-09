@@ -1,11 +1,11 @@
 import { AppWindow, ViewNames, MappedKeyboardEvent } from './appWindow'
 import { YoutubeVideoPlayer } from './youtubeMusic'
-import { Helpers, $ } from '../libs/helpers'
+import { Util, $ } from '../libs/util'
 
 export namespace YoutubeSubscriptions {
 	export namespace Commands {
 		export async function lowerVolume() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				let vol = player.getVolume();
 				if (!player.isMuted()) {
@@ -18,7 +18,7 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function raiseVolume() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				let vol = player.getVolume();
 				if (player.isMuted()) {
@@ -34,7 +34,7 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function togglePlay() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				const state = player.getPlayerState();
 				if (state === 2) {
@@ -50,14 +50,14 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function pause() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.pauseVideo();
 			});
 		}
 
 		export async function play() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.playVideo();
 			});
@@ -67,7 +67,7 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function magicButton() {
-			(await SubBox.getView()).executeJavaScript(Helpers.inlineFn(() => {
+			(await SubBox.getView()).executeJavaScript(Util.inlineFn(() => {
 					(window as any).videos.selected.goLeft();
 					(window as any).videos.selected.launchCurrent();
 				}), false);
@@ -78,7 +78,7 @@ export namespace YoutubeSubscriptions {
 				SubBox.setup(),
 				Video.setup()
 			]);
-			await Helpers.wait(15);
+			await Util.wait(15);
 			(await SubBox.getView()).loadURL('http://www.youtube.com/feed/subscriptions');
 		}
 
@@ -115,12 +115,12 @@ export namespace YoutubeSubscriptions {
 			const subsCont = $('#youtubeSubsCont');
 			if (subsCont.classList.contains('showVideo')) {
 				subsCont.classList.remove('showVideo');
-				await Helpers.wait(500);
+				await Util.wait(500);
 				(await SubBox.getView()).focus();
 				AppWindow.updateStatus('Browsing subscriptions');
 			} else {
 				subsCont.classList.add('showVideo');
-				await Helpers.wait(500);
+				await Util.wait(500);
 				(await Video.getView()).focus();
 				AppWindow.updateStatus(await Video.getTitle());
 			}
@@ -136,7 +136,7 @@ export namespace YoutubeSubscriptions {
 				return true;
 			} else if (event.key === 'd') {
 				if ($('#youtubeSubsCont').classList.contains('showVideo')) {
-					Helpers.downloadVideo((await Video.getView()).src)
+					Util.downloadVideo((await Video.getView()).src)
 					return true;
 				}
 			}
@@ -165,13 +165,13 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function getTitle(): Promise<string> {
-			return await Helpers.execute(await getView(), () => {
+			return await Util.execute(await getView(), () => {
 				return document.querySelector('.title').innerHTML;
 			});
 		}
 
 		export async function setup() {
-			videoPromise = Helpers.createWebview({
+			videoPromise = Util.createWebview({
 				id: 'youtubeSubsVideoView',
 				partition: 'youtubeSubscriptions',
 				parentId: 'youtubeSubsCont'
@@ -179,7 +179,7 @@ export namespace YoutubeSubscriptions {
 			videoView = await videoPromise;
 
 			window.setTimeout(() => {
-				Helpers.addContentScripts(videoView, [{
+				Util.addContentScripts(videoView, [{
 					name: 'js',
 					matches: ['*://www.youtube.com/*'],
 					js: {
@@ -201,7 +201,7 @@ export namespace YoutubeSubscriptions {
 
 				videoView.addEventListener('did-finish-load', async () => {
 					window.setTimeout(() => {
-						Helpers.hacksecute(videoView, (REPLACE) => {
+						Util.hacksecute(videoView, (REPLACE) => {
 							const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 
 							REPLACE.playPauseListeners('youtubeSubscriptions');
@@ -211,12 +211,12 @@ export namespace YoutubeSubscriptions {
 							REPLACE.handleToggleHiddens('k');
 							REPLACE.adSkipper();
 						}, {
-							volumeManager: Helpers.YoutubeVideoFunctions.volumeManager,
-							playPauseListeners: Helpers.YoutubeVideoFunctions.playPauseListeners,
-							initialSizing: Helpers.YoutubeVideoFunctions.initialSizing,
-							handleResize: Helpers.YoutubeVideoFunctions.handleResize,
-							handleToggleHiddens: Helpers.YoutubeVideoFunctions.handleToggleHiddens,
-							adSkipper: Helpers.YoutubeVideoFunctions.adSkipper
+							volumeManager: Util.YoutubeVideoFunctions.volumeManager,
+							playPauseListeners: Util.YoutubeVideoFunctions.playPauseListeners,
+							initialSizing: Util.YoutubeVideoFunctions.initialSizing,
+							handleResize: Util.YoutubeVideoFunctions.handleResize,
+							handleToggleHiddens: Util.YoutubeVideoFunctions.handleToggleHiddens,
+							adSkipper: Util.YoutubeVideoFunctions.adSkipper
 						});
 					}, 2500);
 				});
@@ -245,7 +245,7 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function setup() {
-			subBoxPromise = Helpers.createWebview({
+			subBoxPromise = Util.createWebview({
 				id: 'youtubeSubsSubBoxView',
 				partition: 'youtubeSubsVideoView', 
 				parentId: 'youtubeSubsCont'
@@ -253,7 +253,7 @@ export namespace YoutubeSubscriptions {
 			subBoxView = await subBoxPromise;
 
 			window.setTimeout(() => {
-				Helpers.addContentScripts(subBoxView, [{
+				Util.addContentScripts(subBoxView, [{
 					name: 'js',
 					matches: ['*://www.youtube.com/*'],
 					js: {
@@ -278,7 +278,7 @@ export namespace YoutubeSubscriptions {
 						'*://www.accounts.google.com/*'
 					],
 					js: {
-						code: Helpers.inlineFn(() => {
+						code: Util.inlineFn(() => {
 							localStorage.setItem('loaded', 'youtubeSubscriptions' as ViewNames);
 						})
 					},
@@ -296,7 +296,7 @@ export namespace YoutubeSubscriptions {
 
 	async function showVideo() {
 		$('#youtubeSubsCont').classList.add('showVideo');
-		await Helpers.wait(500);
+		await Util.wait(500);
 		(await Video.getView()).focus();
 		AppWindow.updateStatus(await Video.getTitle());
 	}

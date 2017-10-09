@@ -1,5 +1,5 @@
 import { AppWindow, MappedKeyboardEvent } from './appWindow'
-import { Helpers } from '../libs/helpers'
+import { Util } from '../libs/util'
 
 export namespace Netflix {
 	namespace Video {
@@ -21,7 +21,7 @@ export namespace Netflix {
 		}
 
 		export async function getPlayStatus(): Promise<boolean> {
-			return Helpers.execute(await getView(), () => {
+			return Util.execute(await getView(), () => {
 				if (document.querySelector('.button-nfplayerPause')) {
 					return true;
 				} else {
@@ -31,7 +31,7 @@ export namespace Netflix {
 		}
 
 		export async function getVideoTitle(): Promise<string> {
-			return Helpers.execute(await getView(), () => {
+			return Util.execute(await getView(), () => {
 				if (document.querySelector('.video-title')) {
 					return document.querySelector('.video-title').children[0].children[0].innerHTML;
 				} else {
@@ -41,7 +41,7 @@ export namespace Netflix {
 		}
 
 		export async function setup() {
-			videoPromise = Helpers.createWebview({
+			videoPromise = Util.createWebview({
 				id: 'netflixWebView',
 				partition: 'netflix',
 				parentId: 'netflixCont',
@@ -51,7 +51,7 @@ export namespace Netflix {
 			videoView = await videoPromise;
 
 			window.setTimeout(() => {
-				Helpers.addContentScripts(videoView, [{
+				Util.addContentScripts(videoView, [{
 					name: 'js',
 					matches: ['*://*/*'],
 					js: {
@@ -81,7 +81,7 @@ export namespace Netflix {
 		}
 
 		export async function togglePlay() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const video = (document.querySelector('video') as HTMLVideoElement);
 
 				if (!(window as any).playerStatus) {
@@ -108,14 +108,14 @@ export namespace Netflix {
 		}
 
 		export async function pause() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const video = (document.querySelector('video') as HTMLVideoElement);
 				video.pause();
 			});
 		}
 
 		export async function play() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const video = (document.querySelector('video') as HTMLVideoElement);
 				video.play();
 			});
@@ -124,7 +124,7 @@ export namespace Netflix {
 		export async function setup() {
 			await Video.setup();
 			(await Video.getView()).loadURL('https://www.netflix.com/browse');
-			await Helpers.wait(5000);
+			await Util.wait(5000);
 			AppWindow.onLoadingComplete('netflix');
 			AppWindow.updateStatus('Watching netflix');
 			initStateListener();

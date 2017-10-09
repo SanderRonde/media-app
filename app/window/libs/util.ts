@@ -51,7 +51,7 @@ interface ContentScriptDetails {
 	exclude_globs?: string[]; 
 }
 
-export namespace Helpers {
+export namespace Util {
 	export function stringifyFunction(fn: Function): string {
 		return `(${fn.toString()})();`;
 	}
@@ -292,7 +292,7 @@ export namespace Helpers {
 
 	async function runScripts(url: string, view: Electron.WebviewTag, config: ContentScriptDetails) {
 		if (config.run_at === 'document_start') {
-			await Helpers.wait(500);
+			await Util.wait(500);
 		}
 		
 		if (url.indexOf('example.com') > -1) {
@@ -870,4 +870,4 @@ export namespace Helpers {
 		}));
 	}
 }
-export default Helpers;
+export default Util;

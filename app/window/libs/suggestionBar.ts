@@ -1,4 +1,4 @@
-import { Helpers, $ } from './helpers';
+import { Util, $ } from './util';
 
 export class SuggestionBar {
 	private readonly _searchBar: HTMLInputElement = null;
@@ -131,14 +131,14 @@ export class SuggestionBar {
 		const textElements = suggestion.map((suggestionPart) => {
 			const { isSuggestion, value } = suggestionPart;
 			const highlight = isSuggestion !== this.highlightCurrent
-			const element = Helpers.el('span', highlight ? 
+			const element = Util.el('span', highlight ? 
 				'highlightedSuggestionPart' : '', original.slice(strIndex, value.length));
 			strIndex += value.length;
 			return element;
 		});
 
 		const joinedSuggestion = this._joinSuggestionParts(suggestion);
-		const container = Helpers.el('div', 'suggestion', textElements, {
+		const container = Util.el('div', 'suggestion', textElements, {
 			props: {
 				tabindex: '-1'
 			},

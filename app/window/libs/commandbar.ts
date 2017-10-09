@@ -6,7 +6,7 @@ import { YoutubeMusic } from '../views/youtubeMusic';
 import { SuggestionBar } from './suggestionBar';
 import { AppWindow } from '../views/appWindow';
 import { MediaAppType } from '../../app';
-import { Helpers } from './helpers';
+import { Util } from './util';
 
 declare const MediaApp: MediaAppType;
 declare const Settings: SettingsType;
@@ -36,7 +36,7 @@ export namespace Commands {
 
 	function runRenderer(func: ImportNullifyingFn): () => void {
 		return () => {
-			evalServer.send('eval', Helpers.stringifyFunction(func));
+			evalServer.send('eval', Util.stringifyFunction(func));
 		}
 	}
 

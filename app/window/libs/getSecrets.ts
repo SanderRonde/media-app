@@ -1,7 +1,7 @@
 const optionalRequire = (require('optional-require') as optionalRequire)(require);
 import { STORED_DATA_FILE } from '../../backgroundLibs/constants/constants';
 import { route } from '../../backgroundLibs/routing/routing'
-import { Helpers } from './helpers'
+import { Util } from './util'
 import fs = require('fs');
 
 function exists(path: string): Promise<boolean> {
@@ -44,20 +44,20 @@ async function storeSecrets(secrets: SecretsMap): Promise<void> {
 
 async function askForSecrets<T extends keyof SecretsMap>(key: T): Promise<SecretsMap[T]> {
 	return new Promise<SecretsMap[T]>(async (resolve) => {
-		const promptContainer = Helpers.el('div', 'promptContainer', [
-			Helpers.el('div', 'promptTitle', 'Please fill in these values'),
-			Helpers.el('div', 'promptInputs', [
-				Helpers.el('div', 'promptAPIKey', [
-					Helpers.el('div', 'promptAPIKeyText', 'Youtube API Key:'),
-					Helpers.el('input', 'promptAPIKeyInput', [], {
+		const promptContainer = Util.el('div', 'promptContainer', [
+			Util.el('div', 'promptTitle', 'Please fill in these values'),
+			Util.el('div', 'promptInputs', [
+				Util.el('div', 'promptAPIKey', [
+					Util.el('div', 'promptAPIKeyText', 'Youtube API Key:'),
+					Util.el('input', 'promptAPIKeyInput', [], {
 						props: {
 							placeholder: 'Youtube API Key'
 						}
 					})
 				]),
-				Helpers.el('div', 'promptFirebaseConfig', [
-					Helpers.el('div', 'promptFirebaseConfigText', 'Firebase Config:'),
-					Helpers.el('textarea', 'promptFirebaseConfigInput', [], {
+				Util.el('div', 'promptFirebaseConfig', [
+					Util.el('div', 'promptFirebaseConfigText', 'Firebase Config:'),
+					Util.el('textarea', 'promptFirebaseConfigInput', [], {
 						props: {
 							placeholder: '{ apiKey: "...", ... }',
 							rows: '8'
@@ -65,8 +65,8 @@ async function askForSecrets<T extends keyof SecretsMap>(key: T): Promise<Secret
 					})
 				])
 			]),
-			Helpers.el('div', 'promptButtons', [
-				Helpers.el('div', 'promptOkButton', 'OK', {
+			Util.el('div', 'promptButtons', [
+				Util.el('div', 'promptOkButton', 'OK', {
 					listeners: {
 						'click': async () => {
 							const [ apiKey, firebaseConfig ] = [
@@ -83,7 +83,7 @@ async function askForSecrets<T extends keyof SecretsMap>(key: T): Promise<Secret
 							resolve(secrets[key]);
 
 							promptContainer.classList.remove('visible');
-							await Helpers.wait(500);
+							await Util.wait(500);
 
 							promptContainer.remove();
 						}

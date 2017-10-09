@@ -2,7 +2,7 @@ import { AppWindow, MappedKeyboardEvent } from './appWindow'
 import { SuggestionBar } from '../libs/suggestionBar';
 import { YoutubeVideoPlayer } from './youtubeMusic'
 import { getSecret } from '../libs/getSecrets'
-import { Helpers, $ } from '../libs/helpers'
+import { Util, $ } from '../libs/util'
 
 function arr(first: number, last: number): number[] {
 	return Array.from(new Array(1 + last - first)).map((_, index) => {
@@ -24,7 +24,7 @@ export namespace YoutubeSearch {
 
 	export namespace Commands {
 		export async function lowerVolume() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				let vol = player.getVolume();
 				if (!player.isMuted()) {
@@ -37,7 +37,7 @@ export namespace YoutubeSearch {
 		}
 
 		export async function raiseVolume() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				let vol = player.getVolume();
 				if (player.isMuted()) {
@@ -53,7 +53,7 @@ export namespace YoutubeSearch {
 		}
 
 		export async function togglePlay() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				const state = player.getPlayerState();
 				if (state === 2) {
@@ -69,14 +69,14 @@ export namespace YoutubeSearch {
 		}
 
 		export async function pause() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.pauseVideo();
 			});
 		}
 
 		export async function play() {
-			Helpers.hacksecute((await Video.getView()), () => {
+			Util.hacksecute((await Video.getView()), () => {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 				player.playVideo();
 			});
@@ -91,7 +91,7 @@ export namespace YoutubeSearch {
 			await SearchResultsPage.setup();
 			await SearchBar.setup();
 			await Video.setup();
-			await Helpers.wait(15);
+			await Util.wait(15);
 			SearchResultsPage.navTo('https://www.youtube.com/');
 			AppWindow.updateStatus('Looking at search page');
 		}
@@ -130,7 +130,7 @@ export namespace YoutubeSearch {
 			if (activePage === 'video') {
 				subsCont.classList.remove('showVideo');
 				activePage = 'results';
-				await Helpers.wait(500);
+				await Util.wait(500);
 				(await SearchResultsPage.getView()).focus();
 				SearchBar.show();
 				if (SearchBar.getLastSearch()) {
@@ -141,7 +141,7 @@ export namespace YoutubeSearch {
 			} else {
 				subsCont.classList.add('showVideo');
 				activePage = 'video';
-				await Helpers.wait(500);
+				await Util.wait(500);
 				SearchBar.hide();
 				(await Video.getView()).focus();
 				AppWindow.updateStatus(await Video.getTitle());
@@ -172,7 +172,7 @@ export namespace YoutubeSearch {
 			}
 			if (event.key === 'd' && activePage === 'video') {
 				//Get current video URL and download it
-				Helpers.downloadVideo((await Video.getView()).src)
+				Util.downloadVideo((await Video.getView()).src)
 				return true;
 			}
 			if (VALID_INPUT.indexOf(event.key) > -1 && 
@@ -220,7 +220,7 @@ export namespace YoutubeSearch {
 		}
 
 		export async function getTitle(): Promise<string> {
-			return await Helpers.hacksecute(await getView(), () => {
+			return await Util.hacksecute(await getView(), () => {
 				return document.querySelector('.title').innerHTML;
 			});
 		}
@@ -230,7 +230,7 @@ export namespace YoutubeSearch {
 				return await getView()
 			}
 
-			videoPromise = Helpers.createWebview({
+			videoPromise = Util.createWebview({
 				id: 'youtubeSearchVideoView',
 				partition: 'youtubeSearch',
 				parentId: 'youtubeSearchCont'
@@ -238,7 +238,7 @@ export namespace YoutubeSearch {
 			videoView = await videoPromise;
 
 			window.setTimeout(() => {
-				Helpers.addContentScripts(videoView, [{
+				Util.addContentScripts(videoView, [{
 					name: 'js',
 					matches: ['*://www.youtube.com/*'],
 					js: {
@@ -259,7 +259,7 @@ export namespace YoutubeSearch {
 				}]);
 
 				videoView.addEventListener('did-finish-load', async () => {
-					Helpers.hacksecute(videoView, (REPLACE) => {
+					Util.hacksecute(videoView, (REPLACE) => {
 						function getPlayer() {
 							return new Promise<YoutubeVideoPlayer>((resolve) => {
 								const timer = window.setInterval(() => {
@@ -281,13 +281,13 @@ export namespace YoutubeSearch {
 							REPLACE.adSkipper();
 						});
 					}, {
-						volumeManager: Helpers.YoutubeVideoFunctions.volumeManager,
-						playPauseListeners: Helpers.YoutubeVideoFunctions.playPauseListeners,
-						initialSizing: Helpers.YoutubeVideoFunctions.initialSizing,
-						handleResize: Helpers.YoutubeVideoFunctions.handleResize,
-						handleToggleHiddens: Helpers.YoutubeVideoFunctions.handleToggleHiddens,
-						detectOnEnd: Helpers.YoutubeVideoFunctions.detectOnEnd,
-						adSkipper: Helpers.YoutubeVideoFunctions.adSkipper
+						volumeManager: Util.YoutubeVideoFunctions.volumeManager,
+						playPauseListeners: Util.YoutubeVideoFunctions.playPauseListeners,
+						initialSizing: Util.YoutubeVideoFunctions.initialSizing,
+						handleResize: Util.YoutubeVideoFunctions.handleResize,
+						handleToggleHiddens: Util.YoutubeVideoFunctions.handleToggleHiddens,
+						detectOnEnd: Util.YoutubeVideoFunctions.detectOnEnd,
+						adSkipper: Util.YoutubeVideoFunctions.adSkipper
 					});
 				});
 			}, 10);
@@ -322,7 +322,7 @@ export namespace YoutubeSearch {
 		}
 
 		export async function setup() {
-			searchResultsPromise = Helpers.createWebview({
+			searchResultsPromise = Util.createWebview({
 				id: 'youtubeSearchResultsView',
 				partition: 'youtubeSearch',
 				parentId: 'youtubeSearchCont'
@@ -331,7 +331,7 @@ export namespace YoutubeSearch {
 			searchResultsView.id = 'youtubeSearchResultsView';
 
 			window.setTimeout(() => {
-				Helpers.addContentScripts(searchResultsView, [{
+				Util.addContentScripts(searchResultsView, [{
 					name: 'js',
 					matches: ['*://www.youtube.com/*'],
 					js: {
@@ -572,20 +572,20 @@ export namespace YoutubeSearch {
 
 		function genImageElement(thumbnail: string): HTMLElement {
 			if (thumbnail !== null) {
-				return Helpers.el('img', 'youtubeAddedVideoImage', [], {
+				return Util.el('img', 'youtubeAddedVideoImage', [], {
 					props: {
 						src: thumbnail
 					}
 				});
 			} else {
-				return Helpers.el('div', 'youtubeAddedVideoHiddenThumbnail', '?');
+				return Util.el('div', 'youtubeAddedVideoHiddenThumbnail', '?');
 			}
 		}	
 
 		function createAddedVideoElement(title: string, thumbnail: string): HTMLElement {
-			return Helpers.el('div', 'youtubeAddedVideoContainer', [
-				Helpers.el('div', 'youtubeAddedVideoImageContainer', genImageElement(thumbnail)),
-				Helpers.el('div', 'youtubeAddedVideoTitle', title)
+			return Util.el('div', 'youtubeAddedVideoContainer', [
+				Util.el('div', 'youtubeAddedVideoImageContainer', genImageElement(thumbnail)),
+				Util.el('div', 'youtubeAddedVideoTitle', title)
 			]);
 		}
 
@@ -600,11 +600,11 @@ export namespace YoutubeSearch {
 
 			const element = createAddedVideoElement(title, thumbnail);
 			document.body.insertBefore(element, document.body.children[0]);
-			await Helpers.wait(50);
+			await Util.wait(50);
 			element.classList.add('visible');
-			await Helpers.wait(5000);
+			await Util.wait(5000);
 			element.classList.remove('visible');
-			await Helpers.wait(500);
+			await Util.wait(500);
 			element.remove();
 		}
 
@@ -649,7 +649,7 @@ export namespace YoutubeSearch {
 		activePage = 'video';
 		$('#youtubeSearchCont').classList.add('showVideo');
 		SearchBar.hide();
-		await Helpers.wait(500);
+		await Util.wait(500);
 		(await Video.getView()).focus();
 	}
 
