@@ -1,4 +1,4 @@
-import { EmbeddableSendType, OnTaskType } from '../../../../renderer/msg/msg';
+import { EmbeddableSendType, OnTaskType } from '../../../../backgroundLibs/msg/msg';
 import { CommWindow } from '../../../libs/comm';
 
 declare const Tesseract: any;

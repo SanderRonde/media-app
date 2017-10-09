@@ -1,4 +1,4 @@
-import { EmbeddableSendType } from '../../../../renderer/msg/msg';
+import { EmbeddableSendType } from '../../../../backgroundLibs/msg/msg';
 declare var sendMessage: EmbeddableSendType;
 declare var window: SubBoxWindow;
 

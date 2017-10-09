@@ -85,7 +85,7 @@ export namespace AdBlocking {
 
 	function init(): Promise<void> {
 		return new Promise<void>(async (resolve) => {
-			fs.readFile(await route('./renderer/adblocking/easylist.txt'), 'utf8', (err, easylistTxt) => {
+			fs.readFile(await route('./backgroundLibs/adblocking/easylist.txt'), 'utf8', (err, easylistTxt) => {
 				if (err) {
 					const notification = new Notification({
 						title: 'No Adblocking',

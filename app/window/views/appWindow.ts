@@ -1,4 +1,4 @@
-import { MessageTypes, MessageServer, MessageServerChannel } from '../../renderer/msg/msg';
+import { MessageTypes, MessageServer, MessageServerChannel } from '../../backgroundLibs/msg/msg';
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
 import { SubBoxWindow } from './youtubeSubs/subBox/subBox';
 import { YoutubeSearch } from './youtubeSearch'

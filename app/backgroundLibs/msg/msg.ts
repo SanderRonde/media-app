@@ -638,5 +638,6 @@ export function onTask() {
 	}
 
 export type EmbeddableSendType = typeof embeddableSend;
-export type OnTaskType = typeof onTask;
+export type OnTaskType = <T extends keyof MessageTypes.Tasks>(task: T, 
+	listener: (data: MessageTypes.Tasks[T]['arg']) => Promise<MessageTypes.Tasks[T]['res']>|MessageTypes.Tasks[T]['res']) => void;
 export type MessageServerChannel<C extends MessageTypes.ChannelName> = Channel<C>;

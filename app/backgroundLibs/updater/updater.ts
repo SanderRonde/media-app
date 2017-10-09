@@ -1,4 +1,4 @@
-import { SettingsType } from '../../renderer/settings/settings';
+import { SettingsType } from '../../backgroundLibs/settings/settings';
 import { autoUpdater, GithubOptions } from 'electron-updater';
 import { MediaApp } from '../../app';
 import { Notification, app } from 'electron';

@@ -1,4 +1,4 @@
-import { OnTaskType } from '../../../../renderer/msg/msg';
+import { OnTaskType } from '../../../../backgroundLibs/msg/msg';
 import { CommWindow } from '../../../libs/comm';
 
 declare var onTask: OnTaskType;

@@ -1,6 +1,6 @@
 const optionalRequire = (require('optional-require') as optionalRequire)(require);
-import { STORED_DATA_FILE } from '../../renderer/constants/constants';
-import { route } from '../../renderer/routing/routing'
+import { STORED_DATA_FILE } from '../../backgroundLibs/constants/constants';
+import { route } from '../../backgroundLibs/routing/routing'
 import { Helpers } from './helpers'
 import fs = require('fs');
 

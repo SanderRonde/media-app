@@ -1,7 +1,7 @@
 import { shell } from 'electron';
 import firebase = require('firebase');
 import { Helpers, $ } from '../libs/helpers'
-import { MessageServer } from '../../renderer/msg/msg';
+import { MessageServer } from '../../backgroundLibs/msg/msg';
 import { AppWindow, MappedKeyboardEvent } from './appWindow'
 import { FireBaseConfig, getSecret } from '../libs/getSecrets'
 

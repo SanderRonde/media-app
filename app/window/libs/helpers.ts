@@ -1,10 +1,10 @@
 import * as fs from 'fs'
 import * as md5 from 'md5'
 import { shell } from 'electron'
-import { route } from '../../renderer/routing/routing'
+import { route } from '../../backgroundLibs/routing/routing'
 import { ViewNames } from '../../window/views/appWindow'
-import { embeddableSend, onTask } from '../../renderer/msg/msg';
-import { Partitions } from '../../renderer/adblocking/adblocking';
+import { embeddableSend, onTask } from '../../backgroundLibs/msg/msg';
+import { Partitions } from '../../backgroundLibs/adblocking/adblocking';
 import { YoutubeVideoPlayer, YoutubeMusicWindow } from '../../window/views/youtubeMusic'
 
 export const EXAMPLE_STYLES = `html, body, a {

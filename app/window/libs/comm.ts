@@ -2,7 +2,7 @@
 /// <reference path="../../window/views/youtube/content/content.ts" />
 
 import { ViewNames } from '../views/appWindow';
-import { EmbeddableSendType, MessageTypes } from '../../renderer/msg/msg';
+import { EmbeddableSendType, MessageTypes } from '../../backgroundLibs/msg/msg';
 declare var sendMessage: EmbeddableSendType;
 declare const window: CommWindow;
 

@@ -5,12 +5,12 @@ import {
 import url = require('url');
 import path = require('path');
 import AutoLaunch = require('auto-launch');
-import { Updater } from './renderer/updater/updater'
-import { Settings } from './renderer/settings/settings';
-import { RemoteServer }  from './renderer/remote/remote';
-import { Shortcuts } from './renderer/shortcuts/shortcuts';
-import { AdBlocking } from './renderer/adblocking/adblocking';
-import { MessageServer, AppMessageServer } from './renderer/msg/msg';
+import { Updater } from './backgroundLibs/updater/updater'
+import { Settings } from './backgroundLibs/settings/settings';
+import { RemoteServer }  from './backgroundLibs/remote/remote';
+import { Shortcuts } from './backgroundLibs/shortcuts/shortcuts';
+import { AdBlocking } from './backgroundLibs/adblocking/adblocking';
+import { MessageServer, AppMessageServer } from './backgroundLibs/msg/msg';
 const logger = require('logger').createLogger(path.join(app.getPath('appData'), 'media-app', 'log.log'));
 
 export namespace MediaApp {
