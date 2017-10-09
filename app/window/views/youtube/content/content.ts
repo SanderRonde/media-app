@@ -1,23 +1,18 @@
-declare const Tesseract: any;
-declare var sendIPCMessage: sendIPCMessage;
+import { EmbeddableSendType, OnTaskType } from '../../../../renderer/msg/msg';
+import { CommWindow } from '../../../libs/comm';
 
-interface Window {
+declare const Tesseract: any;
+declare var sendMessage: EmbeddableSendType;
+declare var onTask: OnTaskType;
+declare const window: YoutubeContentWindow;
+
+interface YoutubeContentWindow extends CommWindow {
 	saveProgress(): void;
-	doTask2(name: string, id: number, done: (result: any) => void): void;
-	commToPage(task: string, callback: (result: string) => void): void;
 }
 
 (() => {
 	function saveNewUrl(url: string) {
-		sendIPCMessage('toBgPage', {
-			type: 'passAlong',
-			data: {
-				type: 'saveUrl',
-				data: {
-					url: url
-				}
-			} as PassedAlongMessage<'saveUrl'>
-		});
+		sendMessage('toWindow', 'saveUrl', url);
 	}
 
 	window.saveProgress = () => {
@@ -88,85 +83,94 @@ interface Window {
 		}
 	}
 
-	window.doTask2 = (name: string, id: number, done: (result: any) => void) => {
-		switch (name) {
-			case 'getTimestamps':
-				const descr = document.querySelector('#eow-description');
-				const timestampContainers = Array.from(descr.querySelectorAll('a[href="#"]')).filter((timestamp) => {
-					return /(\d)\:(\d)(:(\d))*/.test(timestamp.innerHTML);
-				});
-				let timestamps = null;
-				if (timestampContainers.length > 4) {
-					//At least 5 songs should be played to make it a tracklist
-					timestamps = timestampContainers.map((timestamp) => {
-						const split = timestamp.innerHTML.split(':');
-						let seconds = 0;
-						for (let i = split.length - 1; i >= 0; i--) {	
-							seconds += Math.pow(60, (split.length - (i + 1))) * ~~split[i];
-						}
-						return seconds;
-					});
-					done({
-						found: true,
-						data: timestamps
-					});
-				} else {
-					//Try to find any links to 1001tracklists in the description
-					const tracklistLinks = Array.from(descr.querySelectorAll('a')).map((anchor) => {
-						if (anchor.getAttribute('href').match(/http(s)?:\/\/www\.1001tracklists\.com\/tracklist\//)) {
-							return anchor.getAttribute('href');
-						} 
-						return null;
-					}).filter((anchor) => {
-						return anchor !== null;
-					});
-
-					if (tracklistLinks.length > 0) {
-						done({
-							found: true,
-							data: tracklistLinks[0]
-						});
-					} else {
-						done({
-							found: false,
-							data: {
-								url: location.href,
-								name: document.title
-							}
-						});
-					}
+	onTask('getTimestamps', (() => {
+		const descr = document.querySelector('#eow-description');
+		const timestampContainers = Array.from(descr.querySelectorAll('a[href="#"]')).filter((timestamp) => {
+			return /(\d)\:(\d)(:(\d))*/.test(timestamp.innerHTML);
+		});
+		let timestamps = null;
+		if (timestampContainers.length > 4) {
+			//At least 5 songs should be played to make it a tracklist
+			timestamps = timestampContainers.map((timestamp) => {
+				const split = timestamp.innerHTML.split(':');
+				let seconds = 0;
+				for (let i = split.length - 1; i >= 0; i--) {	
+					seconds += Math.pow(60, (split.length - (i + 1))) * ~~split[i];
 				}
-				break;
-			case 'getImageOCR':
-				ctx.drawImage(document.querySelector('video'), 0, 0, canv.width, canv.height);
-				const img = new Image();
-				img.src = canv.toDataURL('image/png');
+				return seconds;
+			});
+			return {
+				found: true,
+				data: timestamps
+			};
+		} else {
+			//Try to find any links to 1001tracklists in the description
+			const tracklistLinks = Array.from(descr.querySelectorAll('a')).map((anchor) => {
+				if (anchor.getAttribute('href').match(/http(s)?:\/\/www\.1001tracklists\.com\/tracklist\//)) {
+					return anchor.getAttribute('href');
+				} 
+				return null;
+			}).filter((anchor) => {
+				return anchor !== null;
+			});
 
-				Tesseract.recognize(img, {
-					lang: 'eng'
-				}).then((result: any) => {
-					done(JSON.stringify({
-						lines: result.lines.map((line: any) => {
-							return {
-								bbox: line.bbox,
-								text: line.text,
-								confidence: line.confidence,
-								words: line.words.map(uncirculizeWord)
-							}
-						}),
-						text: result.text,
-						words: result.words.map(uncirculizeWord)
-					}));
-				});
-				break;
-			case 'getTime':
-				window.commToPage('getTime', done);
-				break;
-			default:
-				window.commToPage(name, done);
-				break;
+			if (tracklistLinks.length > 0) {
+				return {
+					found: true,
+					data: tracklistLinks[0]
+				};
+			} else {
+				return {
+					found: false,
+					data: {
+						url: location.href,
+						name: document.title
+					}
+				};
+			}
 		}
-	}
+	}) as any);
+
+	onTask('getImageOCR', (data) => {
+		return new Promise((resolve) => {
+			ctx.drawImage(document.querySelector('video'), 0, 0, canv.width, canv.height);
+			const img = new Image();
+			img.src = canv.toDataURL('image/png');
+
+			Tesseract.recognize(img, {
+				lang: 'eng'
+			}).then((result: any) => {
+				resolve(JSON.stringify({
+					lines: result.lines.map((line: any) => {
+						return {
+							bbox: line.bbox,
+							text: line.text,
+							confidence: line.confidence,
+							words: line.words.map(uncirculizeWord)
+						}
+					}),
+					text: result.text,
+					words: result.words.map(uncirculizeWord)
+				}));
+			});
+		});
+	});
+
+	onTask('getTime', () => {
+		return new Promise((resolve) => {
+			window.commToPage('getTime', null, (result) => {
+				resolve(result);
+			});
+		});
+	});
+
+	onTask('getSongName', (data) => {
+		return new Promise((resolve) => {
+			window.commToPage('getSongName', null, (result) => {
+				resolve(result);
+			});
+		});
+	});
 
 	document.querySelector('video').style.transition = `background-color 500ms linear`;
 	window.setInterval(updateColors, 1e4);

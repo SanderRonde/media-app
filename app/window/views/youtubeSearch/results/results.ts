@@ -1,5 +1,10 @@
-var ipcRenderer = require('electron').ipcRenderer;
-declare var sendIPCMessage: sendIPCMessage;
+import { EmbeddableSendType } from '../../../../renderer/msg/msg';
+declare var sendMessage: EmbeddableSendType;
+declare var window: ResultsWindow;
+
+interface ResultsWindow extends Window {
+	signalledCompletion: boolean;
+}
 
 namespace YoutubeSearchResultsMain {
 	namespace PlaceHolderPage {
@@ -94,13 +99,7 @@ namespace YoutubeSearchResultsMain {
 					e.preventDefault();
 					e.stopPropagation();
 
-					sendIPCMessage('toBgPage', {
-						type: 'passAlong',
-						data: {
-							type: 'navToVideo',
-							data: originalLink
-						} as PassedAlongMessage<'navToVideo'>
-					});
+					sendMessage('toWindow', 'navToVideo', originalLink);
 				});
 				thumbnail.href = '#';
 
@@ -109,36 +108,29 @@ namespace YoutubeSearchResultsMain {
 					e.preventDefault();
 					e.stopPropagation();
 
-					sendIPCMessage('toBgPage', {
-						type: 'passAlong',
-						data: {
-							type: 'navToVideo',
-							data: originalLink
-						} as PassedAlongMessage<'navToVideo'>
-					});
+					sendMessage('toWindow', 'navToVideo', originalLink);
 				});
 				title.href = '#';
 			});
 		}
 	}
 
-	if (location.href.indexOf('results') === -1) {
-		PlaceHolderPage.init();
-	} else {
-		YoutubeSearchResultsPage.init();
-	}
+	export function init() {
+		if (location.href.indexOf('results') === -1) {
+			PlaceHolderPage.init();
+		} else {
+			YoutubeSearchResultsPage.init();
+		}
 
-	if (!window.signalledCompletion) {
-		localStorage.setItem('loaded', 'youtubesearch');
-		window.signalledCompletion = true;
-	}
+		if (!window.signalledCompletion) {
+			localStorage.setItem('loaded', 'youtubesearch');
+			window.signalledCompletion = true;
+		}
 
-	document.body.addEventListener('click', () => {
-		sendIPCMessage('toBgPage', {
-			type: 'passAlong',
-			data: {
-				type: 'youtubeSearchClick'	
-			} as PassedAlongMessage<'youtubeSearchClick'> 
-		})
-	});
+		document.body.addEventListener('click', () => {
+			sendMessage('toWindow', 'youtubeSearchClick', null);
+		});
+	}
 }
+
+YoutubeSearchResultsMain.init();

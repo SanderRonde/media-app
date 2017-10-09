@@ -2,13 +2,18 @@
 /// <reference path="../../window/views/youtube/content/content.ts" />
 
 import { ViewNames } from '../views/appWindow';
-declare var sendIPCMessage: sendIPCMessage;
+import { EmbeddableSendType, MessageTypes } from '../../renderer/msg/msg';
+declare var sendMessage: EmbeddableSendType;
+declare const window: CommWindow;
+
+export interface CommWindow extends Window {
+	commToPage<T extends keyof MessageTypes.Tasks>(task: T, data: MessageTypes.Tasks[T]['arg'], callback: (result: MessageTypes.Tasks[T]['res']) => void): void;
+}
 
 (() => {
 	let commId = 0;
-	const ipcRenderer = require('electron').ipcRenderer;
 
-	function listenForCommPageResponse(id: number, callback: (result: string|boolean|number) => void) {
+	function listenForCommPageResponse<T extends keyof MessageTypes.Tasks>(id: number, callback: (result: MessageTypes.Tasks[T]['res']) => void) {
 		let removalId = window.setInterval(() => {
 			let result;
 			if ((result = localStorage.getItem(`taskResult${id}`))) {
@@ -18,9 +23,10 @@ declare var sendIPCMessage: sendIPCMessage;
 		}, 50);
 	}
 
-	window.commToPage = function(task: string, callback: (result: string) => void) {
+	window.commToPage = <T extends keyof MessageTypes.Tasks>(task: T, data: MessageTypes.Tasks[T]['arg'], callback: (result: MessageTypes.Tasks[T]['res']) => void) => {
 		let tasks: {
-			name: string;
+			name: T;
+			data: MessageTypes.Tasks[T]['arg'];
 			id: number;
 		}[];
 		try {
@@ -33,49 +39,22 @@ declare var sendIPCMessage: sendIPCMessage;
 		}
 		tasks.push({
 			name: task,
+			data: data,
 			id: ++commId
 		});
 		listenForCommPageResponse(commId, callback);
 		localStorage.setItem('tasks', JSON.stringify(tasks));
 	}
 
-	function getTaskRunner() {
-		return window.doTask1 || window.doTask2;
-	}
-
-	ipcRenderer.on('task', (event, task) => {
-		if (location.href.indexOf(task.page) > -1) {
-			getTaskRunner() && getTaskRunner()(task.name, task.id, (result) => {
-				sendIPCMessage('toBgPage', {
-					type: 'passAlong',
-					data: {
-						type: 'taskResult',
-						data: {
-							result: result,
-							name: task.name,
-							id: task.id
-						}
-					} as PassedAlongMessage<'taskResult'> 
-				});
-			});
-		}
-	});
-
 	let loaded = false;
+	console.log('Setting interval');
 	const intervalId = window.setInterval(() => {
 		if (localStorage.getItem('loaded') && localStorage.getItem('loaded') !== 'none') {
 			loaded = true;
 			window.clearInterval(intervalId);
 
-			sendIPCMessage('toBgPage', {
-				type: 'passAlong',
-				data: {
-					type: 'loadingCompleted',
-					data: {
-						view: localStorage.getItem('loaded') as ViewNames
-					}
-				} as PassedAlongMessage<'loadingCompleted'>
-			});
+			console.log('Sending message', localStorage.getItem('loaded'));
+			sendMessage('toWindow', 'loadingCompleted', localStorage.getItem('loaded') as ViewNames);
 
 			localStorage.setItem('loaded', 'none');
 		}

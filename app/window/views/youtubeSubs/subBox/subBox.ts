@@ -1,7 +1,8 @@
-var ipcRenderer = require('electron').ipcRenderer;
-declare var sendIPCMessage: sendIPCMessage;
+import { EmbeddableSendType } from '../../../../renderer/msg/msg';
+declare var sendMessage: EmbeddableSendType;
+declare var window: SubBoxWindow;
 
-interface Window {
+export interface SubBoxWindow extends Window {
 	videos: VideoIdentifier;
 	navToLink(link: string, video?: TransformedVideo): void;
 	requestIdleCallback(callback: (deadline: {
@@ -10,10 +11,6 @@ interface Window {
 		timeout?: number;
 	}): void;
 	signalledCompletion?: boolean;
-}
-
-interface HTMLAnchorElement {
-	hasListener?: boolean;
 }
 
 interface YoutubeIconElement extends HTMLElement {
@@ -641,7 +638,9 @@ class VideoIdentifier {
 
 	_replaceLinks(videos: TransformedVideo[]) {
 		videos.forEach((video) => {
-			const anchors = video.element.querySelectorAll('a');
+			const anchors = <any>video.element.querySelectorAll('a') as (HTMLAnchorElement & {
+				hasListener?: boolean;
+			})[];
 			video.links = [];
 			Array.from(anchors).forEach((anchor) => {
 				const link = `https://www.youtube.com/watch?v=${video.element.data.videoId}`;
@@ -708,15 +707,7 @@ async function identifyVideos() {
 }
 
 window.navToLink = (link, video) => {
-	sendIPCMessage('toBgPage', {
-		type: 'passAlong',
-		data: {
-			type: 'changeYoutubeSubsLink',
-			data: {
-				link: link
-			}
-		} as PassedAlongMessage<'changeYoutubeSubsLink'>
-	});
+	sendMessage('toWindow', 'changeYoutubeSubsLink', link);
 	if (video) {
 		window.videos.selected.setCurrent(video);
 	}

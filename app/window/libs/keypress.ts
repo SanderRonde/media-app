@@ -1,6 +1,6 @@
 import { MappedKeyboardEvent } from '../views/appWindow';
-
-declare var sendIPCMessage: sendIPCMessage;
+import { EmbeddableSendType } from '../../renderer/msg/msg';
+declare var sendMessage: EmbeddableSendType;;
 
 (() => {
 	function mapElement(el: HTMLElement): {
@@ -73,25 +73,13 @@ declare var sendIPCMessage: sendIPCMessage;
 
 	document.body.addEventListener('keydown', (e) => {
 		if (e.srcElement.tagName !== 'INPUT' && location.href.indexOf('accounts.google') === -1) {
-			sendIPCMessage('toBgPage', {
-				type: 'passAlong',
-				data: {
-					type: 'keyPress',
-					data: mapKeyEvent(e)
-				} as PassedAlongMessage<'keyPress'>
-			});
+			sendMessage('toWindow', 'keyPress', mapKeyEvent(e));
 		}
 	});
 
 	document.body.addEventListener('paste', (e) => {
 		if (e.srcElement.tagName !== 'INPUT' && location.href.indexOf('accounts.google') === -1) {
-			sendIPCMessage('toBgPage', {
-				type: 'passAlong',
-				data: {
-					type: 'paste',
-					data: e.clipboardData.getData('Text')
-				} as PassedAlongMessage<'paste'>
-			});
+			sendMessage('toWindow', 'paste', e.clipboardData.getData('Text'));
 		}
 	});
 })();

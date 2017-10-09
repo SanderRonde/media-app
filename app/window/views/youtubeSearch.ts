@@ -272,7 +272,7 @@ export namespace YoutubeSearch {
 						}
 
 						getPlayer().then((player: YoutubeVideoPlayer) => {
-							REPLACE.playPauseListeners();
+							REPLACE.playPauseListeners('youtubesearch');
 							REPLACE.volumeManager(player);
 							REPLACE.initialSizing(player, 'youtubesearch');
 							REPLACE.handleResize(player);

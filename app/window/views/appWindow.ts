@@ -1,9 +1,11 @@
+import { MessageTypes, MessageServer, MessageServerChannel } from '../../renderer/msg/msg';
 import { YoutubeSubscriptions } from './youtubeSubscriptions'
-import { ipcRenderer, clipboard } from 'electron'
+import { SubBoxWindow } from './youtubeSubs/subBox/subBox';
 import { YoutubeSearch } from './youtubeSearch'
 import { CommandBar } from '../libs/commandbar'
 import { YoutubeMusic } from './youtubeMusic'
 import { Helpers, $ } from '../libs/helpers'
+import { clipboard } from 'electron'
 import { Netflix } from './netflix'
 
 export type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions'|'youtubesearch';
@@ -85,27 +87,9 @@ export namespace AppWindow {
 	const titleBar = document.querySelector('#titleBar');
 	let debug: boolean = false;
 	let activeView: ViewNames = null;
-	
-	type AppEvent = 'onFullscreened'|'onMaximized'|'onRestored'|'onMinimized';
-	
-	const listeners: {
-		event: AppEvent;
-		callback: () => void;
-	}[] = [];
-	export function listen(event: AppEvent, callback: () => void) {
-		listeners.push({
-			event: event,
-			callback: callback
-		});
-	}
-
-	function fireEvent(event: AppEvent) {
-		listeners.filter((listener) => {
-			return listener.event === event;
-		}).forEach((listener) => {
-			listener.callback();
-		});
-	}
+		
+	let messageServer: MessageServer = null;
+	let toBgPageChannel: MessageServerChannel<'toBgPage'> = null;
 
 	type ViewTypes = typeof YoutubeMusic | typeof Netflix | typeof YoutubeSubscriptions | typeof YoutubeSearch;
 	export function getViewByName(name: ViewNames): ViewTypes;
@@ -150,33 +134,12 @@ export namespace AppWindow {
 		}
 	}
 
-	function createEventLoop(name: AppEvent, cb: () => void) {
-		sendBackgroundPageMessage(name).then(() => {
-			cb();
-			createEventLoop(name, cb);
-		});
-	}
-
-	function prepareEventListeners() {
-		const events: AppEvent[] = ['onFullscreened', 'onMaximized', 'onRestored', 'onMinimized'];
-		events.forEach((eventName) => {
-			sendBackgroundPageMessage(eventName).then(() => {
-				createEventLoop(eventName, () => {
-					fireEvent(eventName);
-				});
-			})
-		});
-	}
-
 	async function updateButtonsState() {
-		titleBar.classList[await sendBackgroundPageMessage('isMaximized') ? 'add' : 'remove']('maximized');
-		titleBar.classList[await sendBackgroundPageMessage('isFullscreen') ? 'add' : 'remove']('fullscreen');
+		titleBar.classList[await toBgPageChannel.send('isMaximized', null) ? 'add' : 'remove']('maximized');
+		titleBar.classList[await toBgPageChannel.send('isFullscreen', null) ? 'add' : 'remove']('fullscreen');
 	}
 
 	function setupListeners() {
-		listen('onMaximized', updateButtonsState);
-		listen('onFullscreened', updateButtonsState);
-		listen('onRestored', updateButtonsState);
 		window.addEventListener('focus', () => {
 			titleBar.classList.add('focused');
 			onFocus();
@@ -186,17 +149,17 @@ export namespace AppWindow {
 		});
 
 		document.querySelector('#fullscreen').addEventListener('click', async (e: MouseEvent) => {
-			sendBackgroundPageMessage(await sendBackgroundPageMessage('isFullscreen') ?
-				'exitFullscreen' : 'enterFullscreen');
+			toBgPageChannel.send(await toBgPageChannel.send('isFullscreen', null) ?
+				'exitFullscreen' : 'enterFullscreen', null);
 			e.stopPropagation();
 		});
 		document.querySelector('#minimize').addEventListener('click', async (e: MouseEvent) => {
-			sendBackgroundPageMessage('minimize');
+			toBgPageChannel.send('minimize', null);
 			e.stopPropagation();
 		});
 		document.querySelector('#maximize').addEventListener('click', async (e: MouseEvent) => {
-			sendBackgroundPageMessage(await sendBackgroundPageMessage('isMaximized') ?
-				'restore' : 'maximize')
+			toBgPageChannel.send(await toBgPageChannel.send('isMaximized', null) ?
+				'restore' : 'maximize', null);
 			e.stopPropagation();
 		});
 		document.querySelector('#close').addEventListener('click', (e: MouseEvent) => {
@@ -206,7 +169,7 @@ export namespace AppWindow {
 			YoutubeSubscriptions.Commands.onClose();
 
 			window.setInterval(() => {
-				sendBackgroundPageMessage('close');
+				toBgPageChannel.send('close', null);
 			}, 0);
 			e.stopPropagation();
 		});
@@ -231,7 +194,7 @@ export namespace AppWindow {
 		});
 	}
 
-	export async function onShortcut(command: keyof MessageReasons | EXTERNAL_EVENT | ARG_EVENT, data?: string) {
+	export async function onShortcut(command: keyof MessageTypes.ExternalEventsMap, data?: string) {
 		const activeViewView = getActiveViewClass().Commands;
 		switch (command) {
 			case 'lowerVolume':
@@ -264,7 +227,7 @@ export namespace AppWindow {
 			case 'right':
 				if (activeView === 'youtubeSubscriptions') {
 					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
-						window.videos.selected.goRight();
+						(<SubBoxWindow>window).videos.selected.goRight();
 					});
 				} else if (activeView === 'youtubesearch') {
 					YoutubeSearch.Queue.skip();
@@ -277,13 +240,13 @@ export namespace AppWindow {
 					Helpers.hacksecute(await YoutubeSubscriptions.SubBox.getView(), () => {
 						switch (command) {
 							case 'up':
-								window.videos.selected.goUp();
+								(<SubBoxWindow>window).videos.selected.goUp();
 								break;
 							case 'down':
-								window.videos.selected.goDown();
+								(<SubBoxWindow>window).videos.selected.goDown();
 								break;
 							case 'left':
-								window.videos.selected.goLeft();
+								(<SubBoxWindow>window).videos.selected.goLeft();
 								break;
 						}
 					});
@@ -322,15 +285,15 @@ export namespace AppWindow {
 
 	async function handleKeyboardEvent(event: MappedKeyboardEvent) {
 		if (event.key === 'Escape') {
-			const isFullscreen = await sendBackgroundPageMessage('isFullscreen')
+			const isFullscreen = await toBgPageChannel.send('isFullscreen', null)
 			if (isFullscreen) {
-				sendBackgroundPageMessage('exitFullscreen');
+				toBgPageChannel.send('exitFullscreen', null);
 			} else {
 				Exiting.handleEscapePress();
 			}
 		} else if (event.key === 'F11') {
-			sendBackgroundPageMessage('isFullscreen').then((isFullscreen) => {
-				sendBackgroundPageMessage(isFullscreen ? 'exitFullscreen' : 'enterFullscreen');
+			toBgPageChannel.send('isFullscreen', null).then((isFullscreen) => {
+				toBgPageChannel.send(isFullscreen ? 'exitFullscreen' : 'enterFullscreen', null);
 			});
 		} else if (event.key === 'F1') {
 			switchToview('youtubeSubscriptions');
@@ -341,7 +304,7 @@ export namespace AppWindow {
 		} else if (event.key === 'F4') {
 			switchToview('netflix');
 		} else if (event.key === 'F12') {
-			sendBackgroundPageMessage('openDevTools');
+			toBgPageChannel.send('openDevTools', null);
 		} else if (event.key === 'p' && event.ctrlKey) {
 			CommandBar.show();
 		} else {
@@ -414,8 +377,9 @@ export namespace AppWindow {
 		$('#views').classList.add(startView);
 
 		initTagline();
+		messageServer = new MessageServer();
+		toBgPageChannel = messageServer.channel('toBgPage');
 		listenForMessages();
-		prepareEventListeners();
 		setupListeners();
 		CommandBar.setup();
 
@@ -487,149 +451,79 @@ export namespace AppWindow {
 		}
 	}
 
-	const channels: {
-		identifier: string;
-		fn: (data: MessageReasons[keyof MessageReasons]) => void
-	}[] = [];
-
-	function genRandomString(): string {
-		const possibleLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-		let str = '';
-		for (let i = 0; i < 100; i++) {
-			str += possibleLetters.charAt(Math.floor(Math.random() * possibleLetters.length));
+	export function onPlay(view: ViewNames) {
+		if (view === getActiveViewName()) {
+			toBgPageChannel.send('updatePlayStatus', 'play');
 		}
-
-		return str;
 	}
 
-	function genIdentifier(): string {
-		let str: string = null;
-		do {
-			str = genRandomString();
-		} while (channels.filter((val) => {
-			return val.identifier === str;
-		}).length > 0)
-
-		return str;
+	export function onPause(view: ViewNames) {
+		if (view === getActiveViewName()) {
+			toBgPageChannel.send('updatePlayStatus', 'pause');
+		}
 	}
 
 	function listenForMessages() {
-		ipcRenderer.on('log', (event, message) => {
-			switch (message.type) {
-				case 'info':
-					console.info('[BGPAGE] -', ...message.args);
-					break;
-				case 'log':
-					console.log('[BGPAGE] -', ...message.args);
-					break;
-				case 'warn':
-					console.warn('[BGPAGE] -', ...message.args);
-					break;
-				case 'error':
-					console.error('[BGPAGE] -', ...message.args);
-					break;
-				case 'toast':
-					Helpers.showToast(message.args);
-					break;
-			}
+		const logChannel = messageServer.channel('log');
+		const eventChannel = messageServer.channel('events');
+		const toWindowChannel = messageServer.channel('toWindow');
+
+		logChannel.on('info', (args) => {
+			console.info('[BGPAGE] -', ...args);
+		});
+		logChannel.on('log', (args) => {
+			console.log('[BGPAGE] -', ...args);
+		});
+		logChannel.on('warn', (args) => {
+			console.warn('[BGPAGE] -', ...args);
+		});
+		logChannel.on('error', (args) => {
+			console.error('[BGPAGE] -', ...args);
+		});
+		logChannel.on('toast', (message) => {
+			Helpers.showToast(message);
 		});
 
-		ipcRenderer.on('fromBgPage', (event, message) => {
-			if (message.type === 'response') {
-				const identifier = message.identifier;
-				channels.filter((val) => {
-					return val.identifier === identifier
-				}).forEach((val) => {
-					val.fn(message.data);
-					channels.splice(channels.indexOf(val), 1);
-				});
-			} else {
-				const { cmd, data } = message;
-				onShortcut(cmd, data);
-			}
-		});
-
-		ipcRenderer.on('passedAlong', <T extends keyof PassedAlongMessages>(event: Event, message: {
-			type: T;
-			data: PassedAlongMessages[T]
-		}) => {
-			const { type, data } = message;
-			switch (type as T) {
-				case 'loadingCompleted':
-					onLoadingComplete((data as PassedAlongMessages['loadingCompleted']).view);
-					break;
-				case 'taskResult':
-					const res = data as PassedAlongMessages['taskResult'];
-					Helpers.returnTaskValue(res.result, res.id);
-					break;
-				case 'saveUrl':
-					const saveUrlRes = data as PassedAlongMessages['saveUrl'];
-					YoutubeMusic.saveURL(saveUrlRes.url);
-					break;
-				case 'keyPress':
-					const keyPressRes = data as PassedAlongMessages['keyPress'];
-					onKeyPress(keyPressRes);
-					break;
-				case 'paste':
-					const pasteData = data as PassedAlongMessages['paste'];
-					YoutubeSearch.onPaste(pasteData);
-					break;
-				case 'changeYoutubeSubsLink':
-					const youtubeSubsData = data as PassedAlongMessages['changeYoutubeSubsLink'];
-					YoutubeSubscriptions.changeVideo(youtubeSubsData.link);
-					break;
-				case 'navToVideo':
-					const navToVideoData = data as PassedAlongMessages['navToVideo'];
-					YoutubeSearch.changeVideo(navToVideoData);
-					break;
-				case 'youtubeSearchClick':
-					YoutubeSearch.SearchBar.onPageClick();
-					break;
-				case 'onPause':
-					const onPauseData = data as PassedAlongMessages['onPause'];
-					if (onPauseData.view === getActiveViewName()) {
-						Helpers.sendIPCMessage('toBgPage', {
-							type: 'playStatus',
-							data: 'pause'
-						});
-					}
-					break;
-				case 'onPlay':
-					const onPlayData = data as PassedAlongMessages['onPause'];
-					if (onPlayData.view === getActiveViewName()) {
-						Helpers.sendIPCMessage('toBgPage', {
-							type: 'playStatus',
-							data: 'play'
-						});
-					}
-					break;
-				case 'onVideoEnded':
-					YoutubeSearch.Queue.onVideoEnd();
-					break;
-			}
-		});
-	}
-
-	export async function sendBackgroundPageMessage<T extends keyof MessageReasons>(reason: T, data?: {
-		type: string;
-		data: {
-			app: string;
-			status: string;
-		};
-	}): Promise<MessageReasons[T]> {
-		const identifier = genIdentifier();
-		return new Promise<MessageReasons[T]>((resolve) => {
-			channels.push({
-				identifier: identifier,
-				fn: (data) => {
-					resolve(data);
+		eventChannel.onAll((type, data) => {
+			if (type === 'onMaximized' || type === 'onFullscreened' || 
+				type === 'onRestored' || type === 'onMinimized') {
+					updateButtonsState();	
+					return MessageServer.NO_RETURN;
+				} else {
+					onShortcut(type, data);
 				}
-			});
-			Helpers.sendIPCMessage('toBgPage', {
-				identifier: identifier,
-				type: reason,
-				data: data
-			});
+				return void 0;
+		});
+
+		toWindowChannel.on('loadingCompleted', (view) => {
+			onLoadingComplete(view);
+		});
+		toWindowChannel.on('saveUrl', (url) => {
+			YoutubeMusic.saveURL(url);
+		});
+		toWindowChannel.on('keyPress', (keyPress) => {
+			onKeyPress(keyPress);
+		});
+		toWindowChannel.on('paste', (pasteData) => {
+			YoutubeSearch.onPaste(pasteData);
+		});
+		toWindowChannel.on('changeYoutubeSubsLink', (link) => {
+			YoutubeSubscriptions.changeVideo(link);
+		});
+		toWindowChannel.on('navToVideo', (videoData) => {
+			YoutubeSearch.changeVideo(videoData);
+		});
+		toWindowChannel.on('youtubeSearchClick', () => {
+			YoutubeSearch.SearchBar.onPageClick();
+		});
+		toWindowChannel.on('onPause', (view) => {
+			onPause(view);
+		});
+		toWindowChannel.on('onPlay', (view) => {
+			onPlay(view);
+		});
+		toWindowChannel.on('onVideoEnded', () => {
+			YoutubeSearch.Queue.onVideoEnd();
 		});
 	}
 
@@ -647,7 +541,7 @@ export namespace AppWindow {
 	}
 
 	export function updateStatus(status: string) {
-		sendBackgroundPageMessage('messageServer', {
+		toBgPageChannel.send('messageServer', {
 			type: 'statusUpdate',
 			data: {
 				app: mapViewName(getActiveViewName()),

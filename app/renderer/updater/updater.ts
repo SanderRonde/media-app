@@ -1,6 +1,7 @@
+import { SettingsType } from '../../renderer/settings/settings';
 import { autoUpdater, GithubOptions } from 'electron-updater';
-import { Notification, app } from 'electron';
 import { MediaApp } from '../../app';
+import { Notification, app } from 'electron';
 import os = require('os');
 
 const DEBUG = process.argv.filter((arg) => {
@@ -12,7 +13,7 @@ const DEBUG = process.argv.filter((arg) => {
 
 export namespace Updater {
 	let refs: typeof MediaApp.Refs = null;
-	let settings: typeof MediaApp.Settings = null;
+	let settings: SettingsType = null;
 
 	function setFeed() {
 		autoUpdater.setFeedURL({
@@ -86,7 +87,7 @@ export namespace Updater {
 
 	let listening: boolean = false;
 
-	export function init(appRefs: typeof MediaApp.Refs, Settings: typeof MediaApp.Settings) {
+	export function init(appRefs: typeof MediaApp.Refs, Settings: SettingsType) {
 		refs = appRefs;
 		settings = Settings;
 		autoUpdater.autoDownload = false;		

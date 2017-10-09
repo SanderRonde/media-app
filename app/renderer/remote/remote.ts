@@ -4,7 +4,7 @@ import {
 	LOG_REQUESTS, ARG_EVENTS
 } from '../constants/constants'
 
-import { MessageServer, MessageTypes } from '../msg/msg';
+import { MessageServer, MessageTypes, MessageServerChannel } from '../msg/msg';
 import { log, error, toast, warn } from '../log/log';
 import { MediaApp } from '../../app';
 import ws = require('websocket');
@@ -69,7 +69,7 @@ class WSHandler {
 }
 
 export class RemoteServer {
-	private _messageServer: MessageServer<'events'>;
+	private _messageServer: MessageServerChannel<'events'>;
 	private _httpServer: http.Server;
 	private _wsHandler: WSHandler;
 	private _lastState: {
@@ -393,7 +393,7 @@ export class RemoteServer {
 	}
 	
 	private async _handleAPIRequest(url: string, res: http.ServerResponse) {
-		const command = url.split('/api/').slice(1).join('/api/') as keyof MessageTypes.ExternalEvents;
+		const command = url.split('/api/').slice(1).join('/api/') as keyof MessageTypes.ExternalEventsNoArg;
 		const partialCommand = command.split('/')[0] as keyof MessageTypes.ExternalEventsWithArg;
 	
 		if (EXTERNAL_EVENTS.indexOf(command) > -1) {
@@ -436,7 +436,7 @@ export class RemoteServer {
 	}
 
 	constructor(public refs: typeof MediaApp.Refs, public launch: (focus?: boolean) => boolean) {
-		this._messageServer = new MessageServer('events', refs);
+		this._messageServer = new MessageServer(refs).channel('events');
 		this._initServer();
 	}
 }

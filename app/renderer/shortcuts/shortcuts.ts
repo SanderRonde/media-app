@@ -1,8 +1,8 @@
 import { log } from '../log/log'
-import { MessageTypes } from '../msg/msg';
+import { MediaApp } from '../../app';
 import { globalShortcut, app } from 'electron'
 import { SettingsType } from '../settings/settings';
-import { Helpers } from '../../window/libs/helpers';
+import { MessageTypes, MessageServer, MessageServerChannel } from '../msg/msg';
 
 export type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
 	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
@@ -28,8 +28,9 @@ export namespace Shortcuts {
 		Settings: null,
 		activeWindow: null
 	}
+	let messageServer: MessageServerChannel<'events'>;
 
-	function handleEvent(event: keyof MessageTypes.ExternalEventsBoth) {
+	function handleEvent(event: keyof MessageTypes.ExternalEventsMap) {
 		if (remote.launch()) {
 			return true;
 		}
@@ -48,14 +49,11 @@ export namespace Shortcuts {
 		return false;
 	}
 
-	function sendMessage(data: keyof MessageTypes.ExternalEventsBoth) {
-		remote.activeWindow && Helpers.sendIPCMessage('fromBgPage', {
-			cmd: data,
-			type: 'event'
-		}, remote.activeWindow.webContents);
+	function sendMessage(data: keyof MessageTypes.ExternalEventsMap) {
+		messageServer.send(data, null);
 	}
 
-	export function changeKey(command: keyof MessageTypes.ExternalEventsBoth, oldKey: any[], newKey: string) {
+	export function changeKey(command: keyof MessageTypes.ExternalEventsMap, oldKey: any[], newKey: string) {
 		globalShortcut.unregister(oldKey.join('+'));
 		globalShortcut.register(newKey, () => {
 			log(`Key ${newKey} was pressed, launching command ${command}`);
@@ -68,9 +66,9 @@ export namespace Shortcuts {
 
 	function addSettingsListener() {
 		remote.Settings.listen('keys', (newVal, oldVal) => {
-			const changedKeys: (keyof MessageTypes.ExternalEventsBoth)[] = [];
+			const changedKeys: (keyof MessageTypes.ExternalEventsMap)[] = [];
 			for (let key in newVal) {
-				const command = key as keyof MessageTypes.ExternalEventsBoth;
+				const command = key as keyof MessageTypes.ExternalEventsMap;
 				if (JSON.stringify(<any>(<any>newVal)[command]) !== JSON.stringify(<any>(<any>oldVal)[command])) {
 					changedKeys.push(command);
 				}
@@ -82,11 +80,7 @@ export namespace Shortcuts {
 		});
 	};
 
-	export async function init(refs: {
-		activeWindow: Electron.BrowserWindow;
-		tray: Electron.Tray;
-		DEBUG: boolean;
-	}, launch: () => void, remoteSettings: SettingsType) {
+	export async function init(refs: typeof MediaApp.Refs, launch: () => void, remoteSettings: SettingsType) {
 		const {activeWindow, DEBUG, tray } = refs;
 		remote.activeWindow = activeWindow;
 		remote.Settings = remoteSettings
@@ -95,6 +89,7 @@ export namespace Shortcuts {
 		remote.tray = tray;
 
 		const bindings = await remote.Settings.get('keys');
+		messageServer = new MessageServer(refs).channel('events');
 
 		for (let command in bindings) {
 			const keys = bindings[command as keyof typeof bindings];
@@ -103,11 +98,11 @@ export namespace Shortcuts {
 
 				globalShortcut.register(keyCommand as any, () => {
 					log(`Key ${keyCommand} was pressed, launching command ${command}`);
-					if (handleEvent(command as keyof MessageTypes.ExternalEventsBoth)) {
+					if (handleEvent(command as keyof MessageTypes.ExternalEventsMap)) {
 						log(`Key ${keyCommand} was ignored because it launched the app`);
 						return;
 					}
-					sendMessage(command as keyof MessageTypes.ExternalEventsBoth);
+					sendMessage(command as keyof MessageTypes.ExternalEventsMap);
 				});
 			}
 		}

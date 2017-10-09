@@ -1,8 +1,9 @@
-import { Helpers, $ } from '../libs/helpers'
-import { FireBaseConfig, getSecret } from '../libs/getSecrets'
-import { AppWindow, MappedKeyboardEvent } from './appWindow'
-import firebase = require('firebase');
 import { shell } from 'electron';
+import firebase = require('firebase');
+import { Helpers, $ } from '../libs/helpers'
+import { MessageServer } from '../../renderer/msg/msg';
+import { AppWindow, MappedKeyboardEvent } from './appWindow'
+import { FireBaseConfig, getSecret } from '../libs/getSecrets'
 
 export interface YoutubeVideoPlayer extends HTMLElement {
 	getVolume(): number;
@@ -106,7 +107,7 @@ export namespace YoutubeMusic {
 
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;				
 
-				REPLACE.playPauseListeners();
+				REPLACE.playPauseListeners('ytmusic');
 				REPLACE.volumeManager(player);
 				const setupVisualizer = REPLACE.handleVisualizer();
 				REPLACE.initialSizing(player, 'ytmusic', setupVisualizer);
@@ -130,6 +131,8 @@ export namespace YoutubeMusic {
 	namespace Downloading {
 		let songFoundTimeout: number = null;
 		let songFoundName = '';
+		const server = new MessageServer();
+
 		export function downloadSong() {
 			//Search for it on youtube
 			const downloadSongView = $('#youtubeSearchPageView') as Electron.WebviewTag;
@@ -212,7 +215,7 @@ export namespace YoutubeMusic {
 						]
 					}
 				}]);
-				websiteWebview.addEventListener('dom-ready', () => {
+				websiteWebview.addEventListener('dom-ready', async () => {
 					if (currentPage === 'none') {
 						currentPage = 'main';
 					} else if (currentPage === 'main') {
@@ -220,20 +223,15 @@ export namespace YoutubeMusic {
 					}
 
 					if (currentPage === 'main') {
-						Helpers.sendTaskToPage(JSON.stringify([
-							'searchFor', name
-						]), '1001tracklists', () => { });
+						server.sendTask('searchFor', name, '1001tracklists');
 					} else if (currentPage === 'results') {
-						Helpers.sendTaskToPage(JSON.stringify([
-							'findItem', url
-						]), '1001tracklists', (result: false|string) => {
-							if (result !== 'null' && result !== 'false' && result) {
-								getTrackFrom1001TracklistsUrl(result);
-							} else {
-								resolve(false);
-							}
-							websiteWebview.remove();
-						});
+						const result = await server.sendTask('findItem', url, '1001tracklists');
+						if (result !== 'null' && result !== 'false' && result) {
+							getTrackFrom1001TracklistsUrl(result);
+						} else {
+							resolve(false);
+						}
+						websiteWebview.remove();
 					}
 				});
 				websiteWebview.src = 'https://www.1001tracklists.com';
@@ -255,7 +253,7 @@ export namespace YoutubeMusic {
 		}
 
 		function getTrackFrom1001TracklistsUrl(url: string) {
-			getUrlHTML(url).then((doc) => {
+			getUrlHTML(url).then(async (doc) => {
 				const tracks = Helpers.toArr(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
 					try {
 						const nameContainer = songContainer.querySelector('.trackFormat');
@@ -281,63 +279,50 @@ export namespace YoutubeMusic {
 					}
 				});
 
-				Helpers.sendTaskToPage('getTime', 'youtube', (time) => {
-					const index = getSongIndex(tracks.filter((track) => {
-						return !!track;
-					}).map((track) => {
-						return track.startTime;
-					}), ~~time);
+				const time = await server.sendTask('getTime', void 0, 'youtube');
+				const index = getSongIndex(tracks.filter((track) => {
+					return !!track;
+				}).map((track) => {
+					return track.startTime;
+				}), ~~time);
 
-					let unsure = false;
-					if (tracks[index - 1] && tracks[index - 1].startTime === null) {
-						unsure = true;
-					} else if (tracks[index + 1] && tracks[index + 1].startTime === null) {
-						unsure = true;
-					}
-					const trackName = tracks[index].songName;
-					displayFoundSong(unsure ? `???${trackName}???` : trackName);
-				});
+				let unsure = false;
+				if (tracks[index - 1] && tracks[index - 1].startTime === null) {
+					unsure = true;
+				} else if (tracks[index + 1] && tracks[index + 1].startTime === null) {
+					unsure = true;
+				}
+				const trackName = tracks[index].songName;
+				displayFoundSong(unsure ? `???${trackName}???` : trackName);
 			});
 		}
 
-		export function getCurrentSong() {
-			Helpers.sendTaskToPage('getTimestamps', 'youtube', (timestamps: {
-				found: true;
-				data: number[]|string
-			}|{
-				found: false;
-				data: {
-					name: string;
-					url: string;
-				}
-			}) => {
-				const enableOCR = false;
-				if (enableOCR && !timestamps) {
-					//Do some OCR magic
-					//getSongFromOCR(displayFoundSong);
-				} else if (timestamps.found === true) {
-					const data = timestamps.data;
-					if (!Array.isArray(data)) {
-						//It's a link to the tracklist
-						getTrackFrom1001TracklistsUrl(data);
-					} else {
-						Helpers.sendTaskToPage('getTime', 'youtube', (time) => {
-							const index = getSongIndex(data, ~~time);
-							Helpers.sendTaskToPage('getSongName' + index, 'youtube', (name) => {
-								displayFoundSong(name);
-							});
-						});
-					}
+		export async function getCurrentSong() {
+			const timestamps = await server.sendTask('getTimestamps', void 0, 'youtube');
+			const enableOCR = false;
+			if (enableOCR && !timestamps) {
+				//Do some OCR magic
+				//getSongFromOCR(displayFoundSong);
+			} else if (timestamps.found === true) {
+				const data = timestamps.data;
+				if (!Array.isArray(data)) {
+					//It's a link to the tracklist
+					getTrackFrom1001TracklistsUrl(data);
 				} else {
-					//Look if the podcast exists on 1001tracklists
-					findOn1001Tracklists(timestamps.data.name, timestamps.data.url).then((found) => {
-						if (!found) {
-							//Show not found toast
-							Helpers.showToast('Could not find the current song 😞');
-						}
-					});
+					const time = await server.sendTask('getTime', void 0, 'youtube');
+					const index = getSongIndex(data, ~~time);
+					const name = await server.sendTask('getSongName', index, 'youtube');
+					displayFoundSong(name);
 				}
-			});
+			} else {
+				//Look if the podcast exists on 1001tracklists
+				findOn1001Tracklists(timestamps.data.name, timestamps.data.url).then((found) => {
+					if (!found) {
+						//Show not found toast
+						Helpers.showToast('Could not find the current song 😞');
+					}
+				});
+			}
 		}
 	}
 
@@ -420,14 +405,11 @@ export namespace YoutubeMusic {
 				const address = 'https://www.youtube.com/watch';
 				const url = `${address}?v=${vidId}&list=WL&index=${vidIndex}&t=${mins}m${secs}s`;
 				
-				Helpers.sendIPCMessage('toBgPage', {
-					type: 'passAlong',
-					data: {
-						type: 'saveUrl',
-						data: {
-							url: url
-						}
-					} as PassedAlongMessage<'saveUrl'>
+				require('electron').ipcRenderer.send('main', {
+					channel: 'toWindow',
+					type: 'saveUrl',
+					data: url,
+					identifier: -1
 				});
 			}).toString()})()`, false);
 		}
@@ -547,15 +529,20 @@ export namespace YoutubeMusic {
 	}
 
 	function addListeners() {
-		AppWindow.listen('onMinimized', () => {
+		const server = new MessageServer();
+		const eventChannel = server.channel('events');
+		const toBgPageChannel = server.channel('toBgPage');
+
+		eventChannel.on('onMinimized', () => {
 			if (Visualization.isVisualizing()) {
 				Helpers.hacksecute(view, () => {
 					document.body.classList.remove('showVisualizer');
 				});
 			}
+			return MessageServer.NO_RETURN;
 		});
-		AppWindow.listen('onRestored', async () => {
-			if (!await AppWindow.sendBackgroundPageMessage('isMinimized') && Visualization.isVisualizing()) {
+		eventChannel.on('onRestored', async () => {
+			if (!await toBgPageChannel.send('isMinimized', null) && Visualization.isVisualizing()) {
 				Helpers.hacksecute(view, () => {
 					document.body.classList.add('showVisualizer');
 				});

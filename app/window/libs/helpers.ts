@@ -1,8 +1,10 @@
 import * as fs from 'fs'
 import * as md5 from 'md5'
 import { shell } from 'electron'
-import { ViewNames } from '../../window/views/appWindow'
 import { route } from '../../renderer/routing/routing'
+import { ViewNames } from '../../window/views/appWindow'
+import { embeddableSend, onTask } from '../../renderer/msg/msg';
+import { Partitions } from '../../renderer/adblocking/adblocking';
 import { YoutubeVideoPlayer, YoutubeMusicWindow } from '../../window/views/youtubeMusic'
 
 export const EXAMPLE_STYLES = `html, body, a {
@@ -97,11 +99,13 @@ export namespace Helpers {
 	export function hacksecute<T extends {
 		[key: string]: number|string|boolean|((...args: any[]) => void);
 	}>(view: Electron.WebviewTag, fn: (REPLACE: T & {
+		onTask: typeof onTask;
 		inlineFn: typeof inlineFn;
-		sendIPCMessage: typeof sendIPCMessage;
+		sendMessage: typeof embeddableSend;
 	}) => void, parameters: T = {} as T) {
+		parameters['onTask'] = onTask;
 		parameters['inlineFn'] = inlineFn;
-		parameters['sendIPCMessage'] = sendIPCMessage;
+		parameters['embeddableSend'] = embeddableSend;
 		if (!view.src) {
 			return new Promise<any>((resolve) => {
 				resolve(undefined);
@@ -109,8 +113,9 @@ export namespace Helpers {
 		}
 		return new Promise<any>((resolve) => {
 			view.executeJavaScript(replaceParameters(`
+				var onTask = REPLACE.onTask();
 				var inlineFn = REPLACE.inlineFn;
-				var sendIPCMessage = REPLACE.sendIPCMessage;
+				var sendMessage = REPLACE.embeddableSend;
 			(${createTag(fn).toString()})();`, parameters), false, (result) => {
 				resolve(result);
 			});
@@ -130,27 +135,6 @@ export namespace Helpers {
 				resolve(result);
 			});
 		});
-	}
-
-	let taskIds = 0;
-	const taskListeners: {
-		[id: number]: (result: any) => void;
-	} = {};
-	export function returnTaskValue(result: any, id: number) {
-		if (taskListeners[id]) {
-			taskListeners[id](result);
-		}
-		delete taskListeners[id];
-	};
-
-	export function sendTaskToPage(name: string, page: string, callback: (result: any) => void) {
-		Helpers.sendIPCMessage('task', {
-			name: name,
-			page: page,
-			id: ++taskIds
-		});
-
-		taskListeners[taskIds] = callback;
 	}
 
 	export function toArr(iterable: any): any[] {
@@ -267,8 +251,11 @@ export namespace Helpers {
 	function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
 		if (isJS) {
 			view.executeJavaScript('var exports = exports || {}', false);		
-			view.executeJavaScript(replaceParameters('var sendIPCMessage = REPLACE.sendIPCMessage;', {
-				sendIPCMessage: sendIPCMessage
+			view.executeJavaScript(replaceParameters('var sendMessage = REPLACE.embeddableSend;', {
+				embeddableSend: embeddableSend
+			}), false);
+			view.executeJavaScript(replaceParameters('var onTask = REPLACE.onTask();', {
+				onTask: onTask
 			}), false);
 		}
 		if (config.code) {
@@ -428,6 +415,8 @@ export namespace Helpers {
 	}
 
 	export namespace YoutubeVideoFunctions {
+		declare const sendMessage: typeof embeddableSend;
+
 		export function adSkipper() {
 			window.setInterval(() => {
 				let adContainer: HTMLElement = null;
@@ -531,29 +520,13 @@ export namespace Helpers {
 			};
 		}
 		
-		export function playPauseListeners() {
+		export function playPauseListeners(view: ViewNames) {
 			const video = document.getElementsByTagName('video')[0];			
 			video.onplay = () => {
-				sendIPCMessage('toBgPage', {
-					type: 'passAlong',
-					data: {
-						type: 'onPlay',
-						data: {
-							view: 'youtubeSubscriptions'
-						}
-					} as PassedAlongMessage<'onPlay'>
-				});
+				sendMessage('toWindow', 'onPlay', view);
 			}
 			video.onpause = () => {
-				sendIPCMessage('toBgPage', {
-					type: 'passAlong',
-					data: {
-						type: 'onPause',
-						data: {
-							view: 'youtubeSubscriptions'
-						}
-					} as PassedAlongMessage<'onPause'>
-				});
+				sendMessage('toWindow', 'onPause', view);
 			}
 		}
 
@@ -580,7 +553,9 @@ export namespace Helpers {
 								player.setPlaybackQuality('hd720');
 							}
 
+							console.log('Done loading', loaded);
 							if (loaded !== null) {
+								console.log('Setting it');
 								localStorage.setItem('loaded', loaded);
 							}
 							
@@ -617,10 +592,7 @@ export namespace Helpers {
 				if (Array.from(document.querySelectorAll('a[is="yt-endpoint"]')).filter((a: HTMLAnchorElement) => {
 					return a.href.indexOf('accounts.google.com') > -1;
 				}).length > 0) {
-					sendIPCMessage('log', {
-						type: 'toast',
-						args: 'Please log in'
-					});
+					sendMessage('log', 'toast', 'Please log in');
 					document.body.classList.toggle('showHiddens');
 				}
 			}, 5000);
@@ -740,7 +712,7 @@ export namespace Helpers {
 		}
 
 		export function handleYoutubeMusicTasks() {
-			function executeTask(name: string, id: number) {
+			function executeTask(name: string, data: any, id: number) {
 				let result = null;
 				switch (name) {
 					case 'getTime':
@@ -748,50 +720,48 @@ export namespace Helpers {
 							document.querySelector('.html5-video-player') as YoutubeVideoPlayer
 						).getCurrentTime();
 						break;
-					default:
-						if (name.indexOf('getSongName') > -1) {
-							let timestampContainers = document
-								.querySelector('#eow-description')
-								.querySelectorAll('a[href="#"]');
-							const index = ~~name.split('getSongName')[1];
-							const textNodes = [];
-							if (!isNaN(index) && timestampContainers[index]) {
-								let currentNode = timestampContainers[index].previousSibling as HTMLElement;
+					case 'getSongName':
+						let timestampContainers = document
+							.querySelector('#eow-description')
+							.querySelectorAll('a[href="#"]');
+						const index = data as number;
+						const textNodes = [];
+						if (!isNaN(index) && timestampContainers[index]) {
+							let currentNode = timestampContainers[index].previousSibling as HTMLElement;
 
-								//Search back until a <br> is found
-								while (currentNode && currentNode.tagName !== 'BR') {
-									if (!currentNode.tagName) {
-										textNodes.push(currentNode.nodeValue);
-									}
-									currentNode = currentNode.previousSibling as HTMLElement;
+							//Search back until a <br> is found
+							while (currentNode && currentNode.tagName !== 'BR') {
+								if (!currentNode.tagName) {
+									textNodes.push(currentNode.nodeValue);
 								}
-
-								currentNode = timestampContainers[index].nextSibling as HTMLElement;
-
-								//Search forward until a <br> is found
-								while (currentNode && currentNode.tagName !== 'BR') {
-									if (!currentNode.tagName) {
-										textNodes.push(currentNode.nodeValue);
-									}
-									currentNode = currentNode.nextSibling as HTMLElement;
-								}
-
-								//Go through list and find something that resembles a song
-								for (let i = 0; i < textNodes.length; i++) {
-									if (/.+-.+/.test(textNodes[i])) {
-										//This is a song
-										result = textNodes[i];
-										break;
-									}
-								}
-
-								if (!result) {
-									//Just try this instead
-									result = textNodes[0];
-								}
-							} else {
-								result = null;
+								currentNode = currentNode.previousSibling as HTMLElement;
 							}
+
+							currentNode = timestampContainers[index].nextSibling as HTMLElement;
+
+							//Search forward until a <br> is found
+							while (currentNode && currentNode.tagName !== 'BR') {
+								if (!currentNode.tagName) {
+									textNodes.push(currentNode.nodeValue);
+								}
+								currentNode = currentNode.nextSibling as HTMLElement;
+							}
+
+							//Go through list and find something that resembles a song
+							for (let i = 0; i < textNodes.length; i++) {
+								if (/.+-.+/.test(textNodes[i])) {
+									//This is a song
+									result = textNodes[i];
+									break;
+								}
+							}
+
+							if (!result) {
+								//Just try this instead
+								result = textNodes[0];
+							}
+						} else {
+							result = null;
 						}
 						break;
 				}
@@ -809,7 +779,7 @@ export namespace Helpers {
 					}
 					if (Array.isArray(tasks) && tasks.length > 0) {
 						tasks.forEach((task) => {
-							executeTask(task.name, task.id);
+							executeTask(task.name, task.data, task.id);
 						});
 						localStorage.setItem('tasks', '[]');
 					}
@@ -822,12 +792,7 @@ export namespace Helpers {
 		export function detectOnEnd() {
 			const video = document.querySelector('video');
 			video.addEventListener('ended', () => {
-				sendIPCMessage('toBgPage', {
-					type: 'passAlong',
-					data: {
-						type: 'onVideoEnded'
-					} as PassedAlongMessage<'onVideoEnded'>
-				})
+				sendMessage('toWindow', 'onVideoEnded', null);
 			});
 		}
 	}
@@ -904,14 +869,5 @@ export namespace Helpers {
 			});
 		}));
 	}
-
-	export function sendIPCMessage<T extends keyof SafeIPCRenderer.MessagePairs>(channel: T, 
-		message: SafeIPCRenderer.MessagePairs[T], target: {
-			send: (channel: string, ...args: any[]) => void;
-		} = require('electron').ipcRenderer): void {
-		target.send(channel, message);
-	}
 }
-export default Helpers; 
-
-export type sendIPCMessage = <T extends keyof SafeIPCRenderer.MessagePairs>(channel: T, message: SafeIPCRenderer.MessagePairs[T]) => void;
+export default Helpers;

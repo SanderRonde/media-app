@@ -14,7 +14,7 @@ const app = isRemote ? require('electron').remote.app :
 	require('electron').app
 export const STORED_DATA_FILE = path.join(app.getPath('appData'), 'media-app', 'data.json');
 
-export const EXTERNAL_EVENTS: (keyof MessageTypes.ExternalEvents)[] = [
+export const EXTERNAL_EVENTS: (keyof MessageTypes.ExternalEventsNoArg)[] = [
 	'focus',
 	'lowerVolume',
 	'raiseVolume',

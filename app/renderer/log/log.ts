@@ -1,11 +1,27 @@
+import { MessageServer, MessageServerChannel } from '../msg/msg';
 import { BrowserWindow, remote } from 'electron';
-import { Helpers } from '../../window/libs/helpers';
 
-function getWindow(): Electron.BrowserWindow {
+let logChannel: MessageServerChannel<'log'> = null;
+
+function getData(): [Electron.BrowserWindow, MessageServerChannel<'log'>] {
+	let win: Electron.BrowserWindow = null;
 	if (!BrowserWindow) {
-		return remote.BrowserWindow.getAllWindows()[0];
+		win = remote.BrowserWindow.getAllWindows()[0];
+	} else {
+		win = BrowserWindow.getAllWindows()[0];
 	}
-	return BrowserWindow.getAllWindows()[0];
+
+	if (!logChannel && win) {
+		logChannel = new MessageServer({
+			activeWindow: win,
+			activeWindowPromise: new Promise((resolve) => {
+				resolve(win);
+			}),
+			idGenerator: -1
+		}).channel('log');
+	}
+
+	return [win, logChannel];
 }
 
 const queue: ({
@@ -17,22 +33,11 @@ const queue: ({
 })[] = [];
 
 setInterval(() => {
-	const win = getWindow();
+	const [win, logChannel] = getData();
 	if (win && queue.length > 0) {
 		for (let i = 0; i < queue.length; i++) {
 			const queueItem = queue[i];
-			/// Why does this work typescript
-			if (queueItem.type === 'toast') {
-				Helpers.sendIPCMessage('log', {
-					type: queueItem.type,
-					args: queueItem.args
-				}, win.webContents);
-			} else {
-				Helpers.sendIPCMessage('log', {
-					type: queueItem.type,
-					args: queueItem.args
-				}, win.webContents);
-			}
+			logChannel.send(queueItem.type, queueItem.args);
 		}
 
 		while (queue[0]) {
@@ -42,13 +47,10 @@ setInterval(() => {
 }, 100);
 
 export function info(...args: any[]) {
-	const win = getWindow();
+	const [win, logChannel] = getData();
 	console.info(...args);
 	if (win) {
-		Helpers.sendIPCMessage('log', {
-			type: 'info',
-			args: args
-		}, win.webContents);
+		logChannel.send('info', args);
 	} else {
 		queue.push({
 			type: 'info',
@@ -58,13 +60,10 @@ export function info(...args: any[]) {
 }
 
 export function log(...args: any[]) {
-	const win = getWindow();
+	const [win, logChannel] = getData();
 	console.log(...args);
 	if (win) {
-		Helpers.sendIPCMessage('log', {
-			type: 'log',
-			args: args
-		}, win.webContents);
+		logChannel.send('log', args);
 	} else {
 		queue.push({
 			type: 'log',
@@ -74,13 +73,10 @@ export function log(...args: any[]) {
 }
 
 export function warn(...args: any[]) {
-	const win = getWindow();
+	const [win, logChannel] = getData();
 	console.warn(...args);
 	if (win) {
-		Helpers.sendIPCMessage('log', {
-			type: 'warn',
-			args: args
-		}, win.webContents);
+		logChannel.send('warn', args);
 	} else {
 		queue.push({
 			type: 'warn',
@@ -90,13 +86,10 @@ export function warn(...args: any[]) {
 }
 
 export function error(...args: any[]) {
-	const win = getWindow();
+	const [win, logChannel] = getData();
 	console.error(...args);
 	if (win) {
-		Helpers.sendIPCMessage('log', {
-			type: 'error',
-			args: args
-		}, win.webContents);
+		logChannel.send('error', args);
 	} else {
 		queue.push({
 			type: 'error',
@@ -106,12 +99,9 @@ export function error(...args: any[]) {
 }
 
 export function toast(message: string) {
-	const win = getWindow();
+	const [win, logChannel] = getData();
 	if (win) {
-		Helpers.sendIPCMessage('log', {
-			type: 'toast',
-			args: message
-		}, win.webContents);
+		logChannel.send('toast', message);
 	} else {
 		queue.push({
 			type: 'toast',

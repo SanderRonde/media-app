@@ -204,7 +204,7 @@ export namespace YoutubeSubscriptions {
 						Helpers.hacksecute(videoView, (REPLACE) => {
 							const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 
-							REPLACE.playPauseListeners();
+							REPLACE.playPauseListeners('youtubeSubscriptions');
 							REPLACE.volumeManager(player);
 							REPLACE.initialSizing(player, null);
 							REPLACE.handleResize(player);

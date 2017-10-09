@@ -4,4 +4,3 @@
 ///<reference path="paper-ripple.d.ts"/>
 ///<reference path="auto-launch.d.ts"/>
 ///<reference path="websocket.d.ts"/>
-///<reference path="electron.d.ts"/>

@@ -5,19 +5,43 @@ import {
 import url = require('url');
 import path = require('path');
 import AutoLaunch = require('auto-launch');
-import { MessageServer } from './renderer/msg/msg';
 import { Updater } from './renderer/updater/updater'
 import { Settings } from './renderer/settings/settings';
 import { RemoteServer }  from './renderer/remote/remote';
 import { Shortcuts } from './renderer/shortcuts/shortcuts';
 import { AdBlocking } from './renderer/adblocking/adblocking';
+import { MessageServer, AppMessageServer } from './renderer/msg/msg';
 const logger = require('logger').createLogger(path.join(app.getPath('appData'), 'media-app', 'log.log'));
 
 export namespace MediaApp {
+	let resolveBrowserWindow: (win: Electron.BrowserWindow) => void = null;
+
 	export namespace Refs {
-		export let activeWindow: Electron.BrowserWindow = null;
 		export let tray: Electron.Tray = null;
+		export let messageServer: MessageServer = null;
+		export let idGenerator: AppMessageServer = null;
+		export let activeWindow: Electron.BrowserWindow = null;
+		export let activeWindowPromise: Promise<Electron.BrowserWindow> = new Promise((resolve) => {
+			resolveBrowserWindow = resolve;
+		});
 		export const DEBUG = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length;		
+	}
+
+	function initBrowserWindowListeners() {
+		const eventChannel = Refs.messageServer.channel('events');
+
+		Refs.activeWindow.addListener('enter-full-screen', () => {
+			eventChannel.send('onFullscreened', void 0);
+		});
+		Refs.activeWindow.addListener('maximize', () => {
+			eventChannel.send('onMaximized', void 0);
+		});
+		Refs.activeWindow.addListener('minimize', () => {
+			eventChannel.send('onMinimized', void 0);
+		});
+		Refs.activeWindow.addListener('restore', () => {
+			eventChannel.send('onRestored', void 0);
+		});
 	}
 
 	function launch(focus: boolean = false) {		
@@ -38,6 +62,7 @@ export namespace MediaApp {
 				plugins: true
 			}
 		});
+		resolveBrowserWindow(Refs.activeWindow);
 
 		Refs.activeWindow.loadURL(url.format({
 			pathname: path.join(__dirname, 'window/main.html'),
@@ -48,11 +73,16 @@ export namespace MediaApp {
 
 		Refs.activeWindow.on('closed', () => {
 			Refs.activeWindow = null;
+			Refs.activeWindowPromise = new Promise((resolve) => {
+				resolveBrowserWindow = resolve;
+			});
 		});
 
 		if (Refs.DEBUG) {
 			Refs.activeWindow.webContents.openDevTools();
 		}
+
+		initBrowserWindowListeners();
 
 		return true;
 	}
@@ -182,79 +212,47 @@ export namespace MediaApp {
 
 		namespace Comm {
 			export function setupListeners() {
-				const settingsMessenger = new MessageServer('settings', Refs);
-				const eventMessenger = new MessageServer('toBgPage', Refs);
-				const evalMessenger = new MessageServer('eval', Refs);
+				const settingsChannel = Refs.messageServer.channel('settings');
+				const toBgPageChannel = Refs.messageServer.channel('toBgPage');
+				const evalChannel = Refs.messageServer.channel('eval');
 
-				eventMessenger.on('openDevTools', () => {
+				toBgPageChannel.on('openDevTools', () => {
 					Refs.activeWindow.webContents.openDevTools();
 				});
-				eventMessenger.on('messageServer', (data) => {
+				toBgPageChannel.on('messageServer', (data) => {
 					activeServer.sendMessage(data);
 				});
-				eventMessenger.on('isMinimized', () => {
+				toBgPageChannel.on('isMinimized', () => {
 					return Refs.activeWindow && Refs.activeWindow.isMinimized();
 				});
-				eventMessenger.on('onFullscreened', () => {
-					return new Promise((resolve) => {
-						Refs.activeWindow && 
-						Refs.activeWindow.addListener('enter-full-screen', () => {
-							resolve();
-						});
-					});
-				});
-				eventMessenger.on('onMaximized', () => {
-					return new Promise((resolve) => {
-						Refs.activeWindow && 
-						Refs.activeWindow.addListener('maximize', () => {
-							resolve();
-						});
-					});
-				});
-				eventMessenger.on('onMinimized', () => {
-					return new Promise((resolve) => {
-						Refs.activeWindow && 
-						Refs.activeWindow.addListener('minimize', () => {
-							resolve();
-						});
-					});
-				});
-				eventMessenger.on('onRestored', () => {
-					return new Promise((resolve) => {
-						Refs.activeWindow && 
-						Refs.activeWindow.addListener('restore', () => {
-							resolve();
-						});
-					});
-				});
-				eventMessenger.on('isMaximized', () => {
+				toBgPageChannel.on('isMaximized', () => {
 					return Refs.activeWindow && Refs.activeWindow.isMaximized();
 				});
-				eventMessenger.on('isFullscreen', () => {
+				toBgPageChannel.on('isFullscreen', () => {
 					return Refs.activeWindow && Refs.activeWindow.isFullScreen();
 				});
-				eventMessenger.on('restore', () => {
+				toBgPageChannel.on('restore', () => {
 					Refs.activeWindow && Refs.activeWindow.restore();
 				});
-				eventMessenger.on('enterFullscreen', () => {
+				toBgPageChannel.on('enterFullscreen', () => {
 					Refs.activeWindow && Refs.activeWindow.setFullScreen(true);
 				});
-				eventMessenger.on('exitFullscreen', () => {
+				toBgPageChannel.on('exitFullscreen', () => {
 					Refs.activeWindow && Refs.activeWindow.setFullScreen(false);
 				});
-				eventMessenger.on('minimize', () => {
+				toBgPageChannel.on('minimize', () => {
 					Refs.activeWindow && Refs.activeWindow.minimize();
 				});
-				eventMessenger.on('maximize', () => {
+				toBgPageChannel.on('maximize', () => {
 					Refs.activeWindow && Refs.activeWindow.maximize();
 				});
-				eventMessenger.on('close', () => {
+				toBgPageChannel.on('close', () => {
 					Refs.activeWindow && Refs.activeWindow.close();
 				});
-				eventMessenger.on('quit', () => {
+				toBgPageChannel.on('quit', () => {
 					app.quit();
 				});
-				eventMessenger.on('updatePlayStatus', (data) => {
+				toBgPageChannel.on('updatePlayStatus', (data) => {
 					activeServer.sendMessage({
 						type: 'playUpdate',
 						data: {
@@ -263,14 +261,14 @@ export namespace MediaApp {
 					})
 				});
 
-				evalMessenger.on('eval', (data) => {
+				evalChannel.on('eval', (data) => {
 					eval(data);
 				});
 
-				settingsMessenger.on('getSetting', async (key) => {
+				settingsChannel.on('getSetting', (async (key: keyof Settings.Settings) => {
 					return await Settings.get(key);
-				});
-				settingsMessenger.on('setSetting', async (data) => {
+				}) as any);
+				settingsChannel.on('setSetting', async (data) => {
 					const { key, val } = data;
 					await Settings.set(key, val);
 				});
@@ -281,6 +279,8 @@ export namespace MediaApp {
 			//Context Menu
 			require('electron-context-menu')({});
 
+			Refs.idGenerator = new AppMessageServer(Refs);
+			Refs.messageServer = new MessageServer(Refs);
 			Comm.setupListeners();
 			AdBlocking.blockAds();
 			Updater.init(Refs, Settings);
@@ -320,7 +320,6 @@ export namespace MediaApp {
 
 	export async function init() {
 		app.on('ready', async () => {
-			
 			await Settings.init();
 			await Setup.init();
 			await AutoLauncher.init();

@@ -1,12 +1,12 @@
-import { Helpers } from './helpers';
-import { MediaAppType } from '../../app';
-import { AppWindow } from '../views/appWindow';
-import { SuggestionBar } from './suggestionBar';
-import { toast } from './../../renderer/log/log';
-import { YoutubeMusic } from '../views/youtubeMusic';
-import { MessageServer } from '../../renderer/msg/msg';
-import { SettingsType } from '../../renderer/settings/settings';
 import { KeyCombinations } from '../../renderer/shortcuts/shortcuts';
+import { MessageServer, MessageTypes } from '../../renderer/msg/msg';
+import { SettingsType } from '../../renderer/settings/settings';
+import { YoutubeMusic } from '../views/youtubeMusic';
+import { toast } from './../../renderer/log/log';
+import { SuggestionBar } from './suggestionBar';
+import { AppWindow } from '../views/appWindow';
+import { MediaAppType } from '../../app';
+import { Helpers } from './helpers';
 
 declare const MediaApp: MediaAppType;
 declare const Settings: SettingsType;
@@ -29,25 +29,26 @@ interface CommandFnDescriptor {
 }
 
 export namespace Commands {
-	const settingsServer = new MessageServer('settings');
+	const messageServer = new MessageServer();
+	const evalServer = messageServer.channel('eval');
+	const settingsServer = messageServer.channel('settings');
+	const toBgPageChannel = messageServer.channel('toBgPage');
 
 	function runRenderer(func: ImportNullifyingFn): () => void {
 		return () => {
-			Helpers.sendIPCMessage('eval', Helpers.stringifyFunction(func));
+			evalServer.send('eval', Helpers.stringifyFunction(func));
 		}
 	}
 
-	function sendAppWindowEvent(event: keyof MessageReasons | EXTERNAL_EVENT | ARG_EVENT) {
+	function sendAppWindowEvent(event: keyof MessageTypes.ExternalEventsMap) {
 		return fn(() => {
 			AppWindow.onShortcut(event);
 		})
 	}
 
-	function sendBgPageEvent(event: keyof MessageReasons) {
+	function sendBgPageEvent(event: MessageTypes.ToBgPageCommands) {
 		return fn(() => {
-			Helpers.sendIPCMessage('toBgPage', {
-				type: event
-			});
+			toBgPageChannel.send(event, null);
 		});
 	}
 

@@ -181,15 +181,7 @@ export namespace Netflix {
 			]);
 			if (state.playing !== playing || state.title !== title) {
 				AppWindow.updateStatus(state.title);
-				Helpers.sendIPCMessage('toBgPage', {
-					type: 'passAlong',
-					data: {
-						type: playing ? 'onPlay' : 'onPause',
-						data: {
-							view: 'netflix'
-						}
-					} as PassedAlongMessage<'onPlay'|'onPause'>
-				});
+				AppWindow[playing ? 'onPlay' : 'onPause']('netflix');
 
 				state.playing = playing;
 				state.title = title;
