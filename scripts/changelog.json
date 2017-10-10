@@ -75,5 +75,13 @@
 	],
 	"3.0.17": [
 		"Volume bar changes delta at lower volumes"
+	],
+	"3.0.18": [
+		"Ads can now be added by the user and are auto-updated",
+		"Moved settings to its own shared (with secrets) file",
+		"Won't throw an error when widevine can't be found",
+		"Added shutdown and start server commands to command bar",
+		"Server reboots when unexpectedly shutdown and won't crash app",
+		"Checking for updates is a setting now and can be done from the tray icon"
 	]
 }

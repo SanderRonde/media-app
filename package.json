@@ -1,6 +1,6 @@
 {
   "name": "media-app",
-  "version": "3.0.17",
+  "version": "3.0.18",
   "description": "Media App",
   "main": "./out/app.js",
   "scripts": {
