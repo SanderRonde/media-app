@@ -48,7 +48,7 @@ setInterval(() => {
 
 export function info(...args: any[]) {
 	const [win, logChannel] = getData();
-	console.info(...args);
+	console.info('[BGPAGE] ', ...args);
 	if (win) {
 		logChannel.send('info', args);
 	} else {
@@ -61,7 +61,7 @@ export function info(...args: any[]) {
 
 export function log(...args: any[]) {
 	const [win, logChannel] = getData();
-	console.log(...args);
+	console.log('[BGPAGE] ', ...args);
 	if (win) {
 		logChannel.send('log', args);
 	} else {
@@ -74,7 +74,7 @@ export function log(...args: any[]) {
 
 export function warn(...args: any[]) {
 	const [win, logChannel] = getData();
-	console.warn(...args);
+	console.warn('[BGPAGE] ', ...args);
 	if (win) {
 		logChannel.send('warn', args);
 	} else {
@@ -87,7 +87,7 @@ export function warn(...args: any[]) {
 
 export function error(...args: any[]) {
 	const [win, logChannel] = getData();
-	console.error(...args);
+	console.error('[BGPAGE] ', ...args);
 	if (win) {
 		logChannel.send('error', args);
 	} else {
