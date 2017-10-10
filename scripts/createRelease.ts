@@ -88,7 +88,7 @@ async function main() {
 
 	const fullChangelog: {
 		[key: string]: string[]
-	} = JSON.parse(fs.readFileSync(path.join(__dirname, './releases.json'), 'utf8'));
+	} = JSON.parse(fs.readFileSync(path.join(__dirname, './changelog.json'), 'utf8'));
 	if (!(VERSION in fullChangelog)) {
 		throw new Error('No release notes for this version exist');
 	} else {
