@@ -553,9 +553,7 @@ export namespace Util {
 								player.setPlaybackQuality('hd720');
 							}
 
-							console.log('Done loading', loaded);
 							if (loaded !== null) {
-								console.log('Setting it');
 								localStorage.setItem('loaded', loaded);
 							}
 							
