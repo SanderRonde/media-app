@@ -2,6 +2,19 @@ import { MappedKeyboardEvent, ViewNames } from '../../window/views/appWindow';
 import { Settings } from '../settings/settings';
 import electron = require('electron');
 
+function mapTarget(channel: MessageTypes.ChannelName): 'window'|'renderer' {
+	switch (channel) {
+		case 'eval':
+		case 'toBgPage':
+		case 'settings':
+			return 'renderer';
+		case 'events':
+		case 'toWindow':
+		default:
+			return 'window';
+	}
+}
+
 export namespace MessageTypes {
 	interface None { }
 
@@ -171,6 +184,7 @@ export namespace MessageTypes {
 		type: M;
 		data: ChannelMessage<C, M>['arg'];
 		identifier: number;
+		target: 'window'|'renderer';
 		messageServerId: string
 	}
 
@@ -259,16 +273,23 @@ export class AppMessageServer {
 		}
 	}
 
+	private async _proxyMessage(channel: string, message: any) {
+		//Pass it along
+		const win = await this.getActiveWindow();
+		win.webContents.send(channel, message);
+	}
+
 	private _listen() {
 		const ipcMain = require('electron').ipcMain;
 		ipcMain.on('genId', (event: IPCEvent) => {
 			event.returnValue = this._genId();
 		});
+		ipcMain.on('task', async (event: IPCEvent, msg: any) => {
+			this._proxyMessage('task', msg);
+		});
 		ipcMain.on('main', async (event: IPCEvent, message: MessageTypes.IPCMessage) => {
-			if (message.channel === 'toWindow') {
-				//Pass it along
-				const win = await this.getActiveWindow();
-				win.webContents.send('main', message);
+			if (message.target === 'window') {
+				this._proxyMessage('main', message);
 			}
 		});
 	}
@@ -338,7 +359,6 @@ class Channel<C extends MessageTypes.ChannelName> {
 			return;
 		}
 
-
 		let returned: boolean = false;
 		this._listeners.forEach(async (listenerData) => {
 			const { listenerType, listener } = listenerData;
@@ -373,8 +393,10 @@ class Channel<C extends MessageTypes.ChannelName> {
 				return;
 			}
 
+			
 			if (finalValue !== MessageServer.NO_RETURN) {
 				event.sender.send('mainReply', {
+					channel: channel,
 					identifier: identifier,
 					finalValue: finalValue,
 					messageServerId: messageServerId,
@@ -390,12 +412,13 @@ class Channel<C extends MessageTypes.ChannelName> {
 		finalValue: any;
 		messageServerId: string;
 		type: string;
+		channel: MessageTypes.ChannelName;
 	}) {
-		const { identifier, finalValue, type, messageServerId } = message;
+		const { identifier, finalValue, type, messageServerId, channel } = message;
 		const receiverServerId = ~~this._channelId.split('-')[0];
 		const senderServerId = ~~((messageServerId && messageServerId.split('-')[0]) || -1);
 		if (messageServerId !== this._channelId || receiverServerId === -1 ||
-			senderServerId === -1) {
+			senderServerId === -1 || channel !== this.channel) {
 				return;
 			}
 		if (!ReturnValues.returnToIdentifier(identifier, finalValue)) {
@@ -453,6 +476,7 @@ class Channel<C extends MessageTypes.ChannelName> {
 				type: type,
 				data: data,
 				identifier: identifier,
+				target: mapTarget(this.channel),
 				messageServerId: this._channelId
 			}
 		}
@@ -583,7 +607,8 @@ export class MessageServer {
 					page: page,
 					identifier: ReturnValues.createIdentifier((data) => {
 						resolve(data);
-					})
+					}),
+					target: 'window'
 				};
 				(await this._getIpcs()).sender.send('task', msg);
 			});
@@ -598,7 +623,8 @@ export function embeddableSend<C extends MessageTypes.ChannelName,
 			channel: channel,
 			type: type,
 			data: data,
-			identifier: -1
+			identifier: -1,
+			target: 'window'
 		});
 	}
 
@@ -629,7 +655,8 @@ export function onTask() {
 
 					ipcRenderer.send('taskResponse', {
 						identifier: identifier,
-						result: finalResult
+						result: finalResult,
+						target: 'window'
 					});
 				}
 			});
