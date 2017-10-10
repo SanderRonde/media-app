@@ -1,6 +1,5 @@
 import { MappedKeyboardEvent, ViewNames } from '../../window/views/appWindow';
 import { Settings } from '../settings/settings';
-const ipcRenderer = electron.ipcRenderer;
 import electron = require('electron');
 
 export namespace MessageTypes {
@@ -280,7 +279,7 @@ export class AppMessageServer {
 }
 
 interface IPCEvent extends Event {
-	sender: typeof ipcRenderer;
+	sender: typeof electron.ipcRenderer;
 	returnValue: any;
 }
 
