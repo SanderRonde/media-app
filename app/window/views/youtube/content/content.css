@@ -123,3 +123,7 @@ body.showVisualizer .ytma_visualization_cont {
 #yt-dialog-bg {
 	display: none;
 }
+
+iron-overlay-backdrop, ytd-popup-container {
+	display: none;
+}
