@@ -4,7 +4,18 @@
 	  {
 		  "type": "node",
 		  "request": "launch",
-		  "name": "Electron Main",
+		  "name": "Launch debugging",
+		  "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+			"program": "${workspaceRoot}/app/app.ts",
+			"args": [
+				"--debugging"
+			],
+			"sourceMaps": true,
+			"protocol": "legacy"
+		}, {
+		  "type": "node",
+		  "request": "launch",
+		  "name": "Launch without debug",
 		  "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
 			"program": "${workspaceRoot}/app/app.ts",
 			"sourceMaps": true,

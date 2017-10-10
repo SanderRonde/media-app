@@ -182,6 +182,7 @@ export class RemoteServer {
 		});
 
 		this._httpServer.on('close', () => {
+			log('Server was shut down');
 			this._running = false;
 			if (this._expectedShutdown) {
 				//Ignore, the restart was on purpose

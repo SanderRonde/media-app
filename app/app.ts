@@ -5,6 +5,7 @@ import {
 import url = require('url');
 import path = require('path');
 import AutoLaunch = require('auto-launch');
+import { log, error } from './backgroundLibs/log/log';
 import { Updater } from './backgroundLibs/updater/updater'
 import { Settings } from './backgroundLibs/settings/settings';
 import { RemoteServer }  from './backgroundLibs/remote/remote';
@@ -24,7 +25,7 @@ export namespace MediaApp {
 		export let activeWindowPromise: Promise<Electron.BrowserWindow> = new Promise((resolve) => {
 			resolveBrowserWindow = resolve;
 		});
-		export const DEBUG = !!process.argv.filter(arg => arg.indexOf('--debug-brk=') > -1).length;		
+		export const DEBUG = !!process.argv.filter(arg => arg.indexOf('debugging') > -1).length;		
 	}
 
 	function initBrowserWindowListeners() {
@@ -279,13 +280,21 @@ export namespace MediaApp {
 			//Context Menu
 			require('electron-context-menu')({});
 
+			log('Generating ID generator server');
 			Refs.idGenerator = new AppMessageServer(Refs);
+			log('Starting message server');
 			Refs.messageServer = new MessageServer(Refs);
+			log('Setting up listeners');
 			Comm.setupListeners();
+			log('Setting up adblocker');
 			AdBlocking.blockAds();
+			log('Initializing updater');
 			Updater.init(Refs, Settings);
+			log('Starting remote server');
 			activeServer = new RemoteServer(Refs, launch);
+			log('Initializing shortcuts');
 			Shortcuts.init(Refs, launch, Settings);
+			log('Waiting for widevine to load');
 			await WideVine.load();
 		}
 	}
@@ -319,15 +328,24 @@ export namespace MediaApp {
 	}
 
 	export async function init() {
+		log('Waiting for app to be ready');
 		app.on('ready', async () => {
+			log('App is ready, waiting for settings to initialize');
 			await Settings.init();
+			log('Settings initialized');
 			await Setup.init();
+			log('Done setupping, initializing autolauncher');
 			await AutoLauncher.init();
+			log('Initializing tray icon');
 			SystemTray.init();
+			log('Done initializing everything');
 
 			if (Refs.DEBUG || !(await Settings.get('launchOnBoot'))) {
 				//Not launch on boot, that means that this launch should start the app
+				log('Launching main window');
 				launch(true);
+			} else {
+				log('Not launching main window');
 			}
 
 			app.on('window-all-closed', async () => {
@@ -342,8 +360,9 @@ export namespace MediaApp {
 export type MediaAppType = typeof MediaApp;
 
 try {
-	logger.info('initializing');
+	log('Initializing');
 	MediaApp.init();
 } catch(e) {
+	error('An error occurred while launching', e);
 	logger.error(e);
 }
