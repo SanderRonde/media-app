@@ -84,7 +84,7 @@ interface YoutubeContentWindow extends CommWindow {
 	}
 
 	onTask('getTimestamps', (() => {
-		const descr = document.querySelector('#eow-description');
+		const descr = document.querySelector('#description');
 		const timestampContainers = Array.from(descr.querySelectorAll('a[href="#"]')).filter((timestamp) => {
 			return /(\d)\:(\d)(:(\d))*/.test(timestamp.innerHTML);
 		});
