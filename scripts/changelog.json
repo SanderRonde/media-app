@@ -83,5 +83,10 @@
 		"Added shutdown and start server commands to command bar",
 		"Server reboots when unexpectedly shutdown and won't crash app",
 		"Checking for updates is a setting now and can be done from the tray icon"
+	],
+	"3.0.19": [
+		"Subbox now has loading spinner while loading",
+		"You can now copy links to videos in the subbox view by right-clicking",
+		"Fixed get playing song functionality"
 	]
 }
