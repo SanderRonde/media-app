@@ -654,6 +654,10 @@ class VideoIdentifier {
 						e.stopPropagation();
 						window.navToLink(link, video);
 					});
+					anchor.addEventListener('contextmenu', () => {
+						require('electron').clipboard.writeText(link);
+						sendMessage('log', 'toast', 'Copied to clipboard 📋');
+					});
 					anchor.hasListener = true;
 				}
 				video.links.push(link);
