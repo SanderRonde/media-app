@@ -222,12 +222,16 @@ export namespace YoutubeMusic {
 						currentPage = 'results';
 					}
 
+					await Util.wait(500);
+
 					if (currentPage === 'main') {
 						server.sendTask('searchFor', name, '1001tracklists');
 					} else if (currentPage === 'results') {
 						const result = await server.sendTask('findItem', url, '1001tracklists');
 						if (result !== 'null' && result !== 'false' && result) {
-							getTrackFrom1001TracklistsUrl(result);
+							getTrackFrom1001TracklistsUrl(result).then(() => {
+								resolve(true);
+							});
 						} else {
 							resolve(false);
 						}
@@ -253,7 +257,7 @@ export namespace YoutubeMusic {
 		}
 
 		function getTrackFrom1001TracklistsUrl(url: string) {
-			getUrlHTML(url).then(async (doc) => {
+			return getUrlHTML(url).then(async (doc) => {
 				const tracks = Util.toArr(doc.querySelectorAll('.tlpTog')).map((songContainer) => {
 					try {
 						const nameContainer = songContainer.querySelector('.trackFormat');
@@ -294,6 +298,7 @@ export namespace YoutubeMusic {
 				}
 				const trackName = tracks[index].songName;
 				displayFoundSong(unsure ? `???${trackName}???` : trackName);
+				return true;
 			});
 		}
 
