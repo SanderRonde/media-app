@@ -308,7 +308,6 @@ export namespace AppWindow {
 		} else if (event.key === 'p' && event.ctrlKey) {
 			CommandBar.show();
 		} else {
-			console.log(`Key '${event.key}' was pressed but ignored`);
 			return;
 		}
 		console.log(`Key '${event.key}' was pressed and activated`);
@@ -446,8 +445,6 @@ export namespace AppWindow {
 
 		if (await getActiveViewClass().Commands.onKeyPress(event)) {
 			console.log(`Key '${event.key}' was pressed and activated`);
-		} else {
-			console.log(`Key '${event.key}' was pressed but activated no command`);
 		}
 	}
 
