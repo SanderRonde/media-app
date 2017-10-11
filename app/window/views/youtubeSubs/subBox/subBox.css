@@ -41,3 +41,10 @@ ytd-two-column-browse-results-renderer {
 ytd-page-manager {
 	margin-left: 0!important;
 }
+
+#spinner {
+	bottom: 1vh;
+    position: fixed;
+    z-index: 10000;
+    left: 1vh;
+}

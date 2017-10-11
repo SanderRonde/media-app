@@ -15,6 +15,23 @@
 	direction: ltr;
 }
 
+#spinner.small {
+	display: inline-block;
+	position: relative;
+	width: 5vh; /* CONTAINERWIDTH */
+	height: 5vh; /* CONTAINERWIDTH */
+}
+
+#spinner.small #spinnerContainer {
+	width: 5vh;
+	height: 5vh;
+
+	/* The spinner does not have any contents that would have to be
+		* flipped if the direction changes. Always use ltr so that the
+		* style works out correctly in both cases. */
+	direction: ltr;
+}
+
 #spinner.active #spinnerContainer {
 	/* duration: 360 * ARCTIME / (ARCSTARTROT + (360-ARCSIZE)) */
 	-webkit-animation: container-rotate 1568ms linear infinite;
@@ -345,6 +362,10 @@
 	right: 0;
 	bottom: 0;
 	left: 0;
+}
+
+#spinner.small .circle {
+	border-width: 5px;
 }
 
 #spinner .circle-clipper.left .circle {

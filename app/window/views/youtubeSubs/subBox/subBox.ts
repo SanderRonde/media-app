@@ -716,14 +716,106 @@ class VideoIdentifier {
 	constructor() { }
 }
 
-async function identifyVideos() {
+function el<T extends keyof HTMLElementTagNameMap>(tagName: T, className: string, 
+	children: string|HTMLElement|(HTMLElement|string)[] = [], id?: string): HTMLElementTagNameMap[T] {
+		const element = document.createElement(tagName);
+		if (className && className.length > 0) {
+			element.classList.add(...className.split(' '));
+		}
+		if (id && id.length > 0) {
+			element.id = id;
+		}
+
+		let childrenArr: (HTMLElement|string)[] = Array.isArray(children) ?
+			children : [children];
+
+		for (let child of childrenArr) {
+			if (typeof child === 'string') {
+				element.innerText = child;
+			} else {
+				element.appendChild(child);
+			}
+		}
+
+		return element;
+	}
+
+class Spinner {
+	private element: HTMLElement;
+
+	constructor() {
+		this.element = el('div', 'small', [
+			el('div', '', [
+				el('div', 'spinner-layer layer-1', [
+					el('div', 'circle-clipper left', [
+						el('div', 'circle')
+					]),
+					el('div', 'gap-patch', [
+						el('div', 'circle')
+					]),
+					el('div', 'circle-clipper right', [
+						el('div', 'circle')
+					])
+				]),
+				el('div', 'spinner-layer layer-2', [
+					el('div', 'circle-clipper left', [
+						el('div', 'circle')
+					]),
+					el('div', 'gap-patch', [
+						el('div', 'circle')
+					]),
+					el('div', 'circle-clipper right', [
+						el('div', 'circle')
+					])
+				]),
+				el('div', 'spinner-layer layer-3', [
+					el('div', 'circle-clipper left', [
+						el('div', 'circle')
+					]),
+					el('div', 'gap-patch', [
+						el('div', 'circle')
+					]),
+					el('div', 'circle-clipper right', [
+						el('div', 'circle')
+					])
+				]),
+				el('div', 'spinner-layer layer-4', [
+					el('div', 'circle-clipper left', [
+						el('div', 'circle')
+					]),
+					el('div', 'gap-patch', [
+						el('div', 'circle')
+					]),
+					el('div', 'circle-clipper right', [
+						el('div', 'circle')
+					])
+				])
+			], 'spinnerContainer')
+		], 'spinner');
+
+		document.body.insertBefore(this.element, document.body.children[0]);
+	}
+
+	public show() {
+		this.element.classList.add('active');
+	}
+
+	public hide() {
+		this.element.classList.remove('active');
+	}
+}
+
+async function identifyVideos(spinner: Spinner) {
 	const vids = document.querySelectorAll('ytd-grid-video-renderer');
 	if (!window.videos) {
+		spinner.show();
 		const videoIndentifier = new VideoIdentifier();
 		window.videos = await videoIndentifier.init(vids as NodeListOf<Thumbnail>);
 	} else if (window.videos.getAmount() !== vids.length) {
+		spinner.show();
 		window.videos = await window.videos.update(vids as NodeListOf<Thumbnail>);
 	}
+	spinner.hide();
 }
 
 window.navToLink = (link, video) => {
@@ -734,8 +826,9 @@ window.navToLink = (link, video) => {
 }
 
 async function initVideoIdentification() {
+	const spinner = new Spinner();
 	while (true) {
-		await identifyVideos();
+		await identifyVideos(spinner);
 		await new Promise((resolve) => {
 			window.setTimeout(resolve, 1000);
 		});
