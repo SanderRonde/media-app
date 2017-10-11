@@ -125,5 +125,5 @@ body.showVisualizer .ytma_visualization_cont {
 }
 
 iron-overlay-backdrop, ytd-popup-container {
-	display: none;
+	display: none!important;
 }
