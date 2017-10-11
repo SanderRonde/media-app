@@ -177,7 +177,7 @@ export namespace YoutubeSubscriptions {
 		export async function setup() {
 			videoPromise = Util.createWebview({
 				id: 'youtubeSubsVideoView',
-				partition: 'youtubeSubscriptions',
+				partition: 'youtubeSubsVideoView',
 				parentId: 'youtubeSubsCont'
 			});
 			videoView = await videoPromise;
@@ -251,7 +251,7 @@ export namespace YoutubeSubscriptions {
 		export async function setup() {
 			subBoxPromise = Util.createWebview({
 				id: 'youtubeSubsSubBoxView',
-				partition: 'youtubeSubsVideoView', 
+				partition: 'youtubeSubscriptions', 
 				parentId: 'youtubeSubsCont'
 			});
 			subBoxView = await subBoxPromise;
@@ -272,7 +272,10 @@ export namespace YoutubeSubscriptions {
 					name: 'css',
 					matches: ['*://www.youtube.com/*'],
 					css: {
-						files: ['./window/views/youtubeSubs/subBox/subBox.css']
+						files: [
+							'./window/views/youtubeSubs/subBox/subBox.css',
+							'./window/resources/css/spinner.css'
+						]
 					},
 					run_at: 'document_start'
 				}, {
