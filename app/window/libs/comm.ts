@@ -47,13 +47,11 @@ export interface CommWindow extends Window {
 	}
 
 	let loaded = false;
-	console.log('Setting interval');
 	const intervalId = window.setInterval(() => {
 		if (localStorage.getItem('loaded') && localStorage.getItem('loaded') !== 'none') {
 			loaded = true;
 			window.clearInterval(intervalId);
 
-			console.log('Sending message', localStorage.getItem('loaded'));
 			sendMessage('toWindow', 'loadingCompleted', localStorage.getItem('loaded') as ViewNames);
 
 			localStorage.setItem('loaded', 'none');
