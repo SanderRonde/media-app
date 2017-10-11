@@ -465,6 +465,7 @@ interface TransformedVideo {
 	isPodcast: boolean;
 	isHidden: boolean;
 	links: string[];
+	disabled: boolean;
 
 	index: number;
 	list: TransformedVideo[];
@@ -507,11 +508,25 @@ class VideoIdentifier {
 
 	_waitForReady(video: {
 		element: Thumbnail
+		disabled: boolean;
 	}): Promise<{
+		disabled: boolean;
 		element: Thumbnail;
 		isLiveStream: boolean;
 	}> {
 		return new Promise((resolve) => {
+			//Make it non-clickable
+			const anchors = <any>video.element.querySelectorAll('a') as (HTMLAnchorElement & {
+				hasListener?: boolean;
+			})[];
+			anchors.forEach((anchor) => {
+				anchor.addEventListener('click', (e) => {
+					if (video.disabled) {
+						e.preventDefault();
+						e.stopPropagation();
+					}
+				});
+			});
 			fnInterval((done) => {
 				if (video.element.querySelector('ytd-thumbnail-overlay-time-status-renderer')) {
 					done();
@@ -662,6 +677,7 @@ class VideoIdentifier {
 				}
 				video.links.push(link);
 			});
+			video.disabled = false;
 		});
 	}
 
