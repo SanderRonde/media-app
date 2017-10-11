@@ -521,13 +521,21 @@ export namespace Util {
 		}
 		
 		export function playPauseListeners(view: ViewNames) {
-			const video = document.getElementsByTagName('video')[0];			
-			video.onplay = () => {
-				sendMessage('toWindow', 'onPlay', view);
-			}
-			video.onpause = () => {
-				sendMessage('toWindow', 'onPause', view);
-			}
+			new Promise<HTMLVideoElement>((resolve) => {
+				const interval = window.setInterval(() => {
+					if (document.getElementsByTagName('video')[0]) {
+						window.clearInterval(interval);
+						resolve(document.getElementsByTagName('video')[0]);
+					}
+				}, 100);
+			}).then((video) => {
+				video.onplay = () => {
+					sendMessage('toWindow', 'onPlay', view);
+				}
+				video.onpause = () => {
+					sendMessage('toWindow', 'onPause', view);
+				}
+			});
 		}
 
 		export function initialSizing(player: YoutubeVideoPlayer, loaded: ViewNames|null, onload?: () => void) {
