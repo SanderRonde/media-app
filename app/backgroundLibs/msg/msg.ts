@@ -176,7 +176,16 @@ export namespace MessageTypes {
 		type: T;
 		data: Tasks[T]['arg'];
 		page: string;
+		serverId: number;
 		identifier: number;
+		target: 'window'|'renderer';
+	}
+
+	export type TaskResponse<T extends keyof Tasks = keyof Tasks> = {
+		identifier: number;
+		result: Tasks[T]['res'];
+		serverId: number;
+		target: 'window'|'renderer';
 	}
 
 	export type IPCMessage<C extends MessageTypes.ChannelName = MessageTypes.ChannelName, M extends MessageTypes.ChannelMessageName<C> = MessageTypes.ChannelMessageName<C>> = {
@@ -275,6 +284,7 @@ export class AppMessageServer {
 
 	private async _proxyMessage(channel: string, message: any) {
 		//Pass it along
+
 		const win = await this.getActiveWindow();
 		win.webContents.send(channel, message);
 	}
@@ -284,8 +294,14 @@ export class AppMessageServer {
 		ipcMain.on('genId', (event: IPCEvent) => {
 			event.returnValue = this._genId();
 		});
+		ipcMain.on('test', (e: any, msg: any) => {
+			this._proxyMessage('test', msg);
+		});
 		ipcMain.on('task', async (event: IPCEvent, msg: any) => {
 			this._proxyMessage('task', msg);
+		});
+		ipcMain.on('taskResponse', async (event: IPCEvent, msg: any) => {
+			this._proxyMessage('taskResponse', msg);
 		});
 		ipcMain.on('main', async (event: IPCEvent, message: MessageTypes.IPCMessage) => {
 			if (message.target === 'window') {
@@ -299,12 +315,102 @@ export class AppMessageServer {
 	}
 }
 
+async function getIpcs(ipcSource: IPCSource): Promise<{
+	receiver: Electron.EventEmitter;
+	sender: {
+		send(channel: string, ...arg: any[]): void;
+		sendSync?(channel: string, ...arg: any[]): any;
+	}
+}> {
+	if (ipcSource.type === 'renderer') {
+		let win = ipcSource.refs.activeWindow;
+		if (!win) {
+			win = await ipcSource.refs.activeWindowPromise;
+		}
+		return {
+			receiver: electron.ipcMain,
+			sender: ipcSource.refs.activeWindow.webContents
+		}
+	} else {
+		return {
+			receiver: electron.ipcRenderer,
+			sender: electron.ipcRenderer
+		}
+	}
+}
+
 interface IPCEvent extends Event {
 	sender: typeof electron.ipcRenderer;
 	returnValue: any;
 }
 
-class Channel<C extends MessageTypes.ChannelName> {
+type IPCSource = {
+	type: 'renderer';
+	refs: {
+		activeWindow: Electron.BrowserWindow;
+		activeWindowPromise: Promise<Electron.BrowserWindow>;
+		idGenerator: AppMessageServer|number;
+	};
+}|{
+	type: 'window';
+}
+
+class IPCContainer {
+	protected _ipcSource: IPCSource;
+
+	protected get _receiver() {
+		return new Promise<Electron.EventEmitter>(async (resolve) => {
+			resolve((await getIpcs(this._ipcSource)).receiver);
+		});
+	}
+
+	protected get _sender() {
+		return new Promise<{
+			send(channel: string, ...arg: any[]): void;
+			sendSync?(channel: string, ...arg: any[]): any;
+		}>(async (resolve) => {
+			resolve((await getIpcs(this._ipcSource)).sender);
+		});
+	}
+}
+
+class ListenerHandler extends IPCContainer {
+	private _eventListeners: {
+		[key: string]: Function;
+	} = {};
+
+	constructor(receiver: () => Promise<Electron.EventEmitter>, protected _temp: boolean) {
+		super();
+		if (typeof window !== 'undefined') {
+			window.addEventListener('unload', async () => {
+				this._removeListeners(await receiver());
+			});
+		}
+	}
+	
+	protected async _listen() { }
+
+	protected async _doListen() {
+		if (!this._temp) {
+			this._listen();
+		}
+	 }
+
+	protected _setListener(receiver: Electron.EventEmitter, event: string, listener: Function) {
+		const boundListener = listener.bind(this);
+		this._eventListeners[event] = boundListener;
+		receiver.on(event, boundListener);
+	}
+
+	protected async _removeListeners(receiver: Electron.EventEmitter) {
+		for (let event in this._eventListeners) {
+			receiver.removeListener(event, this._eventListeners[event]);
+			delete this._eventListeners[event];
+		}
+	}
+}
+
+class Channel<C extends MessageTypes.ChannelName> extends ListenerHandler {
 	private _listeners: ({
 		listenerType: 'all';
 		listener: MessageTypes.AllMessageListener<C>
@@ -315,42 +421,18 @@ class Channel<C extends MessageTypes.ChannelName> {
 
 	private _channelId: string;
 
-	constructor(public channel: C, private _server: {
-		getIpcs: () => Promise<{
-			receiver: Electron.EventEmitter;
-			sender: {
-				send(channel: string, ...arg: any[]): void;
-				sendSync?(channel: string, ...arg: any[]): any;
-			};
-		}>;
+	constructor(public channel: C, {id, channelId, ipcSource, temp}: {
 		id: number;
 		channelId: number;
-		ipcSource: {
-			type: 'renderer';
-			refs: {
-				activeWindow: Electron.BrowserWindow;
-				activeWindowPromise: Promise<Electron.BrowserWindow>;
-				idGenerator: AppMessageServer|number;
-			};
-		}|{
-			type: 'window';
-		};
+		ipcSource: IPCSource;
 		temp: boolean;
 	}) {
-		const { id, channelId } = _server;
-		if (!_server.temp) {
-			this._listen();
-		}
+		super(async () => {
+			return this._receiver;
+		}, temp);
+		this._ipcSource = ipcSource;
 		this._channelId = `${id}-${channelId}`;
-		if (typeof window !== 'undefined') {
-			window.addEventListener('unload', () => {
-				this._removeListeners();
-			});
-		}
-	}
-
-	private _getIpcs() {
-		return this._server.getIpcs();
+		this._doListen();
 	}
 
 	private _onMainMessage(event: IPCEvent, msg: MessageTypes.IPCMessage) {
@@ -386,8 +468,8 @@ class Channel<C extends MessageTypes.ChannelName> {
 			}
 
 			if (returned && finalValue !== MessageServer.NO_RETURN) {
-				new MessageServer(this._server.ipcSource.type === 'renderer' ?
-					this._server.ipcSource.refs : void 0, true).channel('log').send('warn', 
+				new MessageServer(this._ipcSource.type === 'renderer' ?
+					this._ipcSource.refs : void 0, true).channel('log').send('warn', 
 						[`Message ${type} was listener for multiple times, second one being` +
 						` of type ${listenerType}`, 'Listener is', listener.toString()]);
 				return;
@@ -422,51 +504,17 @@ class Channel<C extends MessageTypes.ChannelName> {
 				return;
 			}
 		if (!ReturnValues.returnToIdentifier(identifier, finalValue)) {
-			new MessageServer(this._server.ipcSource.type === 'renderer' ?
-				this._server.ipcSource.refs : void 0, true).channel('log').send('warn', 
+			new MessageServer(this._ipcSource.type === 'renderer' ?
+				this._ipcSource.refs : void 0, true).channel('log').send('warn', 
 					[`Listener for identifier ${identifier} of msg type ${type} does not exist (non-task)`]);
 		}
 	}
 
-	private _onTaskResponse(event: IPCEvent, msg: {
-		identifier: number;
-		result: any;
-	}) {
-		const { result, identifier } = msg;
-		if (!ReturnValues.returnToIdentifier(identifier, result)) {
-			new MessageServer(this._server.ipcSource.type === 'renderer' ?
-				this._server.ipcSource.refs : void 0, true).channel('log').send('warn', 
-					[`Listener for identifier ${identifier} does not exist (non-task)`]);
-		}
-	}
-
-	private _eventListeners: {
-		[key: string]: Function;
-	} = {};
-
-	private _setListener(receiver: Electron.EventEmitter, event: string, listener: Function) {
-		const boundListener = listener.bind(this);
-		this._eventListeners[event] = boundListener;
-		receiver.on(event, boundListener);
-	}
-
-	private async _listen() {
-		const { receiver } = await this._getIpcs();
+	protected async _listen() {
+		const receiver = await this._receiver;
 
 		this._setListener(receiver, 'main', this._onMainMessage);
 		this._setListener(receiver, 'mainReply', this._onMainReply);
-		if (this._server.ipcSource.type === 'window') {
-			this._setListener(receiver, 'taskResponse', this._onTaskResponse);			
-		}
-	}
-
-	private async _removeListeners() {
-		const { receiver } = await this._getIpcs();
-
-		for (let event in this._eventListeners) {
-			receiver.removeListener(event, this._eventListeners[event]);
-			delete this._eventListeners[event];
-		}
 	}
 
 	private _genIpcMessage<M extends MessageTypes.ChannelMessageName<C>>(type: M, 
@@ -487,7 +535,7 @@ class Channel<C extends MessageTypes.ChannelName> {
 				const msg = this._genIpcMessage(type, data, ReturnValues.createIdentifier((data) => {
 					resolve(data);
 				}));
-				(await this._getIpcs()).sender.send('main', msg);
+				(await this._sender).send('main', msg);
 			});
 		}
 
@@ -507,18 +555,7 @@ class Channel<C extends MessageTypes.ChannelName> {
 	}
 }
 
-export class MessageServer {
-	private _ipcSource: {
-		type: 'renderer';
-		refs: {
-			activeWindow: Electron.BrowserWindow;
-			activeWindowPromise: Promise<Electron.BrowserWindow>;
-			idGenerator: AppMessageServer|number;
-		};
-	}|{
-		type: 'window';
-	}
-
+export class MessageServer extends ListenerHandler {
 	private _messageServerId: number;
 	private _channelIds: number[] = [];
 
@@ -526,7 +563,10 @@ export class MessageServer {
 		activeWindow: Electron.BrowserWindow;
 		activeWindowPromise: Promise<Electron.BrowserWindow>;
 		idGenerator: AppMessageServer|number;
-	}, private _temp?: boolean) {
+	}, _temp?: boolean) {
+		super(async () => {
+			return this._receiver;
+		}, _temp);
 		const isRenderer = !!electron.dialog;
 		if (isRenderer) {
 			this._ipcSource = {
@@ -545,7 +585,8 @@ export class MessageServer {
 			this._messageServerId = this._genMessageServerId();
 		}
 
-		this._getIpcs().then(({receiver}) => {
+		this._doListen();
+		this._receiver.then((receiver) => {
 			receiver.setMaxListeners(100);
 		});
 	}
@@ -560,7 +601,6 @@ export class MessageServer {
 
 	public channel<C extends MessageTypes.ChannelName>(channel: C): Channel<C> {
 		return new Channel<C>(channel, {
-			getIpcs: this._getIpcs.bind(this),
 			id: this._messageServerId,
 			channelId: this._genChannelID(),
 			ipcSource: this._ipcSource,
@@ -572,47 +612,50 @@ export class MessageServer {
 		return electron.ipcRenderer.sendSync('genId');
 	}
 
-	private async _getIpcs(): Promise<{
-		receiver: Electron.EventEmitter;
-		sender: {
-			send(channel: string, ...arg: any[]): void;
-			sendSync?(channel: string, ...arg: any[]): any;
-		}
-	}> {
-		if (this._ipcSource.type === 'renderer') {
-			let win = this._ipcSource.refs.activeWindow;
-			if (!win) {
-				win = await this._ipcSource.refs.activeWindowPromise;
-			}
-			return {
-				receiver: electron.ipcMain,
-				sender: this._ipcSource.refs.activeWindow.webContents
-			}
-		} else {
-			return {
-				receiver: electron.ipcRenderer,
-				sender: electron.ipcRenderer
-			}
-		}
-	}
-
 	public static NO_RETURN = Symbol('noReturnValue');
 
 	public sendTask<T extends keyof MessageTypes.Tasks>(task: T, 
 		data: MessageTypes.Tasks[T]['arg'], page: string): Promise<MessageTypes.Tasks[T]['res']> {
 			return new Promise(async (resolve) => {
-				const msg = {
+				const msg: MessageTypes.TaskMessage = {
 					type: task,
 					data: data,
 					page: page,
+					serverId: this._messageServerId,
 					identifier: ReturnValues.createIdentifier((data) => {
 						resolve(data);
 					}),
 					target: 'window'
 				};
-				(await this._getIpcs()).sender.send('task', msg);
+
+				//Get all webviews matching the page specifier
+				const webviews = document.querySelectorAll('webview');
+				Array.from(<NodeListOf<Electron.WebviewTag>>webviews).filter((view) => {
+					return view.getURL().indexOf(page) > -1;
+				}).forEach((view) => {
+					view.send('task', msg);
+				});
 			});
 		}
+
+	private _onTaskResponse(event: IPCEvent, msg: MessageTypes.TaskResponse) {
+		const { result, identifier, serverId, target } = msg;
+		if ((target === 'window') === (this._ipcSource.type === 'window') &&
+			serverId === this._messageServerId) {
+				if (!ReturnValues.returnToIdentifier(identifier, result)) {
+					new MessageServer(this._ipcSource.type === 'renderer' ?
+						this._ipcSource.refs : void 0, true).channel('log').send('warn', 
+							[`Listener for identifier ${identifier} for a result does not exist (task), result is`, 
+								result, 'msg is', msg]);
+				}
+			}
+	}
+
+	async _listen() {
+		if (this._ipcSource.type === 'window') {
+			this._setListener(await this._receiver, 'taskResponse', this._onTaskResponse);			
+		}
+	}
 }
 
 export function embeddableSend<C extends MessageTypes.ChannelName, 
@@ -630,33 +673,46 @@ export function embeddableSend<C extends MessageTypes.ChannelName,
 
 export function onTask() {
 	let taskListeners: ((data: any) => any)[] = [];
-	const ipcRenderer = require('electron').ipcRenderer;
-	ipcRenderer.on('task', async (taskDescription: MessageTypes.TaskMessage) => {
+	const receiver = require('electron').ipcRenderer;
+	function taskHandlerListener (event: IPCEvent, taskDescription: MessageTypes.TaskMessage) {
 		taskListeners.forEach((listener) => {
 			listener(taskDescription);
 		});
+	}
+	receiver.on('task', taskHandlerListener);
+	(typeof window !== 'undefined') && window.addEventListener('unload', () => {
+		receiver.removeListener('task', taskHandlerListener);
 	});
 
 	return <T extends keyof MessageTypes.Tasks>(task: T, 
 		listener: (data: MessageTypes.Tasks[T]['arg']) => Promise<MessageTypes.Tasks[T]['res']>|MessageTypes.Tasks[T]['res']) => {
 			const ipcRenderer = require('electron').ipcRenderer;
-			taskListeners.push(async (taskDescription: MessageTypes.TaskMessage) => {
-				const { type, data, identifier } = taskDescription;
+			taskListeners.push((taskDescription: MessageTypes.TaskMessage) => {
+				const { type, data, identifier, serverId } = taskDescription;
 				if (type === task) {
 					const result = listener(data);
-					let finalResult: MessageTypes.Tasks[T]['res'] = void 0;
+					let finalResultPromise: Promise<MessageTypes.Tasks[T]['res']> = new Promise((resolve) => {
+						resolve(void 0);
+					});
 					if (result === void 0) {
-						finalResult = void 0;
+						//Already good
 					} else if ('then' in (<Promise<MessageTypes.Tasks[T]['res']>>result)) {
-						finalResult = await result;
+						finalResultPromise = new Promise((resolve) => {
+							resolve(result);
+						});
 					} else {
-						finalResult = result as MessageTypes.Tasks[T]['res'];
+						finalResultPromise = new Promise((resolve) => {
+							resolve(result as MessageTypes.Tasks[T]['res']);
+						});
 					}
 
-					ipcRenderer.send('taskResponse', {
-						identifier: identifier,
-						result: finalResult,
-						target: 'window'
+					finalResultPromise.then((finalResult) => {
+						ipcRenderer.send('taskResponse', {
+							identifier: identifier,
+							result: finalResult,
+							serverId: serverId,
+							target: 'window'
+						} as MessageTypes.TaskResponse);
 					});
 				}
 			});
