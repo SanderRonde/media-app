@@ -131,31 +131,6 @@ interface YoutubeContentWindow extends CommWindow {
 		}
 	}) as any);
 
-	onTask('getImageOCR', (data) => {
-		return new Promise((resolve) => {
-			ctx.drawImage(document.querySelector('video'), 0, 0, canv.width, canv.height);
-			const img = new Image();
-			img.src = canv.toDataURL('image/png');
-
-			Tesseract.recognize(img, {
-				lang: 'eng'
-			}).then((result: any) => {
-				resolve(JSON.stringify({
-					lines: result.lines.map((line: any) => {
-						return {
-							bbox: line.bbox,
-							text: line.text,
-							confidence: line.confidence,
-							words: line.words.map(uncirculizeWord)
-						}
-					}),
-					text: result.text,
-					words: result.words.map(uncirculizeWord)
-				}));
-			});
-		});
-	});
-
 	onTask('getTime', () => {
 		return new Promise((resolve) => {
 			window.commToPage('getTime', null, (result) => {

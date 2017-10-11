@@ -304,11 +304,7 @@ export namespace YoutubeMusic {
 
 		export async function getCurrentSong() {
 			const timestamps = await server.sendTask('getTimestamps', void 0, 'youtube');
-			const enableOCR = false;
-			if (enableOCR && !timestamps) {
-				//Do some OCR magic
-				//getSongFromOCR(displayFoundSong);
-			} else if (timestamps.found === true) {
+			if (timestamps.found === true) {
 				const data = timestamps.data;
 				if (!Array.isArray(data)) {
 					//It's a link to the tracklist

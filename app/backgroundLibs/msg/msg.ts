@@ -165,7 +165,6 @@ export namespace MessageTypes {
 				name: string;
 			}
 		}>;
-		getImageOCR: Msg<None, string>;
 		getTime: Msg<None, number>;
 		getSongName: Msg<number, string>;
 		searchFor: Msg<string>;
