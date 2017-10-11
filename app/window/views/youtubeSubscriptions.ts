@@ -132,6 +132,10 @@ export namespace YoutubeSubscriptions {
 			}
 	
 			if (event.key === 'h') {
+				if ((await Video.getView()).getURL() === 'about:blank') {
+					//Skip it
+					return false;
+				}
 				toggleVideoVisibility();
 				return true;
 			} else if (event.key === 'd') {
