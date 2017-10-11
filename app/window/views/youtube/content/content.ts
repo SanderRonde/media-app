@@ -1,7 +1,6 @@
 import { EmbeddableSendType, OnTaskType } from '../../../../backgroundLibs/msg/msg';
 import { CommWindow } from '../../../libs/comm';
 
-declare const Tesseract: any;
 declare var sendMessage: EmbeddableSendType;
 declare var onTask: OnTaskType;
 declare const window: YoutubeContentWindow;
@@ -71,16 +70,6 @@ interface YoutubeContentWindow extends CommWindow {
 		}
 
 		document.querySelector('video').style.backgroundColor = `rgb(${mostUsedColor})`;
-	}
-
-
-	function uncirculizeWord(word: any) {
-		return {
-			bbox: word.bbox,
-			text: word.text,
-			confidence: word.confidence,
-			choices: word.choices
-		}
 	}
 
 	onTask('getTimestamps', (() => {
