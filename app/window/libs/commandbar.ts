@@ -497,5 +497,14 @@ export namespace CommandBar {
 
 	export function setup() {
 		suggestionBar.setup();
-	}	
+	}
+
+	export function escapePress() {
+		//If hidden, return false
+		if (container.classList.contains('visible')) {
+			suggestionBar.escapePress();
+			return true;
+		}
+		return false;
+	}
 }

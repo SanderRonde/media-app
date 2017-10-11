@@ -286,6 +286,9 @@ export namespace AppWindow {
 	async function handleKeyboardEvent(event: MappedKeyboardEvent) {
 		if (event.key === 'Escape') {
 			const isFullscreen = await toBgPageChannel.send('isFullscreen', null)
+			if (CommandBar.escapePress()) {
+				return;
+			}
 			if (isFullscreen) {
 				toBgPageChannel.send('exitFullscreen', null);
 			} else {

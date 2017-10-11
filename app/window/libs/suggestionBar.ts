@@ -248,14 +248,7 @@ export class SuggestionBar {
 		}
 		this._searchBar.setAttribute('registered', 'true');
 		this._searchBar.addEventListener('keydown', async (e) => {
-			if (e.key === 'Escape') {
-				if (this.hideSuggestions()) {
-					//Already was hidden, hide this bar in general
-					this.getRef().hide();
-
-					this._reset();
-				}
-			} else if (!this.config.searchButton && e.key === 'Enter') {
+			if (!this.config.searchButton && e.key === 'Enter') {
 				e.preventDefault();
 				e.stopPropagation();
 				this._submit();
@@ -285,7 +278,8 @@ export class SuggestionBar {
 				this._updateInputValue();
 				e.preventDefault();
 				e.stopPropagation();
-			} else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Enter') {
+			} else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || 
+				e.key === 'Enter' || e.key === 'Ecsape') {
 				//Don't update input
 			} else {
 				window.setTimeout(() => {
@@ -305,9 +299,18 @@ export class SuggestionBar {
 		this.hideSuggestions();
 	}
 
-	focus(key: string = '') {
+	public focus(key: string = '') {
 		this._searchBar.value = this._searchBar.value + key;
 		this._searchBar.focus();
+	}
+
+	public escapePress() {
+		if (this.hideSuggestions()) {
+			//Already was hidden, hide this bar in general
+			this.getRef().hide();
+
+			this._reset();
+		}
 	}
 
 	constructor(private config: {
