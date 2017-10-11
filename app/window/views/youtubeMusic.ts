@@ -199,8 +199,8 @@ export namespace YoutubeMusic {
 		function findOn1001Tracklists(name: string, url: string): Promise<boolean> {
 			return new Promise(async (resolve) => {
 				const websiteWebview = await Util.createWebview({
-					id: '1001TracklistsView',
-					parentId: '1001tracklistsContainer',
+					id: 'thousandAndOneTracklistsView',
+					parentId: 'thousandAndOneTracklistsContainer',
 					partition: 'tracklists'
 				});;
 				let currentPage: 'main'|'results'|'none' = 'none';
