@@ -147,7 +147,7 @@ export namespace Util {
 
 	export function downloadVideo(url: string, removeOverlay: boolean = false) {
 		if (removeOverlay) {
-			const searchPageView = $('#youtubeSearchPageView');
+			const searchPageView = $('#downloadVideoView');
 			searchPageView && searchPageView.remove();
 		}
 		shell.openExternal(`https://ytmp3.cc/#v${url.split('?v=')[1]}`);

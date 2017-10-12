@@ -133,24 +133,28 @@ export namespace YoutubeMusic {
 		let songFoundName = '';
 		const server = new MessageServer();
 
-		export function downloadSong() {
+		export async function downloadSong() {
 			//Search for it on youtube
-			const downloadSongView = $('#youtubeSearchPageView') as Electron.WebviewTag;
+			const downloadSongView = await Util.createWebview({
+				id: 'downloadVideoView',
+				parentId: 'getSongDialogHorizontalCenter',
+				partition: 'youtubeplaylist'
+			 });
 
 			downloadSongView.style.display = 'block';
 			Util.addContentScripts(downloadSongView, [{
-				name: 'youtubeSearchJs',
+				name: 'downloadVideoJs',
 				matches: ['*://www.youtube.com/*'],
 				js: {
-					files: ['./window/views/youtube/youtubeSearch/youtubeSearch.js', 
+					files: ['./window/views/youtube/downloadVideo/downloadVideo.js', 
 						'./window/libs/keypress.js']
 				},
 				run_at: 'document_end'
 			}, {
-				name: 'youtubeSearchCss',
+				name: 'downloadVideoCss',
 				matches: ['*://www.youtube.com/*'],
 				css: {
-					files: ['./window/views/youtube/youtubeSearch/youtubeSearch.css']
+					files: ['./window/views/youtube/downloadVideo/downloadVideo.css']
 				},
 				run_at: "document_start"
 			}]);
