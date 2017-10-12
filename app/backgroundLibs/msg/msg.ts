@@ -139,6 +139,7 @@ export namespace MessageTypes {
 			navToVideo: Msg<string>;
 			youtubeSearchClick: Msg;
 			onVideoEnded: Msg;
+			downloadVideo: Msg<string>;
 	
 			onPause: Msg<ViewNames>;
 			onPlay: Msg<ViewNames>;

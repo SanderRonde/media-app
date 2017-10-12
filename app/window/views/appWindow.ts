@@ -525,6 +525,9 @@ export namespace AppWindow {
 		toWindowChannel.on('onVideoEnded', () => {
 			YoutubeSearch.Queue.onVideoEnd();
 		});
+		toWindowChannel.on('downloadVideo', (url) => {
+			Util.downloadVideo(url);
+		});
 	}
 
 	function mapViewName(viewName: ViewNames): string {
