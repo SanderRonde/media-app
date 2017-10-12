@@ -1,4 +1,4 @@
-/// <reference path="../../window/views/youtube/1001tracklists/content.ts" />
+/// <reference path="../../window/views/youtube/1001tracklists/1001tracklists.ts" />
 /// <reference path="../../window/views/youtube/content/content.ts" />
 
 import { EmbeddableSendType, MessageTypes } from '../../backgroundLibs/msg/msg';
