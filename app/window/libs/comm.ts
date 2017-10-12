@@ -44,7 +44,7 @@ export interface CommWindow extends Window {
 		});
 		listenForCommPageResponse(commId, callback);
 		localStorage.setItem('tasks', JSON.stringify(tasks));
-	}
+	};
 
 	let loaded = false;
 	const intervalId = window.setInterval(() => {

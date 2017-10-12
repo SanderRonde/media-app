@@ -6,7 +6,7 @@ import url = require('url');
 import path = require('path');
 import AutoLaunch = require('auto-launch');
 import { log, error } from './backgroundLibs/log/log';
-import { Updater } from './backgroundLibs/updater/updater'
+import { Updater } from './backgroundLibs/updater/updater';
 import { Settings } from './backgroundLibs/settings/settings';
 import { RemoteServer }  from './backgroundLibs/remote/remote';
 import { Shortcuts } from './backgroundLibs/shortcuts/shortcuts';
@@ -259,7 +259,7 @@ export namespace MediaApp {
 						data: {
 							playing: data === 'play'
 						}
-					})
+					});
 				});
 
 				evalChannel.on('eval', (data) => {

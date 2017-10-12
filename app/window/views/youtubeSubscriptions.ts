@@ -1,6 +1,6 @@
-import { AppWindow, ViewNames, MappedKeyboardEvent } from './appWindow'
-import { YoutubeVideoPlayer } from './youtubeMusic'
-import { Util, $ } from '../libs/util'
+import { AppWindow, ViewNames, MappedKeyboardEvent } from './appWindow';
+import { YoutubeVideoPlayer } from './youtubeMusic';
+import { Util, $ } from '../libs/util';
 
 export namespace YoutubeSubscriptions {
 	export namespace Commands {
@@ -140,7 +140,7 @@ export namespace YoutubeSubscriptions {
 				return true;
 			} else if (event.key === 'd') {
 				if ($('#youtubeSubsCont').classList.contains('showVideo')) {
-					Util.downloadVideo((await Video.getView()).src)
+					Util.downloadVideo((await Video.getView()).src);
 					return true;
 				}
 			}
@@ -150,7 +150,7 @@ export namespace YoutubeSubscriptions {
 		export function free() {
 			Video.free();
 			SubBox.free();
-			$('#youtubeSubsCont').classList.remove('showVideo')
+			$('#youtubeSubsCont').classList.remove('showVideo');
 		}
 	}
 
@@ -309,7 +309,7 @@ export namespace YoutubeSubscriptions {
 	}
 
 	export async function changeVideo(url: string) {
-		(await Video.getView()).loadURL(url)
+		(await Video.getView()).loadURL(url);
 		showVideo();
 	}
 }

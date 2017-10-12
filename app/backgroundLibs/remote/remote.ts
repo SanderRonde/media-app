@@ -2,7 +2,7 @@ import {
 	REMOTE_PORT, INDEX_PATH, EXTERNAL_EVENTS,
 	ICONS_DIR, SW_TOOLBOX_DIR, LOG_ERROR_REQUESTS, 
 	LOG_REQUESTS, ARG_EVENTS
-} from '../constants/constants'
+} from '../constants/constants';
 
 import { MessageServer, MessageTypes, MessageServerChannel } from '../msg/msg';
 import { log, error, toast, warn } from '../log/log';
@@ -30,14 +30,14 @@ type WSMessage = {
 	data: {
 		playing: boolean;
 	}
-}
+};
 
 const STATUS_CODES = {
 	200: 'OK',
 	404: 'Not Found',
 	403: 'Unauthorized',
 	500: 'Server error'
-}
+};
 
 class WSHandler {
 	private wsServer: ws.server;
@@ -80,7 +80,7 @@ export class RemoteServer {
 		app: 'Music',
 		status: '',
 		playing: true
-	}
+	};
 	private readonly _PATH_MAPS = {
 		'/': INDEX_PATH,
 		'/sw-toolbox.js': SW_TOOLBOX_DIR + 'sw-toolbox.js',
@@ -91,7 +91,7 @@ export class RemoteServer {
 		'/images/144.png': ICONS_DIR + '144.png',
 		'/images/168.png': ICONS_DIR + '168.png',
 		'/images/192.png': ICONS_DIR + '192.png'
-	}
+	};
 
 	private readonly _OPTIONS_MAPS: {
 		[key: string]: {
@@ -128,7 +128,7 @@ export class RemoteServer {
 				offline: true
 			}
 		}
-	}
+	};
 
 	private _isPortAvailable(port: number): Promise<boolean> {
 		return new Promise<boolean>((resolve) => {
@@ -197,10 +197,10 @@ export class RemoteServer {
 		if (port !== null) {
 			this._httpServer.listen(port, async () => {
 				if (port !== REMOTE_PORT) {
-					toast(`Hosting server on ${await this._getIp()}:${port} instead`)
-					log(`Hosting server on ${await this._getIp()}:${port} instead`)
+					toast(`Hosting server on ${await this._getIp()}:${port} instead`);
+					log(`Hosting server on ${await this._getIp()}:${port} instead`);
 				} else {
-					log(`HTTP server listening on ${await this._getIp()}:${port}`)
+					log(`HTTP server listening on ${await this._getIp()}:${port}`);
 				}
 			});
 
@@ -246,7 +246,7 @@ export class RemoteServer {
 	
 	private _respondError(res: http.ServerResponse, url: string, statusCode: keyof typeof STATUS_CODES) {
 		if (LOG_ERROR_REQUESTS) {
-			console.log(`👎 - [${statusCode}] - ${url}`)
+			console.log(`👎 - [${statusCode}] - ${url}`);
 		}
 		res.writeHead(~~statusCode, STATUS_CODES[statusCode]);
 		res.end();
@@ -273,7 +273,7 @@ export class RemoteServer {
 	}
 
 	private _getRelativeFile(fileName: string): string {
-		return path.join(__dirname, 'client/', fileName)
+		return path.join(__dirname, 'client/', fileName);
 	}
 
 	private _getFileInfo(fileName: string): Promise<{

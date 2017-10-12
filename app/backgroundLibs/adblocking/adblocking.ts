@@ -7,7 +7,7 @@ import URL = require('url');
 import fs = require('fs');
 
 export type Partitions = 'netflix'|'tracklists'|'youtubeplaylist'|
-	'youtubeSearch'|'youtubeSubscriptions'|'youtubeSubsVideoView'
+	'youtubeSearch'|'youtubeSubscriptions'|'youtubeSubsVideoView';
 
 const FILTER_ALL = {
 	urls: ['*://*./*', '*://*/*']
@@ -22,7 +22,7 @@ const PARTITION_MAP: {
 	youtubeSearch: 'https://www.youtube.com',
 	netflix: 'https://www.netflix.com',
 	tracklists: 'https://www.1001tracklists.com'
-}
+};
 
 export namespace AdBlocking {
 	export let done: boolean = false;
@@ -113,7 +113,7 @@ export namespace AdBlocking {
 				fs.createReadStream(path.join(defaultListsDir, file))
 					.pipe(fs.createWriteStream(path.join(listsDir, file))).once('close', () => {
 						resolve();
-					})
+					});
 			});
 		}));
 

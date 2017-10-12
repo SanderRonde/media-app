@@ -1,10 +1,10 @@
-import { YoutubeSubscriptions } from './views/youtubeSubscriptions'
-import { AppWindow, ViewNames } from './views/appWindow'
-import { YoutubeSearch } from './views/youtubeSearch'
-import { YoutubeMusic } from './views/youtubeMusic'
-import { CommandBar } from './libs/commandbar'
-import { Util } from './libs/util'
-import { Netflix } from './views/netflix'
+import { YoutubeSubscriptions } from './views/youtubeSubscriptions';
+import { AppWindow, ViewNames } from './views/appWindow';
+import { YoutubeSearch } from './views/youtubeSearch';
+import { YoutubeMusic } from './views/youtubeMusic';
+import { CommandBar } from './libs/commandbar';
+import { Util } from './libs/util';
+import { Netflix } from './views/netflix';
 
 declare let window: CustomWindow;
 

@@ -68,7 +68,7 @@ declare var sendMessage: EmbeddableSendType;;
 			type: e.type,
 			view: null,
 			which: e.which
-		}
+		};
 	}
 
 	document.body.addEventListener('keydown', (e) => {

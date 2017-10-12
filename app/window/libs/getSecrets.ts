@@ -1,7 +1,7 @@
 const optionalRequire = (require('optional-require') as optionalRequire)(require);
 import { STORED_DATA_FILE } from '../../backgroundLibs/constants/constants';
-import { route } from '../../backgroundLibs/routing/routing'
-import { Util } from './util'
+import { route } from '../../backgroundLibs/routing/routing';
+import { Util } from './util';
 import fs = require('fs');
 
 function exists(path: string): Promise<boolean> {
@@ -114,12 +114,12 @@ export async function getSecret<T extends keyof SecretsMap>(key: T): Promise<Sec
 	return await askForSecrets(key);
 }
 
-export type getSecret = <T extends keyof SecretsMap>(key: T) => Promise<SecretsMap[T]>
+export type getSecret = <T extends keyof SecretsMap>(key: T) => Promise<SecretsMap[T]>;
 
 export type SecretsMap = {
 	firebaseConfig: FireBaseConfig;
 	googleAPIKey: GoogleAPIKey;
-}
+};
 
 export type FireBaseConfig = {
 	apiKey: string;
@@ -128,6 +128,6 @@ export type FireBaseConfig = {
 	projectId: string;
 	storageBucket: string;
 	messagingSenderId: string;	
-}
+};
 
 export type GoogleAPIKey = string;

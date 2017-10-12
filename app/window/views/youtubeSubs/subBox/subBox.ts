@@ -75,7 +75,7 @@ const PODCAST_CHANNELS: {
 	onLongerThan: ([ 
 		['Future Bass Mix', 30 * 60]
 	] as [string, number][]).map(e => [e[0].toLowerCase(), e[1]]) as [string, number][]
-}
+};
 
 const HOUR = 60 * 60;
 
@@ -296,7 +296,7 @@ class SelectedVideo {
 		this.rowWidth = {
 			width: window.innerWidth,
 			amount: rowWidth
-		}
+		};
 		return rowWidth;
 	}
 
@@ -327,7 +327,7 @@ class SelectedVideo {
 				if (toSelect.previous) {
 					toSelect = toSelect.previous;
 				}
-			} while (toSelect.isHidden)
+			} while (toSelect.isHidden);
 		}
 		this._updateSelected(toSelect);
 	}
@@ -343,7 +343,7 @@ class SelectedVideo {
 				if (toSelect.next) {
 					toSelect = toSelect.next;
 				}
-			} while (toSelect.isHidden)
+			} while (toSelect.isHidden);
 		}
 		this._updateSelected(toSelect);
 	}
@@ -357,7 +357,7 @@ class SelectedVideo {
 			if (toSelect.previous) {
 				toSelect = toSelect.previous;
 			}
-		} while (toSelect.isHidden)
+		} while (toSelect.isHidden);
 		this._updateSelected(toSelect);
 	}
 
@@ -370,7 +370,7 @@ class SelectedVideo {
 			if (toSelect.next) {
 				toSelect = toSelect.next;
 			}
-		} while (toSelect.isHidden)
+		} while (toSelect.isHidden);
 		this._updateSelected(toSelect);
 	}
 
@@ -386,7 +386,7 @@ class SelectedVideo {
 			if (this.videos[i].watched && !this.videos[i].isHidden) {
 				newSelected = this.videos[i];
 				if (foundSelected === 0) {
-					this._updateSelected(newSelected)
+					this._updateSelected(newSelected);
 					return;
 				}
 				foundSelected--;
@@ -479,7 +479,7 @@ interface Thumbnail extends HTMLElement {
 			simpleText: string;
 		}
 		videoId: string;
-	}
+	};
 }
 
 function fnInterval(fn: (done: () => void) => void, interval: number) {
@@ -823,7 +823,7 @@ window.navToLink = (link, video) => {
 	if (video) {
 		window.videos.selected.setCurrent(video);
 	}
-}
+};
 
 async function initVideoIdentification() {
 	const spinner = new Spinner();

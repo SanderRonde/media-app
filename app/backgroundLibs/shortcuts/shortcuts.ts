@@ -1,8 +1,8 @@
 import { MessageTypes, MessageServer, MessageServerChannel } from '../msg/msg';
 import { SettingsType } from '../settings/settings';
-import { globalShortcut, app } from 'electron'
+import { globalShortcut, app } from 'electron';
 import { MediaApp } from '../../app';
-import { log } from '../log/log'
+import { log } from '../log/log';
 
 export type keys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
 	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
@@ -27,7 +27,7 @@ export namespace Shortcuts {
 		launch: null,
 		Settings: null,
 		activeWindow: null
-	}
+	};
 	let messageServer: MessageServerChannel<'events'>;
 
 	function handleEvent(event: keyof MessageTypes.ExternalEventsMap) {
@@ -83,7 +83,7 @@ export namespace Shortcuts {
 	export async function init(refs: typeof MediaApp.Refs, launch: () => void, remoteSettings: SettingsType) {
 		const {activeWindow, DEBUG, tray } = refs;
 		remote.activeWindow = activeWindow;
-		remote.Settings = remoteSettings
+		remote.Settings = remoteSettings;
 		remote.launch = launch;
 		remote.DEBUG = DEBUG;
 		remote.tray = tray;

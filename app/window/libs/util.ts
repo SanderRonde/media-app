@@ -1,11 +1,11 @@
-import { YoutubeVideoPlayer, YoutubeMusicWindow } from '../../window/views/youtubeMusic'
+import { YoutubeVideoPlayer, YoutubeMusicWindow } from '../../window/views/youtubeMusic';
 import { Partitions } from '../../backgroundLibs/adblocking/adblocking';
 import { embeddableSend, onTask } from '../../backgroundLibs/msg/msg';
-import { ViewNames } from '../../window/views/appWindow'
-import { route } from '../../backgroundLibs/routing/routing'
-import { shell } from 'electron'
-import * as md5 from 'md5'
-import * as fs from 'fs'
+import { route } from '../../backgroundLibs/routing/routing';
+import { ViewNames } from '../../window/views/appWindow';
+import { shell } from 'electron';
+import * as md5 from 'md5';
+import * as fs from 'fs';
 
 export const EXAMPLE_STYLES = `html, body, a {
 	background-color: white!important;
@@ -19,12 +19,12 @@ interface ElementTagNameMap {
 export const $ = <K extends keyof ElementTagNameMap>(selector: K|string,
 	base: HTMLElement|Element|Document = document): HTMLElement => {
 		return base.querySelector(selector) as HTMLElement;
-	}
+	};
 
 export const $$ = <K extends keyof ElementTagNameMap>(selector: K|string,
 	base: HTMLElement|Element|Document = document): NodeListOf<HTMLElement> => {
 		return base.querySelectorAll(selector) as NodeListOf<HTMLElement>;
-	}
+	};
 
 interface MatchPattern {
 	scheme: string;
@@ -235,7 +235,7 @@ export namespace Util {
 			}
 			return true;
 		}
-	}
+	};
 
 	function ensureNoPrevExec(code: string): string {
 		return `(() => {
@@ -299,7 +299,7 @@ export namespace Util {
 			//Make background white
 			runCodeType(view, {
 				code: EXAMPLE_STYLES
-			}, false)
+			}, false);
 			return;
 		}
 
@@ -341,9 +341,9 @@ export namespace Util {
 
 	function genOnceListener(fn: Function, onTriggered: () => void): Function {
 		return () => {
-			onTriggered()
+			onTriggered();
 			fn();
-		}
+		};
 	}
 
 	export function once<Y extends string>(target: Electron.WebviewTag, event: Y, fn: Function) {
@@ -358,7 +358,7 @@ export namespace Util {
 			window.setTimeout(() => {
 				resolve();
 			}, duration);
-		})
+		});
 	}
 
 	export function delay(fn: () => Promise<any>|void, duration: number): Promise<void> {
@@ -531,10 +531,10 @@ export namespace Util {
 			}).then((video) => {
 				video.onplay = () => {
 					sendMessage('toWindow', 'onPlay', view);
-				}
+				};
 				video.onpause = () => {
 					sendMessage('toWindow', 'onPause', view);
-				}
+				};
 			});
 		}
 

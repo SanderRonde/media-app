@@ -36,7 +36,7 @@ export class SuggestionBar {
 			this._searchPromise = {
 				resolve: resolve,
 				promise: promise
-			}
+			};
 		});
 		const result = await promise;
 		this._mode = 'search';
@@ -54,7 +54,7 @@ export class SuggestionBar {
 		const args: string[] = [];
 		for (let argDescriptor of argDescriptors) {
 			if (typeof argDescriptor === 'function') {
-				argDescriptor()
+				argDescriptor();
 			}
 			let { enums, name } = argDescriptor;
 			if (typeof name === 'function') {
@@ -130,7 +130,7 @@ export class SuggestionBar {
 		let strIndex = 0;
 		const textElements = suggestion.map((suggestionPart) => {
 			const { isSuggestion, value } = suggestionPart;
-			const highlight = isSuggestion !== this.highlightCurrent
+			const highlight = isSuggestion !== this.highlightCurrent;
 			const element = Util.el('span', highlight ? 
 				'highlightedSuggestionPart' : '', original.slice(strIndex, value.length));
 			strIndex += value.length;
@@ -154,7 +154,7 @@ export class SuggestionBar {
 					}
 				}
 			}
-		})
+		});
 
 		return container;
 	}
@@ -175,7 +175,7 @@ export class SuggestionBar {
 					}, {
 						isSuggestion: true,
 						value: option.slice(option.indexOf(value) + value.length)
-					}]
+					}];
 				} else {
 					return null;
 				}
@@ -201,7 +201,7 @@ export class SuggestionBar {
 	}
 
 	public hideSuggestions(): boolean {
-		const wasHidden = $(`#${this.config.container}`).classList.contains('suggestionsHidden')
+		const wasHidden = $(`#${this.config.container}`).classList.contains('suggestionsHidden');
 		$(`#${this.config.container}`).classList.add('suggestionsHidden');
 		return wasHidden;
 	}

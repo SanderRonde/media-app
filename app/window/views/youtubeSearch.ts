@@ -1,8 +1,8 @@
-import { AppWindow, MappedKeyboardEvent } from './appWindow'
+import { AppWindow, MappedKeyboardEvent } from './appWindow';
 import { SuggestionBar } from '../libs/suggestionBar';
-import { YoutubeVideoPlayer } from './youtubeMusic'
-import { getSecret } from '../libs/getSecrets'
-import { Util, $ } from '../libs/util'
+import { YoutubeVideoPlayer } from './youtubeMusic';
+import { getSecret } from '../libs/getSecrets';
+import { Util, $ } from '../libs/util';
 
 function arr(first: number, last: number): number[] {
 	return Array.from(new Array(1 + last - first)).map((_, index) => {
@@ -134,7 +134,7 @@ export namespace YoutubeSearch {
 				(await SearchResultsPage.getView()).focus();
 				SearchBar.show();
 				if (SearchBar.getLastSearch()) {
-					AppWindow.updateStatus(`Browsing search results for ${SearchBar.getLastSearch()}`)
+					AppWindow.updateStatus(`Browsing search results for ${SearchBar.getLastSearch()}`);
 				} else {
 					AppWindow.updateStatus('Looking at search page');
 				}
@@ -158,7 +158,7 @@ export namespace YoutubeSearch {
 				return true;
 			}
 			if (event.key === 'ArrowLeft' && event.altKey && activePage === 'results') {
-				const searchView = (await SearchResultsPage.getView())
+				const searchView = (await SearchResultsPage.getView());
 				searchView.canGoBack() && searchView.goBack();
 				return true;
 			}
@@ -172,7 +172,7 @@ export namespace YoutubeSearch {
 			}
 			if (event.key === 'd' && activePage === 'video') {
 				//Get current video URL and download it
-				Util.downloadVideo((await Video.getView()).src)
+				Util.downloadVideo((await Video.getView()).src);
 				return true;
 			}
 			if (VALID_INPUT.indexOf(event.key) > -1 && 
@@ -227,7 +227,7 @@ export namespace YoutubeSearch {
 
 		export async function setup(): Promise<Electron.WebviewTag> {
 			if (videoPromise || videoView) {
-				return await getView()
+				return await getView();
 			}
 
 			videoPromise = Util.createWebview({
@@ -460,7 +460,7 @@ export namespace YoutubeSearch {
 		}
 
 		export function getLastSearch() {
-			return suggestionBar.lastSearch
+			return suggestionBar.lastSearch;
 		}
 	}
 
@@ -482,7 +482,7 @@ export namespace YoutubeSearch {
 			pageInfo: {
 				totalResults: number;
 				resultsPerPage: number;
-			}
+			};
 			items: {
 				id: string;
 				kind: string;
@@ -548,7 +548,7 @@ export namespace YoutubeSearch {
 					uploadStatus: string;
 					privacyStatus: string;
 				}
-			}[]
+			}[];
 		}
 
 

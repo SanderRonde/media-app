@@ -20,7 +20,7 @@ export namespace Updater {
 			provider: 'github',
 			repo: 'media-app',
 			owner: 'SanderRonde'
-		} as GithubOptions)
+		} as GithubOptions);
 	}
 
 	function showNotification(title: string, body: string = title, listener?: () => void) {

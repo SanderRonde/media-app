@@ -1,7 +1,7 @@
-import { FireBaseConfig, getSecret } from '../libs/getSecrets'
+import { FireBaseConfig, getSecret } from '../libs/getSecrets';
 import { MessageServer } from '../../backgroundLibs/msg/msg';
-import { AppWindow, MappedKeyboardEvent } from './appWindow'
-import { Util, $ } from '../libs/util'
+import { AppWindow, MappedKeyboardEvent } from './appWindow';
+import { Util, $ } from '../libs/util';
 import firebase = require('firebase');
 import { shell } from 'electron';
 
@@ -88,7 +88,7 @@ export namespace YoutubeMusic {
 					return;
 				}
 
-				const db = firebase.database()
+				const db = firebase.database();
 				const ref = db.ref(key);
 				ref.update({
 					[key]: val

@@ -1,4 +1,4 @@
-import { keys } from '../shortcuts/shortcuts'
+import { keys } from '../shortcuts/shortcuts';
 import { MessageTypes } from '../msg/msg';
 import { app } from 'electron';
 import path = require('path');
@@ -19,7 +19,7 @@ export namespace Settings {
 		launchOnBoot: 'boolean',
 		keys: 'object',
 		autoUpdate: 'boolean'
-	}
+	};
 
 	export interface Settings {
 		launchOnBoot: boolean;
@@ -33,7 +33,7 @@ export namespace Settings {
 		type ListenerObj<T extends keyof Settings.Settings = keyof Settings.Settings> = {
 			key: T;
 			listener(val: Settings.Settings[T], oldValue: Settings.Settings[T]): void
-		 }
+		 };
 		const listeners: ListenerObj[] = [];
 
 		export async function addListener<K extends keyof Settings.Settings>(key: K, 
@@ -68,7 +68,7 @@ export namespace Settings {
 			pause: ['MediaStop']
 		},
 		autoUpdate: true
-	}
+	};
 
 	async function assertLoaded(): Promise<void> {
 		if (settings === null) {

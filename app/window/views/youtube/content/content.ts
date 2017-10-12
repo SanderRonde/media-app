@@ -27,7 +27,7 @@ interface YoutubeContentWindow extends CommWindow {
 		}`;
 		
 		saveNewUrl(url);
-	}
+	};
 
 	const canv = document.createElement('canvas');
 	canv.width = 1280;

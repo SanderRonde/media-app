@@ -37,13 +37,13 @@ export namespace Commands {
 	function runRenderer(func: ImportNullifyingFn): () => void {
 		return () => {
 			evalServer.send('eval', Util.stringifyFunction(func));
-		}
+		};
 	}
 
 	function sendAppWindowEvent(event: keyof MessageTypes.ExternalEventsMap) {
 		return fn(() => {
 			AppWindow.onShortcut(event);
-		})
+		});
 	}
 
 	function sendBgPageEvent(event: MessageTypes.ToBgPageCommands) {
@@ -59,7 +59,7 @@ export namespace Commands {
 		return {
 			fn: func,
 			args: enums
-		}
+		};
 	}
 
 	const KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
@@ -196,7 +196,7 @@ export namespace Commands {
 		'Reload YoutubeMusic video': fn(() => {
 			YoutubeMusic.reload();
 		})
-	}
+	};
 }
 
 
@@ -247,7 +247,7 @@ export namespace CommandBar {
 			full: command,
 			original: split,
 			lowercase: split.map(e => e.toLowerCase())
-		}
+		};
 	});
 	let lastAcronymSuggestions: SuggestionGenerationAcronymObj[] = [];	
 
@@ -284,7 +284,7 @@ export namespace CommandBar {
 					resolve(Suggestions.getSuggestions(query));
 				});
 			}
-		}
+		};
 	});
 	const container = document.getElementById('commandBarCentererContainer');
 
@@ -442,7 +442,7 @@ export namespace CommandBar {
 						type: 'contains',
 						full: commandKey,
 						priority: index
-					})
+					});
 				}
 			});
 

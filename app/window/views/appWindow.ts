@@ -1,12 +1,12 @@
 import { MessageTypes, MessageServer, MessageServerChannel } from '../../backgroundLibs/msg/msg';
-import { YoutubeSubscriptions } from './youtubeSubscriptions'
+import { YoutubeSubscriptions } from './youtubeSubscriptions';
 import { SubBoxWindow } from './youtubeSubs/subBox/subBox';
-import { YoutubeSearch } from './youtubeSearch'
-import { CommandBar } from '../libs/commandbar'
-import { YoutubeMusic } from './youtubeMusic'
-import { Util, $ } from '../libs/util'
-import { clipboard } from 'electron'
-import { Netflix } from './netflix'
+import { YoutubeSearch } from './youtubeSearch';
+import { CommandBar } from '../libs/commandbar';
+import { YoutubeMusic } from './youtubeMusic';
+import { Util, $ } from '../libs/util';
+import { clipboard } from 'electron';
+import { Netflix } from './netflix';
 
 export type ViewNames = 'ytmusic'|'netflix'|'youtubeSubscriptions'|'youtubesearch';
 
@@ -285,7 +285,7 @@ export namespace AppWindow {
 
 	async function handleKeyboardEvent(event: MappedKeyboardEvent) {
 		if (event.key === 'Escape') {
-			const isFullscreen = await toBgPageChannel.send('isFullscreen', null)
+			const isFullscreen = await toBgPageChannel.send('isFullscreen', null);
 			if (CommandBar.escapePress()) {
 				return;
 			}
@@ -348,7 +348,7 @@ export namespace AppWindow {
 		}
 
 		activeView = view;
-		const isLoaded = loadedViews.indexOf(activeView) > -1
+		const isLoaded = loadedViews.indexOf(activeView) > -1;
 		if (isLoaded) {
 			hideSpinner();
 			getActiveViewClass().Commands.play();
@@ -415,7 +415,7 @@ export namespace AppWindow {
 		} = {
 			time: new Date(),
 			key: null
-		}
+		};
 
 		function isSameEvent(): boolean {
 			const time = new Date();

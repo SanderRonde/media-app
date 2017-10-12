@@ -1,5 +1,5 @@
-import { AppWindow, MappedKeyboardEvent } from './appWindow'
-import { Util } from '../libs/util'
+import { AppWindow, MappedKeyboardEvent } from './appWindow';
+import { Util } from '../libs/util';
 
 export namespace Netflix {
 	namespace Video {
@@ -167,7 +167,7 @@ export namespace Netflix {
 	const state = {
 		playing: false,
 		title: 'nothing'
-	}
+	};
 
 	let interval: number = null;
 	function initStateListener() {

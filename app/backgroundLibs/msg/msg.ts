@@ -21,7 +21,7 @@ export namespace MessageTypes {
 	type SettingsKeyVal<K extends keyof Settings.Settings = keyof Settings.Settings> = {
 		key: K;
 		val: Settings.Settings[K];
-	}
+	};
 
 	type ChangeSettingsMessage<K extends keyof Settings.Settings = keyof Settings.Settings> = 
 		Msg<K, Settings.Settings[K]>;
@@ -29,7 +29,7 @@ export namespace MessageTypes {
 	type Msg<ARG = None, RES = void> = {
 		arg: ARG;
 		res: RES;
-	}
+	};
 
 	export interface ExternalEventsNoArg {
 		focus: Msg;
@@ -98,7 +98,7 @@ export namespace MessageTypes {
 			}
 		}>
 		updatePlayStatus: Msg<'play'|'pause'>;
-	}
+	};
 
 	export type ToBgPageCommands = keyof ToBgPageCommandsMap;
 
@@ -119,7 +119,7 @@ export namespace MessageTypes {
 			warn: Msg<any[]>;
 			error: Msg<any[]>;
 			toast: Msg<string>
-		}
+		};
 
 		toBgPage: ToBgPageCommandsMap;
 
@@ -143,16 +143,16 @@ export namespace MessageTypes {
 	
 			onPause: Msg<ViewNames>;
 			onPlay: Msg<ViewNames>;
-		}
+		};
 
 		eval: {
 			eval: Msg<string, any>;
-		}
+		};
 
 		settings: {
 			getSetting: ChangeSettingsMessage;
 			setSetting: Msg<SettingsKeyVal>;
-		}
+		};
 	}
 
 	export interface Tasks {
@@ -179,14 +179,14 @@ export namespace MessageTypes {
 		serverId: number;
 		identifier: number;
 		target: 'window'|'renderer';
-	}
+	};
 
 	export type TaskResponse<T extends keyof Tasks = keyof Tasks> = {
 		identifier: number;
 		result: Tasks[T]['res'];
 		serverId: number;
 		target: 'window'|'renderer';
-	}
+	};
 
 	export type IPCMessage<C extends MessageTypes.ChannelName = MessageTypes.ChannelName, M extends MessageTypes.ChannelMessageName<C> = MessageTypes.ChannelMessageName<C>> = {
 		channel: C;
@@ -195,7 +195,7 @@ export namespace MessageTypes {
 		identifier: number;
 		target: 'window'|'renderer';
 		messageServerId: string
-	}
+	};
 
 	export type ChannelName = keyof MessagesMap;
 	type Channel<C extends ChannelName> = MessagesMap[C];
@@ -205,14 +205,14 @@ export namespace MessageTypes {
 	export type MessageData = ChannelMessage<ChannelName, ChannelMessageName<ChannelName>>['arg'];
 
 	export type AllMessageListener<C extends ChannelName = ChannelName, M extends MessageTypes.ChannelMessageName<C> = MessageTypes.ChannelMessageName<C>> = 
-		(type: M, data: MessageTypes.ChannelMessage<C, M>['arg']) => Promise<MessageTypes.ChannelMessage<C, M>['res']>|MessageTypes.ChannelMessage<C, M>['res']|symbol
+		(type: M, data: MessageTypes.ChannelMessage<C, M>['arg']) => Promise<MessageTypes.ChannelMessage<C, M>['res']>|MessageTypes.ChannelMessage<C, M>['res']|symbol;
 	export type MessageListener<C extends ChannelName = ChannelName, M extends MessageTypes.ChannelMessageName<C> = MessageTypes.ChannelMessageName<C>> = 
-		(data: MessageTypes.ChannelMessage<C, M>['arg']) => Promise<MessageTypes.ChannelMessage<C, M>['res']>|MessageTypes.ChannelMessage<C, M>['res']|symbol
+		(data: MessageTypes.ChannelMessage<C, M>['arg']) => Promise<MessageTypes.ChannelMessage<C, M>['res']>|MessageTypes.ChannelMessage<C, M>['res']|symbol;
 
 	export type HandlerData<C extends ChannelName, M extends MessageTypes.ChannelMessageName<C> = MessageTypes.ChannelMessageName<C>> = {
 		type: M;
 		data: MessageTypes.ChannelMessage<C, M>['arg'];
-	}
+	};
 }
 
 namespace ReturnValues {
@@ -330,12 +330,12 @@ async function getIpcs(ipcSource: IPCSource): Promise<{
 		return {
 			receiver: electron.ipcMain,
 			sender: ipcSource.refs.activeWindow.webContents
-		}
+		};
 	} else {
 		return {
 			receiver: electron.ipcRenderer,
 			sender: electron.ipcRenderer
-		}
+		};
 	}
 }
 
@@ -353,7 +353,7 @@ type IPCSource = {
 	};
 }|{
 	type: 'window';
-}
+};
 
 class IPCContainer {
 	protected _ipcSource: IPCSource;
@@ -526,7 +526,7 @@ class Channel<C extends MessageTypes.ChannelName> extends ListenerHandler {
 				identifier: identifier,
 				target: mapTarget(this.channel),
 				messageServerId: this._channelId
-			}
+			};
 		}
 
 	public send<M extends MessageTypes.ChannelMessageName<C>>(type: M, 
@@ -572,7 +572,7 @@ export class MessageServer extends ListenerHandler {
 			this._ipcSource = {
 				type: 'renderer',
 				refs: refs
-			}
+			};
 			if (typeof refs.idGenerator === 'number') {
 				this._messageServerId = refs.idGenerator;
 			} else {
@@ -581,7 +581,7 @@ export class MessageServer extends ListenerHandler {
 		} else {
 			this._ipcSource = {
 				type: 'window'
-			}
+			};
 			this._messageServerId = this._genMessageServerId();
 		}
 
@@ -716,7 +716,7 @@ export function onTask() {
 					});
 				}
 			});
-		}
+		};
 	}
 
 export type EmbeddableSendType = typeof embeddableSend;
