@@ -215,7 +215,7 @@ export namespace YoutubeMusic {
 						files: [
 							'./window/libs/comm.js',
 							'./window/libs/keypress.js',
-							'./window/views/youtube/1001tracklists/content.js'
+							'./window/views/youtube/1001tracklists/1001tracklists.js'
 						]
 					}
 				}]);
