@@ -329,7 +329,7 @@ export namespace MediaApp {
 
 	export async function init() {
 		log('Waiting for app to be ready');
-		app.on('ready', async () => {
+		app.once('ready', async () => {
 			log('App is ready, waiting for settings to initialize');
 			await Settings.init();
 			log('Settings initialized');
