@@ -186,7 +186,10 @@ export namespace MediaApp {
 					} else {
 						try {
 							await widevine.downloadAsync(app, widevinePath);
-							app.relaunch();
+							log('Relaunching app');
+							app.relaunch({
+								args: process.argv.slice(1).concat('--widevine-installed')
+							});
 
 							if (!Refs.activeWindow) {
 								//No open window, the user probably won't notice a reload
@@ -301,6 +304,7 @@ export namespace MediaApp {
 			Shortcuts.init(Refs, launch, Settings);
 			log('Waiting for widevine to load');
 			await WideVine.load();
+			log('Done loading widevine')
 		}
 	}
 
@@ -360,6 +364,10 @@ export namespace MediaApp {
 				}
 			});
 		});
+		if (process.argv.indexOf('--widevine-installed') > -1) {
+			log('Relaunched due to widevine');
+			toast('Installed widevine');
+		}
 	}
 }
 export type MediaAppType = typeof MediaApp;
