@@ -356,7 +356,7 @@ body {
 }
 
 .toast {
-position: absolute;
+	position: absolute;
 	bottom: -100px;
 	left: 0;
 	z-index: 10000000;
