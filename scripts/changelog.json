@@ -88,5 +88,10 @@
 		"Subbox now has loading spinner while loading",
 		"You can now copy links to videos in the subbox view by right-clicking",
 		"Fixed get playing song functionality"
+	],
+	"3.0.20": [
+		"Fixed downloading song",
+		"Fixed getting current song name functionality",
+		"Works better offline or when widevine/easylist.to is offline"
 	]
 }
