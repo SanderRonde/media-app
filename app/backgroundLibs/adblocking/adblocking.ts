@@ -1,6 +1,7 @@
 import { session, Notification, app } from 'electron';
 import filterParser = require('abp-filter-parser');
 import { route } from '../routing/routing';
+import { toast, warn } from '../log/log';
 import https = require('https');
 import path = require('path');
 import URL = require('url');
@@ -179,7 +180,7 @@ export namespace AdBlocking {
 	function downloadFile(filePath: string) {
 		return new Promise((resolve) => {
 			let str = '';
-			https.get(`https://easylist.to/easylist/${filePath}`, (res) => {
+			const req = https.get(`https://easylist.to/easylist/${filePath}`, (res) => {
 				res.on('data', (chunk) => {
 					str += chunk;
 				});
@@ -187,16 +188,27 @@ export namespace AdBlocking {
 					resolve(str);
 				});
 			});
+			req.once('error', (e) => {
+				warn('Could not update adblocking list', e);
+				resolve(null);
+			});
 		});
 	}
 
 	function updateFile(filePath: string) {
-		return new Promise(async (resolve) => {
+		return new Promise<boolean>(async (resolve) => {
 			const content = await downloadFile(filePath);
+			if (content === null) {
+				resolve(false);
+			}
 			fs.writeFile(path.join(
 				path.join(app.getPath('appData'), 'media-app', 'adLists/'), filePath),
 				content, 'utf8', (err) => {
-					resolve();
+					if (err) {
+						resolve(false);
+					} else {
+						resolve(true);
+					}
 				});
 		});
 	}
@@ -242,13 +254,22 @@ export namespace AdBlocking {
 	async function updateFiles() {
 		const listsDir = path.join(app.getPath('appData'), 'media-app', 'adLists/');
 		const files = await getFiles();
+		let updatedAll: boolean = true;
 		await Promise.all(files.map((file) => {
 			return new Promise(async (resolve) => {
-				await shouldFileUpdate(path.join(listsDir, file)) &&
-					await updateFile(path.join(listsDir, file));
+				const shouldUpdate = await shouldFileUpdate(path.join(listsDir, file));
+				if (shouldUpdate) {
+					const didUpdate = await updateFile(path.join(listsDir, file));
+					if (!didUpdate) {
+						updatedAll = false;
+					}
+				}
 				resolve();
 			});
 		}));
+		if (!updatedAll) {
+			toast('Some adblocking lists may not have been updated');
+		}
 	}
 
 	async function readFiles(): Promise<string[]> {
