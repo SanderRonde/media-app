@@ -4,8 +4,7 @@
   "description": "Media App",
   "main": "./out/app.js",
   "scripts": {
-    "release": "tsc && grunt move && electron-builder -p \"onTagOrRelease\"",
-    "postinstall": "electron-builder install-app-deps"
+    "release": "tsc && grunt move && electron-builder -p \"onTagOrRelease\""
   },
   "build": {
     "appId": "com.sanderronde.mediaapp",
