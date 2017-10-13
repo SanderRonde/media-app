@@ -5,8 +5,8 @@ import { app, BrowserWindow, dialog, Tray, Menu } from 'electron';
 import { Shortcuts } from './backgroundLibs/shortcuts/shortcuts';
 import { RemoteServer }  from './backgroundLibs/remote/remote';
 import { Settings } from './backgroundLibs/settings/settings';
+import { log, error, toast } from './backgroundLibs/log/log';
 import { Updater } from './backgroundLibs/updater/updater';
-import { log, error } from './backgroundLibs/log/log';
 import AutoLaunch = require('auto-launch');
 import path = require('path');
 import url = require('url');
@@ -184,26 +184,32 @@ export namespace MediaApp {
 					if (widevineExists) {
 						resolve();
 					} else {
-						await widevine.downloadAsync(app, widevinePath);
-						app.relaunch();
+						try {
+							await widevine.downloadAsync(app, widevinePath);
+							app.relaunch();
 
-						if (!Refs.activeWindow) {
-							//No open window, the user probably won't notice a reload
-							app.quit();
-						} else {
-							dialog.showMessageBox({
-								message: 'You need to relaunch the app to use widevineCDM',
-								buttons: [
-									'Close now',
-									'Cancel',
-								],
-								defaultId: 0,
-								cancelId: 1,
-							}, (response) => {
-								if (response === 0) {
-									app.quit();
-								}
-							});
+							if (!Refs.activeWindow) {
+								//No open window, the user probably won't notice a reload
+								app.quit();
+							} else {
+								dialog.showMessageBox({
+									message: 'You need to relaunch the app to use widevineCDM',
+									buttons: [
+										'Close now',
+										'Cancel',
+									],
+									defaultId: 0,
+									cancelId: 1,
+								}, (response) => {
+									if (response === 0) {
+										app.quit();
+									}
+								});
+							}
+						} catch(e) {
+							toast('Widevine was not loaded');
+							error('Widevine was not loaded');
+							resolve();
 						}
 					}
 				});
