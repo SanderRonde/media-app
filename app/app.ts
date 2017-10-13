@@ -1,17 +1,16 @@
 ///<reference path="window/main.ts"/>
-import {
-	app, BrowserWindow, dialog, Tray, Menu
-} from 'electron';
-import url = require('url');
-import path = require('path');
-import AutoLaunch = require('auto-launch');
-import { log, error } from './backgroundLibs/log/log';
-import { Updater } from './backgroundLibs/updater/updater';
-import { Settings } from './backgroundLibs/settings/settings';
-import { RemoteServer }  from './backgroundLibs/remote/remote';
-import { Shortcuts } from './backgroundLibs/shortcuts/shortcuts';
-import { AdBlocking } from './backgroundLibs/adblocking/adblocking';
 import { MessageServer, AppMessageServer } from './backgroundLibs/msg/msg';
+import { AdBlocking } from './backgroundLibs/adblocking/adblocking';
+import { app, BrowserWindow, dialog, Tray, Menu } from 'electron';
+import { Shortcuts } from './backgroundLibs/shortcuts/shortcuts';
+import { RemoteServer }  from './backgroundLibs/remote/remote';
+import { Settings } from './backgroundLibs/settings/settings';
+import { Updater } from './backgroundLibs/updater/updater';
+import { log, error } from './backgroundLibs/log/log';
+import AutoLaunch = require('auto-launch');
+import path = require('path');
+import url = require('url');
+
 const logger = require('logger').createLogger(path.join(app.getPath('appData'), 'media-app', 'log.log'));
 
 export namespace MediaApp {
