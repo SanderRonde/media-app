@@ -1,6 +1,5 @@
-import { EmbeddableSendType } from '../../../../backgroundLibs/msg/msg';
-declare var sendMessage: EmbeddableSendType;
-declare var window: ResultsWindow;
+import { MessageableWindow } from '../../../libs/embedmsg';
+declare var window: MessageableWindow<ResultsWindow>;
 
 interface ResultsWindow extends Window {
 	signalledCompletion: boolean;
@@ -99,7 +98,7 @@ namespace YoutubeSearchResultsMain {
 					e.preventDefault();
 					e.stopPropagation();
 
-					sendMessage('toWindow', 'navToVideo', originalLink);
+					window.sendMessage('toWindow', 'navToVideo', originalLink);
 				});
 				thumbnail.href = '#';
 
@@ -108,7 +107,7 @@ namespace YoutubeSearchResultsMain {
 					e.preventDefault();
 					e.stopPropagation();
 
-					sendMessage('toWindow', 'navToVideo', originalLink);
+					window.sendMessage('toWindow', 'navToVideo', originalLink);
 				});
 				title.href = '#';
 			});
@@ -128,7 +127,7 @@ namespace YoutubeSearchResultsMain {
 		}
 
 		document.body.addEventListener('click', () => {
-			sendMessage('toWindow', 'youtubeSearchClick', null);
+			window.sendMessage('toWindow', 'youtubeSearchClick', null);
 		});
 	}
 }

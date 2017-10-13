@@ -1,9 +1,7 @@
-import { EmbeddableSendType, OnTaskType } from '../../../../backgroundLibs/msg/msg';
+import { MessageableWindow } from '../../../libs/embedmsg';
 import { CommWindow } from '../../../libs/comm';
 
-declare var sendMessage: EmbeddableSendType;
-declare var onTask: OnTaskType;
-declare const window: YoutubeContentWindow;
+declare const window: MessageableWindow<YoutubeContentWindow>;
 
 interface YoutubeContentWindow extends CommWindow {
 	saveProgress(): void;
@@ -11,7 +9,7 @@ interface YoutubeContentWindow extends CommWindow {
 
 (() => {
 	function saveNewUrl(url: string) {
-		sendMessage('toWindow', 'saveUrl', url);
+		window.sendMessage('toWindow', 'saveUrl', url);
 	}
 
 	window.saveProgress = () => {
@@ -72,7 +70,7 @@ interface YoutubeContentWindow extends CommWindow {
 		document.querySelector('video').style.backgroundColor = `rgb(${mostUsedColor})`;
 	}
 
-	onTask('getTimestamps', (() => {
+	window.onTask('getTimestamps', (() => {
 		const descr = document.querySelector('#description');
 		const timestampContainers = Array.from(descr.querySelectorAll('a[href="#"]')).filter((timestamp) => {
 			return /(\d)\:(\d)(:(\d))*/.test(timestamp.innerHTML);
@@ -120,7 +118,7 @@ interface YoutubeContentWindow extends CommWindow {
 		}
 	}) as any);
 
-	onTask('getTime', () => {
+	window.onTask('getTime', () => {
 		return new Promise((resolve) => {
 			window.commToPage('getTime', null, (result) => {
 				resolve(result);
@@ -128,7 +126,7 @@ interface YoutubeContentWindow extends CommWindow {
 		});
 	});
 
-	onTask('getSongName', (data) => {
+	window.onTask('getSongName', (data) => {
 		return new Promise((resolve) => {
 			window.commToPage('getSongName', null, (result) => {
 				resolve(result);

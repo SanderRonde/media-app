@@ -1,5 +1,7 @@
-import { EmbeddableSendType } from '../../../../backgroundLibs/msg/msg';
-declare var sendMessage: EmbeddableSendType;
+import { MessageableWindow } from '../../../libs/embedmsg';
+
+declare var window: MessageableWindow;
+
 
 Array.from(document.querySelectorAll('.item-section')).forEach((item) => {
 	item.addEventListener('click', (e: MouseEvent & {
@@ -16,6 +18,6 @@ Array.from(document.querySelectorAll('.item-section')).forEach((item) => {
 		}
 
 		const url = el.querySelector('.yt-uix-sessionlink').getAttribute('href');
-		sendMessage('toWindow', 'downloadVideo', url);
+		window.sendMessage('toWindow', 'downloadVideo', url);
 	});
 });

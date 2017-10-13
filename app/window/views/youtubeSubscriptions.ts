@@ -1,6 +1,6 @@
 import { AppWindow, ViewNames, MappedKeyboardEvent } from './appWindow';
 import { YoutubeVideoPlayer } from './youtubeMusic';
-import { Util, $ } from '../libs/util';
+import { Util, $, inlineFn } from '../libs/util';
 
 export namespace YoutubeSubscriptions {
 	export namespace Commands {
@@ -67,7 +67,7 @@ export namespace YoutubeSubscriptions {
 		}
 
 		export async function magicButton() {
-			(await SubBox.getView()).executeJavaScript(Util.inlineFn(() => {
+			(await SubBox.getView()).executeJavaScript(inlineFn(() => {
 					(window as any).videos.selected.goLeft();
 					(window as any).videos.selected.launchCurrent();
 				}), false);
@@ -285,7 +285,7 @@ export namespace YoutubeSubscriptions {
 						'*://www.accounts.google.com/*'
 					],
 					js: {
-						code: Util.inlineFn(() => {
+						code: inlineFn(() => {
 							localStorage.setItem('loaded', 'youtubeSubscriptions' as ViewNames);
 						})
 					},

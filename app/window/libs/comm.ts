@@ -1,10 +1,10 @@
 /// <reference path="../../window/views/youtube/1001tracklists/1001tracklists.ts" />
 /// <reference path="../../window/views/youtube/content/content.ts" />
 
-import { EmbeddableSendType, MessageTypes } from '../../backgroundLibs/msg/msg';
+import { MessageTypes } from '../../backgroundLibs/msg/msg';
+import { MessageableWindow } from '../libs/embedmsg';
 import { ViewNames } from '../views/appWindow';
-declare var sendMessage: EmbeddableSendType;
-declare const window: CommWindow;
+declare const window: MessageableWindow<CommWindow>;
 
 export interface CommWindow extends Window {
 	commToPage<T extends keyof MessageTypes.Tasks>(task: T, data: MessageTypes.Tasks[T]['arg'], callback: (result: MessageTypes.Tasks[T]['res']) => void): void;
@@ -52,7 +52,7 @@ export interface CommWindow extends Window {
 			loaded = true;
 			window.clearInterval(intervalId);
 
-			sendMessage('toWindow', 'loadingCompleted', localStorage.getItem('loaded') as ViewNames);
+			window.sendMessage('toWindow', 'loadingCompleted', localStorage.getItem('loaded') as ViewNames);
 
 			localStorage.setItem('loaded', 'none');
 		}

@@ -1,6 +1,7 @@
-import { EmbeddableSendType } from '../../backgroundLibs/msg/msg';
 import { MappedKeyboardEvent } from '../views/appWindow';
-declare var sendMessage: EmbeddableSendType;;
+import { MessageableWindow } from '../libs/embedmsg';
+
+declare var window: MessageableWindow;
 
 (() => {
 	function mapElement(el: HTMLElement): {
@@ -73,13 +74,13 @@ declare var sendMessage: EmbeddableSendType;;
 
 	document.body.addEventListener('keydown', (e) => {
 		if (e.srcElement.tagName !== 'INPUT' && location.href.indexOf('accounts.google') === -1) {
-			sendMessage('toWindow', 'keyPress', mapKeyEvent(e));
+			window.sendMessage('toWindow', 'keyPress', mapKeyEvent(e));
 		}
 	});
 
 	document.body.addEventListener('paste', (e) => {
 		if (e.srcElement.tagName !== 'INPUT' && location.href.indexOf('accounts.google') === -1) {
-			sendMessage('toWindow', 'paste', e.clipboardData.getData('Text'));
+			window.sendMessage('toWindow', 'paste', e.clipboardData.getData('Text'));
 		}
 	});
 })();

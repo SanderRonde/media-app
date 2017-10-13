@@ -1,8 +1,9 @@
 import { YoutubeVideoPlayer, YoutubeMusicWindow } from '../../window/views/youtubeMusic';
 import { Partitions } from '../../backgroundLibs/adblocking/adblocking';
-import { embeddableSend, onTask } from '../../backgroundLibs/msg/msg';
+import { embeddableSend } from '../../backgroundLibs/msg/msg';
 import { route } from '../../backgroundLibs/routing/routing';
 import { ViewNames } from '../../window/views/appWindow';
+import { EmbeddedFns } from '../libs/embedmsg';
 import { shell } from 'electron';
 import * as md5 from 'md5';
 import * as fs from 'fs';
@@ -25,6 +26,10 @@ export const $$ = <K extends keyof ElementTagNameMap>(selector: K|string,
 	base: HTMLElement|Element|Document = document): NodeListOf<HTMLElement> => {
 		return base.querySelectorAll(selector) as NodeListOf<HTMLElement>;
 	};
+
+export function inlineFn(fn: () => void): string {
+	return `(${fn.toString()})()`;
+}
 
 interface MatchPattern {
 	scheme: string;
@@ -98,14 +103,7 @@ export namespace Util {
 
 	export function hacksecute<T extends {
 		[key: string]: number|string|boolean|((...args: any[]) => void);
-	}>(view: Electron.WebviewTag, fn: (REPLACE: T & {
-		onTask: typeof onTask;
-		inlineFn: typeof inlineFn;
-		sendMessage: typeof embeddableSend;
-	}) => void, parameters: T = {} as T) {
-		parameters['onTask'] = onTask;
-		parameters['inlineFn'] = inlineFn;
-		parameters['embeddableSend'] = embeddableSend;
+	}>(view: Electron.WebviewTag, fn: (REPLACE: T & EmbeddedFns) => void, parameters: T = {} as T) {
 		if (!view.src) {
 			return new Promise<any>((resolve) => {
 				resolve(undefined);
@@ -113,9 +111,7 @@ export namespace Util {
 		}
 		return new Promise<any>((resolve) => {
 			view.executeJavaScript(replaceParameters(`
-				var onTask = REPLACE.onTask();
 				var inlineFn = REPLACE.inlineFn;
-				var sendMessage = REPLACE.embeddableSend;
 			(${createTag(fn).toString()})();`, parameters), false, (result) => {
 				resolve(result);
 			});
@@ -250,13 +246,7 @@ export namespace Util {
 
 	function runCodeType(view: Electron.WebviewTag, config: InjectionItems, isJS: boolean) {
 		if (isJS) {
-			view.executeJavaScript('var exports = exports || {}', false);		
-			view.executeJavaScript(replaceParameters('var sendMessage = REPLACE.embeddableSend;', {
-				embeddableSend: embeddableSend
-			}), false);
-			view.executeJavaScript(replaceParameters('var onTask = REPLACE.onTask();', {
-				onTask: onTask
-			}), false);
+			view.executeJavaScript('var exports = exports || {}', false);
 		}
 		if (config.code) {
 			if (isJS) {
@@ -370,10 +360,6 @@ export namespace Util {
 		});
 	}
 
-	export function inlineFn(fn: () => void): string {
-		return `(${fn.toString()})()`;
-	}
-
 	export function createWebview(settings: {
 		id: string;
 		partition: Partitions;
@@ -385,6 +371,7 @@ export namespace Util {
 			const { id, partition, parentId, nodeIntegration, plugins } = settings;
 
 			const view = document.createElement('webview');
+			view.setAttribute('preload', './libs/embedmsg.js')
 			let hasListener = false;
 			view.addEventListener('did-finish-load' as any, () => {
 				if (view.getURL().indexOf('example.com') > -1) {
@@ -876,4 +863,5 @@ export namespace Util {
 		}));
 	}
 }
+
 export default Util;

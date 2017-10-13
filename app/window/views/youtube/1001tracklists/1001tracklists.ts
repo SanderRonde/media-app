@@ -1,8 +1,7 @@
-import { OnTaskType } from '../../../../backgroundLibs/msg/msg';
+import { MessageableWindow } from '../../../libs/embedmsg';
 import { CommWindow } from '../../../libs/comm';
 
-declare var onTask: OnTaskType;
-declare const window: CommWindow;
+declare const window: MessageableWindow<CommWindow>;
 
 function toQueryString(obj: {
 	[key: string]: string|number|boolean;
@@ -14,13 +13,13 @@ function toQueryString(obj: {
 	return `?${parts.join('&')}`;
 }
 
-onTask('searchFor', (data) => {
+window.onTask('searchFor', (data) => {
 	(document.getElementById('main_search') as HTMLInputElement).value = data;
 	(document.getElementById('search_selection') as HTMLInputElement).value = '9';
 	document.getElementById('searchBtn').click();
 });
 
-onTask('findItem', (data) => {
+window.onTask('findItem', (data) => {
 	return new Promise((resolve) => {
 		let isDone = false;
 		let timeout = 0;

@@ -1,6 +1,5 @@
-import { EmbeddableSendType } from '../../../../backgroundLibs/msg/msg';
-declare var sendMessage: EmbeddableSendType;
-declare var window: SubBoxWindow;
+import { MessageableWindow } from '../../../libs/embedmsg';
+declare var window: MessageableWindow<SubBoxWindow>;
 
 export interface SubBoxWindow extends Window {
 	videos: VideoIdentifier;
@@ -671,7 +670,7 @@ class VideoIdentifier {
 					});
 					anchor.addEventListener('contextmenu', () => {
 						require('electron').clipboard.writeText(link);
-						sendMessage('log', 'toast', 'Copied to clipboard 📋');
+						window.sendMessage('log', 'toast', 'Copied to clipboard 📋');
 					});
 					anchor.hasListener = true;
 				}
@@ -819,7 +818,7 @@ async function identifyVideos(spinner: Spinner) {
 }
 
 window.navToLink = (link, video) => {
-	sendMessage('toWindow', 'changeYoutubeSubsLink', link);
+	window.sendMessage('toWindow', 'changeYoutubeSubsLink', link);
 	if (video) {
 		window.videos.selected.setCurrent(video);
 	}
