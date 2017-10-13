@@ -1,7 +1,7 @@
 ///<reference path="window/main.ts"/>
+import { app, BrowserWindow, dialog, Tray, Menu, Notification } from 'electron';
 import { MessageServer, AppMessageServer } from './backgroundLibs/msg/msg';
 import { AdBlocking } from './backgroundLibs/adblocking/adblocking';
-import { app, BrowserWindow, dialog, Tray, Menu } from 'electron';
 import { Shortcuts } from './backgroundLibs/shortcuts/shortcuts';
 import { RemoteServer }  from './backgroundLibs/remote/remote';
 import { Settings } from './backgroundLibs/settings/settings';
@@ -191,8 +191,14 @@ export namespace MediaApp {
 								args: process.argv.slice(1).concat('--widevine-installed')
 							});
 
+							const notification = new Notification({
+								title: 'Relaunching',
+								body: 'Relaunching app due to widevine install...',
+							});
+
 							if (!Refs.activeWindow) {
 								//No open window, the user probably won't notice a reload
+								notification.show();
 								app.quit();
 							} else {
 								dialog.showMessageBox({
@@ -205,6 +211,7 @@ export namespace MediaApp {
 									cancelId: 1,
 								}, (response) => {
 									if (response === 0) {
+										notification.show();
 										app.quit();
 									}
 								});
@@ -365,6 +372,10 @@ export namespace MediaApp {
 			});
 		});
 		if (process.argv.indexOf('--widevine-installed') > -1) {
+			new Notification({
+				title: 'Back from relaunch',
+				body: 'Done relaunching app due to widevine install',
+			}).show();
 			log('Relaunched due to widevine');
 			toast('Installed widevine');
 		}
