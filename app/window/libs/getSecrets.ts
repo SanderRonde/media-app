@@ -1,4 +1,3 @@
-const optionalRequire = (require('optional-require') as optionalRequire)(require);
 import { STORED_DATA_FILE } from '../../backgroundLibs/constants/constants';
 import { route } from '../../backgroundLibs/routing/routing';
 import { Util } from './util';
@@ -96,8 +95,17 @@ async function askForSecrets<T extends keyof SecretsMap>(key: T): Promise<Secret
 	});
 }
 
+function optionalRequire<T>(path: string): T|void {
+	try {
+		const mod = require(path);
+		return mod;
+	} catch(e) {
+		return null;
+	}
+}
+
 export async function getSecret<T extends keyof SecretsMap>(key: T): Promise<SecretsMap[T]> {
-	const tryRequire = optionalRequire<SecretsMap>(await route('./genericJs/secrets')) || null;
+	const tryRequire = optionalRequire<SecretsMap>(await route('./genericJs/secrets'));
 	if (tryRequire) {
 		return tryRequire[key];
 	} else {
