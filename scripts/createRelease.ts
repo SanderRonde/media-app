@@ -126,6 +126,8 @@ async function main() {
 			prerelease: false,
 			target_commitish: process.env.TRAVIS_COMMIT
 		});
+
+		console.log('Created release');
 	}
 }
 

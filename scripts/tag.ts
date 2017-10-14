@@ -75,11 +75,16 @@ async function main() {
 		sha: process.env.TRAVIS_COMMIT,
 		ref: `refs/tags/v${VERSION}`
 	});
+
+	console.log('Created tag');
 }
 
 try {
 	main().then(() => {
 		//Exits with 0 when valid tag, 1 if not
+		if (validTag) {
+			console.log('Is a valid tag');
+		}
 		process.exit(~~validTag);
 	});
 } catch(e) {
