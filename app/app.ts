@@ -184,6 +184,13 @@ export namespace MediaApp {
 					if (widevineExists) {
 						resolve();
 					} else {
+						if (process.argv.indexOf('--widevine-installed') > -1) {
+							const notification = new Notification({
+								title: 'Media App Skipping relaunch',
+								body: 'Skipping relaunch due to possible boot loop'
+							});
+							notification.show();
+						}
 						try {
 							await widevine.downloadAsync(app, widevinePath);
 							log('Relaunching app');
@@ -192,30 +199,24 @@ export namespace MediaApp {
 							});
 
 							const notification = new Notification({
-								title: 'Relaunching',
+								title: 'Media App Relaunching',
 								body: 'Relaunching app due to widevine install...',
 							});
 
-							if (!Refs.activeWindow) {
-								//No open window, the user probably won't notice a reload
-								notification.show();
-								app.quit();
-							} else {
-								dialog.showMessageBox({
-									message: 'You need to relaunch the app to use widevineCDM',
-									buttons: [
-										'Close now',
-										'Cancel',
-									],
-									defaultId: 0,
-									cancelId: 1,
-								}, (response) => {
-									if (response === 0) {
-										notification.show();
-										app.quit();
-									}
-								});
-							}
+							dialog.showMessageBox({
+								message: 'You need to relaunch the app to use widevineCDM',
+								buttons: [
+									'Close now',
+									'Cancel',
+								],
+								defaultId: 0,
+								cancelId: 1,
+							}, (response) => {
+								if (response === 0) {
+									notification.show();
+									app.quit();
+								}
+							});
 						} catch(e) {
 							toast('Widevine was not loaded');
 							error('Widevine was not loaded');
@@ -372,10 +373,11 @@ export namespace MediaApp {
 			});
 		});
 		if (process.argv.indexOf('--widevine-installed') > -1) {
-			new Notification({
-				title: 'Back from relaunch',
+			const notification = new Notification({
+				title: 'Media App Back from relaunch',
 				body: 'Done relaunching app due to widevine install',
-			}).show();
+			});
+			notification.show();
 			log('Relaunched due to widevine');
 			toast('Installed widevine');
 		}
