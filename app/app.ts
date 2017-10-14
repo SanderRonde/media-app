@@ -216,6 +216,7 @@ export namespace MediaApp {
 									notification.show();
 									app.quit();
 								}
+								resolve();
 							});
 						} catch(e) {
 							toast('Widevine was not loaded');
