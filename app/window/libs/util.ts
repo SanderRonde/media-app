@@ -110,9 +110,7 @@ export namespace Util {
 			});
 		}
 		return new Promise<any>((resolve) => {
-			view.executeJavaScript(replaceParameters(`
-				var inlineFn = REPLACE.inlineFn;
-			(${createTag(fn).toString()})();`, parameters), false, (result) => {
+			view.executeJavaScript(replaceParameters(`(${createTag(fn).toString()})();`, parameters), false, (result) => {
 				resolve(result);
 			});
 		});
