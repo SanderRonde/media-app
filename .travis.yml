@@ -26,7 +26,7 @@ install:
 
 script:
   - tsc
-  - node scripts/tag.js && node scripts/createRelease.js
+  - (node scripts/tag.js && node scripts/createRelease.js) || echo "Not tagging"
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tsc ; grunt move && electron-builder -p "onTagOrDraft" -l; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tsc ; grunt move && electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw; fi
   - node scripts/publish.js
