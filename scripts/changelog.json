@@ -93,5 +93,8 @@
 		"Fixed downloading song",
 		"Fixed getting current song name functionality",
 		"Works better offline or when widevine/easylist.to is offline"
+	],
+	"3.0.21": [
+		"No longer auto-relaunches for widevine"
 	]
 }
