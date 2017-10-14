@@ -1,8 +1,11 @@
+const semver = require('semver');
+import GithubAPI = require('github')
+
+const commitMessage = process.env.TRAVIS_COMMIT_MESSAGE || '';
 let VERSION = process.env.TRAVIS_COMMIT_MESSAGE;
 if (VERSION.startsWith('v')) {
 	VERSION = VERSION.slice(1);
 }
-import GithubAPI = require('github')
 
 interface User {
 	login: string;
@@ -87,6 +90,11 @@ gh.authenticate({
 });
 
 async function main() {
+	const validTag = !!semver.valid(commitMessage);
+	if (!validTag) {
+		console.log('Not a valid version tag, not publishing');
+		return;
+	}	
 	if (process.env.TRAVIS_OS_NAME === 'osx') {
 		const allReleases: GithubMeta<Release[]> = await gh.repos.getReleases({
 			owner: 'SanderRonde',
