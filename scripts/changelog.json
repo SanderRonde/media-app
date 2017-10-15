@@ -96,5 +96,8 @@
 	],
 	"3.0.21": [
 		"No longer auto-relaunches for widevine"
+	],
+	"3.0.22": [
+		"Embedded scripts work again"
 	]
 }
