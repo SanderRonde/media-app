@@ -394,7 +394,7 @@ export namespace CommandBar {
 						permutation: combination
 					};
 					for (let i = 0; i < lowercase.length; i++) {
-						if (!lowercase[i].startsWith(combination[i].toLowerCase())) {
+						if (!combination[i] || !lowercase[i].startsWith(combination[i].toLowerCase())) {
 							return;
 						} else {
 							suggestion.arr.push({
