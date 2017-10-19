@@ -182,6 +182,7 @@ export namespace MediaApp {
 
 				return new Promise(async (resolve) => {
 					if (widevineExists) {
+						log('Widevine exists!');
 						resolve();
 					} else {
 						if (process.argv.indexOf('--widevine-installed') > -1) {
@@ -190,8 +191,10 @@ export namespace MediaApp {
 								body: 'Skipping relaunch due to possible boot loop'
 							});
 							notification.show();
+							log('Skipping widevine installation due to possible boot loop');
 						}
 						try {
+							log('Downloading widevine');
 							await widevine.downloadAsync(app, widevinePath);
 							log('Relaunching app');
 							app.relaunch({
