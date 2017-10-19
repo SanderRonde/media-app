@@ -39,7 +39,7 @@ setInterval(() => {
 		while (queue[0]) {
 			queue.pop();
 		}
-		window.setTimeout(() => {
+		setTimeout(() => {
 			for (let i = 0; i < tempQueue.length; i++) {
 				const queueItem = tempQueue[i];
 				logChannel.send(queueItem.type, queueItem.args);
