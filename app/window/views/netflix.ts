@@ -49,19 +49,6 @@ export namespace Netflix {
 				plugins: true
 			});
 			videoView = await videoPromise;
-
-			window.setTimeout(() => {
-				Util.addContentScripts(videoView, [{
-					name: 'js',
-					matches: ['*://*/*'],
-					js: {
-						files: [
-							'netflix/video/video.js'
-						]
-					},
-					run_at: 'document_idle'
-				}]);
-			}, 10);
 		}
 
 		export function free() {
