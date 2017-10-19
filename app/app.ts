@@ -192,6 +192,8 @@ export namespace MediaApp {
 							});
 							notification.show();
 							log('Skipping widevine installation due to possible boot loop');
+							resolve();
+							return;
 						}
 						try {
 							log('Downloading widevine');
