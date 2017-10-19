@@ -35,14 +35,20 @@ const queue: ({
 setInterval(() => {
 	const [win, logChannel] = getData();
 	if (win && queue.length > 0) {
-		for (let i = 0; i < queue.length; i++) {
-			const queueItem = queue[i];
-			logChannel.send(queueItem.type, queueItem.args);
-		}
-
+		const tempQueue = Array.from(queue);
 		while (queue[0]) {
 			queue.pop();
 		}
+		window.setTimeout(() => {
+			for (let i = 0; i < tempQueue.length; i++) {
+				const queueItem = tempQueue[i];
+				logChannel.send(queueItem.type, queueItem.args);
+			}
+
+			while (tempQueue[0]) {
+				tempQueue.pop();
+			}
+		}, 5000);
 	}
 }, 100);
 
