@@ -858,6 +858,7 @@ export namespace Util {
 			lastItem.then(() => {
 				doShowToast(message).then(() => {
 					resolve();
+					activeToasts.shift();
 				});
 			});
 		}));
