@@ -848,6 +848,7 @@ export namespace Util {
 			await wait(5000);
 			toast.classList.remove('visible');
 			await wait(500);
+			resolve();
 		});
 	}
 
@@ -855,8 +856,9 @@ export namespace Util {
 		const lastItem = activeToasts.slice(-1)[0];
 		activeToasts.push(new Promise<void>(async (resolve) => {
 			lastItem.then(() => {
-				doShowToast(message);
-				resolve();
+				doShowToast(message).then(() => {
+					resolve();
+				});
 			});
 		}));
 	}
