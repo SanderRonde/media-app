@@ -102,5 +102,8 @@
 	],
 	"3.0.23": [
 		"Fixed netflix/widevine"
+	],
+	"3.0.24": [
+		"Fixed toasts"
 	]
 }
