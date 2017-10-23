@@ -1,7 +1,7 @@
 import { session, Notification, app } from 'electron';
 import filterParser = require('abp-filter-parser');
+import { toast, warn, error } from '../log/log';
 import { route } from '../routing/routing';
-import { toast, warn } from '../log/log';
 import https = require('https');
 import path = require('path');
 import URL = require('url');
@@ -177,7 +177,7 @@ export namespace AdBlocking {
 		};
 	}
 
-	function downloadFile(filePath: string) {
+	function downloadFile(filePath: string): Promise<string> {
 		return new Promise((resolve) => {
 			let str = '';
 			const req = https.get(`https://easylist.to/easylist/${filePath}`, (res) => {
@@ -201,10 +201,9 @@ export namespace AdBlocking {
 			if (content === null) {
 				resolve(false);
 			}
-			fs.writeFile(path.join(
-				path.join(app.getPath('appData'), 'media-app', 'adLists/'), filePath),
-				content, 'utf8', (err) => {
+			fs.writeFile(filePath, content, 'utf8', (err) => {
 					if (err) {
+						error('Failed to write to updated adlist file', err);
 						resolve(false);
 					} else {
 						resolve(true);
