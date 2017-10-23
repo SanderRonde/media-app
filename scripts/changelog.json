@@ -99,5 +99,8 @@
 	],
 	"3.0.22": [
 		"Embedded scripts work again"
+	],
+	"3.0.23": [
+		"Fixed netflix/widevine"
 	]
 }
