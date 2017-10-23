@@ -50,9 +50,10 @@
     "asarUnpack": [
       "./**/*",
       "./package.json",
-      "!./renderer/**/*",
-      "./renderer/adblocking/easylist.txt",
-      "./renderer/remote/client/**.*"
+      "!./backgroundLibs/**/*",
+      "./widevine/**/*",
+      "./backgroundLibs/adblocking/easylist.txt",
+      "./backgroundLibs/remote/client/**.*"
     ]
   },
   "repository": {
