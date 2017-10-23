@@ -1,5 +1,5 @@
 ///<reference path="window/main.ts"/>
-import { app, BrowserWindow, dialog, Tray, Menu, Notification } from 'electron';
+import { app, BrowserWindow, Tray, Menu, Notification } from 'electron';
 import { MessageServer, AppMessageServer } from './backgroundLibs/msg/msg';
 import { AdBlocking } from './backgroundLibs/adblocking/adblocking';
 import { Shortcuts } from './backgroundLibs/shortcuts/shortcuts';
@@ -10,6 +10,9 @@ import { Updater } from './backgroundLibs/updater/updater';
 import AutoLaunch = require('auto-launch');
 import path = require('path');
 import url = require('url');
+
+app.commandLine.appendSwitch('widevine-cdm-path', path.join(__dirname, 'widevine', 'widevinecdmadapter.dll'));
+app.commandLine.appendSwitch('widevine-cdm-version', '1.4.8.984');
 
 const logger = require('logger').createLogger(path.join(app.getPath('appData'), 'media-app', 'log.log'));
 
@@ -166,73 +169,6 @@ export namespace MediaApp {
 	export namespace Setup {
 		export let activeServer: RemoteServer = null;	
 
-		namespace WideVine {
-			export async function load() {
-				const widevine: {
-					load(app: Electron.App, dest: string): boolean;
-					downloadAsync(app: Electron.App, dest: string): Promise<void>;
-				} = require('electron-widevinecdm');
-				const widevinePath = path.join(app.getPath('appData'), 'media-app', 'widevine');
-				let widevineExists = false;
-				try {
-					widevineExists = widevine.load(app, widevinePath);
-				} catch(e) {
-					logger.error('Error loading widevine', e);
-				}
-
-				return new Promise(async (resolve) => {
-					if (widevineExists) {
-						log('Widevine exists!');
-						resolve();
-					} else {
-						if (process.argv.indexOf('--widevine-installed') > -1) {
-							const notification = new Notification({
-								title: 'Media App Skipping relaunch',
-								body: 'Skipping relaunch due to possible boot loop'
-							});
-							notification.show();
-							log('Skipping widevine installation due to possible boot loop');
-							resolve();
-							return;
-						}
-						try {
-							log('Downloading widevine');
-							await widevine.downloadAsync(app, widevinePath);
-							log('Relaunching app');
-							app.relaunch({
-								args: process.argv.slice(1).concat('--widevine-installed')
-							});
-
-							const notification = new Notification({
-								title: 'Media App Relaunching',
-								body: 'Relaunching app due to widevine install...',
-							});
-
-							dialog.showMessageBox({
-								message: 'You need to relaunch the app to use widevineCDM',
-								buttons: [
-									'Close now',
-									'Cancel',
-								],
-								defaultId: 0,
-								cancelId: 1,
-							}, (response) => {
-								if (response === 0) {
-									notification.show();
-									app.quit();
-								}
-								resolve();
-							});
-						} catch(e) {
-							toast('Widevine was not loaded');
-							error('Widevine was not loaded');
-							resolve();
-						}
-					}
-				});
-			}
-		}
-
 		namespace Comm {
 			export function setupListeners() {
 				const settingsChannel = Refs.messageServer.channel('settings');
@@ -316,9 +252,7 @@ export namespace MediaApp {
 			activeServer = new RemoteServer(Refs, launch);
 			log('Initializing shortcuts');
 			Shortcuts.init(Refs, launch, Settings);
-			log('Waiting for widevine to load');
-			await WideVine.load();
-			log('Done loading widevine')
+			log('Done with initialization');
 		}
 	}
 
