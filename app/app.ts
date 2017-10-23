@@ -1,12 +1,12 @@
 ///<reference path="window/main.ts"/>
-import { app, BrowserWindow, Tray, Menu, Notification } from 'electron';
 import { MessageServer, AppMessageServer } from './backgroundLibs/msg/msg';
 import { AdBlocking } from './backgroundLibs/adblocking/adblocking';
 import { Shortcuts } from './backgroundLibs/shortcuts/shortcuts';
 import { RemoteServer }  from './backgroundLibs/remote/remote';
 import { Settings } from './backgroundLibs/settings/settings';
-import { log, error, toast } from './backgroundLibs/log/log';
 import { Updater } from './backgroundLibs/updater/updater';
+import { app, BrowserWindow, Tray, Menu } from 'electron';
+import { log, error } from './backgroundLibs/log/log';
 import AutoLaunch = require('auto-launch');
 import path = require('path');
 import url = require('url');
