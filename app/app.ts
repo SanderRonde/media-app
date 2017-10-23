@@ -312,15 +312,6 @@ export namespace MediaApp {
 				}
 			});
 		});
-		if (process.argv.indexOf('--widevine-installed') > -1) {
-			const notification = new Notification({
-				title: 'Media App Back from relaunch',
-				body: 'Done relaunching app due to widevine install',
-			});
-			notification.show();
-			log('Relaunched due to widevine');
-			toast('Installed widevine');
-		}
 	}
 }
 export type MediaAppType = typeof MediaApp;
