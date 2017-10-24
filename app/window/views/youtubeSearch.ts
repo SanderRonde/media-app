@@ -87,11 +87,33 @@ export namespace YoutubeSearch {
 
 		export function magicButton() { }
 
+		function orderElements(first: HTMLElement, second: HTMLElement) {
+			if (first.nextSibling === second) {
+				return;
+			} else {
+				var temp = document.createElement("div");
+				first.parentNode.insertBefore(temp, first);
+				second.parentNode.insertBefore(first, second);
+				temp.parentNode.insertBefore(second, temp);
+				temp.parentNode.removeChild(temp);
+			}
+		}
+
+		async function assertViewOrder() {
+			const searchBarEl = SearchBar.getSearchBar();
+			const searchResultsView = await SearchResultsPage.getView();
+			const videoView = await Video.getView();
+
+			orderElements(searchBarEl, searchResultsView);
+			orderElements(searchResultsView, videoView);
+		}
+
 		export async function setup() {
 			await SearchResultsPage.setup();
 			await SearchBar.setup();
 			await Video.setup();
 			await Util.wait(15);
+			await assertViewOrder();
 			SearchResultsPage.navTo('https://www.youtube.com/');
 			AppWindow.updateStatus('Looking at search page');
 		}
