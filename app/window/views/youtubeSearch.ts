@@ -655,7 +655,9 @@ export namespace YoutubeSearch {
 		}
 
 		export function skip() {
-			play(queue.shift());
+			if (queue[0]) {
+				play(queue.shift());
+			}
 		}
 
 		export function onVideoEnd() {
