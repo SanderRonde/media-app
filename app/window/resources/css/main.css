@@ -60,18 +60,6 @@ body {
 	height: 100vh;
 }
 
-#titleBar {
-	display: flex;
-	justify-content: space-between;
-	height: 26px;
-	display: flex;
-	justify-content: flex-end;
-	-webkit-app-region: drag;
-	background-color: transparent;
-	position: relative;
-	z-index: 10000000;
-}
-
 #titleBar > div {
 	width: 45px;
 	height: 100%;
