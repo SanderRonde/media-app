@@ -124,6 +124,7 @@ html {
 	display: none;
 	width: 20px;
 	fill: white;
+	margin-left: 7px;
 }
 
 #networkStatus.visible {
@@ -225,4 +226,15 @@ body.showDialog #overlay {
 body.showDialog #dialog {
 	transform: translateY(0);
 	pointer-events: all;
+}
+
+#scrollableContainer {
+	display: flex;
+	flex-direction: row;
+	overflow-x: scroll;
+	overflow-y: hidden;
+}
+
+#scrollableContainer > * {
+	white-space: nowrap;
 }
