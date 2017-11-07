@@ -1,5 +1,6 @@
 import { KeyCombinations } from '../../backgroundLibs/shortcuts/shortcuts';
 import { MessageServer, MessageTypes } from '../../backgroundLibs/msg/msg';
+import { Partitions } from '../../backgroundLibs/adblocking/adblocking';
 import { SettingsType } from '../../backgroundLibs/settings/settings';
 import { toast } from './../../backgroundLibs/log/log';
 import { YoutubeMusic } from '../views/youtubeMusic';
@@ -34,6 +35,22 @@ export namespace Commands {
 	const settingsServer = messageServer.channel('settings');
 	const toBgPageChannel = messageServer.channel('toBgPage');
 
+	namespace Fns {
+		export async function getCacheSize(): Promise<number> {
+			return (await Promise.all(partitions.map((partition) => {
+				return new Promise<number>((resolve) => {
+					const session = require('electron').remote.session;
+					const partitionSession: Electron.Session = (<any>session.fromPartition)(`persist:${partition}`);
+					partitionSession.getCacheSize((size) => {
+						resolve(size);
+					});
+				});
+			}))).reduce((left, right) => {
+				return left + right;
+			});
+		}
+	}
+
 	function runRenderer(func: ImportNullifyingFn): () => void {
 		return () => {
 			evalServer.send('eval', Util.stringifyFunction(func));
@@ -63,10 +80,14 @@ export namespace Commands {
 	}
 
 	const KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
-	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-	'W', 'X', 'Y', 'Z', 'Shift', 'Alt', 'Left', 'Right', 'Down',
-	'Up', 'MediaNextTrack', 'MediaPreviousTrack', 'MediaStop',
-	'MediaPlayPause', 'Space', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+		'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+		'W', 'X', 'Y', 'Z', 'Shift', 'Alt', 'Left', 'Right', 'Down',
+		'Up', 'MediaNextTrack', 'MediaPreviousTrack', 'MediaStop',
+		'MediaPlayPause', 'Space', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+	const partitions: Partitions[] = ['netflix', 'tracklists',
+		'youtubeplaylist', 'youtubeSearch', 'youtubeSubscriptions',
+		'youtubeSubsVideoView'];
 
 	export const commands = {
 		'Lower Volume': sendAppWindowEvent('lowerVolume'),
@@ -195,6 +216,26 @@ export namespace Commands {
 		}),
 		'Reload YoutubeMusic video': fn(() => {
 			YoutubeMusic.reload();
+		}),
+		'Get cache size': fn(async () => {
+			const size = await Fns.getCacheSize();
+			const mb = size / 1024 / 1024;
+			toast(`Cache size is ${mb}MiB`);
+		}),
+		'Clear caches': fn(async () => {
+			const sizeBefore = await Fns.getCacheSize();
+			await Promise.all(partitions.map((partition) => {
+				return new Promise<void>((resolve) => {
+					const session = require('electron').remote.session;
+					const partitionSession: Electron.Session = (<any>session.fromPartition)(`persist:${partition}`);
+					partitionSession.clearCache(() => {
+						resolve(null);
+					});
+				});
+			}));
+			const sizeAfter = await Fns.getCacheSize();
+			const mb = (sizeBefore - sizeAfter) / 1024 / 1024;
+			toast(`Cleared a total of ${mb}MiB`);
 		})
 	};
 }
