@@ -105,5 +105,9 @@
 	],
 	"3.0.24": [
 		"Fixed toasts"
+	],
+	"3.0.25": [
+		"Added bass boost command",
+		"Volume can now go above 100"
 	]
 }
