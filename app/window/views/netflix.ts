@@ -139,6 +139,10 @@ export namespace Netflix {
 		export async function getView(): Promise<Electron.WebviewTag> {
 			return (await Video.getView());
 		}
+
+		export async function getYoutubeView(): Promise<Electron.WebviewTag> {
+			return null;
+		}
 	
 		export async function onKeyPress(event: MappedKeyboardEvent) { 
 			return false;
