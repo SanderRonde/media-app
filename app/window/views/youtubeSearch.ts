@@ -295,7 +295,8 @@ export namespace YoutubeSearch {
 
 						getPlayer().then((player: YoutubeVideoPlayer) => {
 							REPLACE.playPauseListeners('youtubesearch');
-							REPLACE.volumeManager(player);
+							const setGain  = REPLACE.handleVisualizer()[1];
+							REPLACE.volumeManager(player, setGain);
 							REPLACE.initialSizing(player, 'youtubesearch');
 							REPLACE.handleResize(player);
 							REPLACE.handleToggleHiddens('k');
@@ -308,6 +309,7 @@ export namespace YoutubeSearch {
 						initialSizing: Util.YoutubeVideoFunctions.initialSizing,
 						handleResize: Util.YoutubeVideoFunctions.handleResize,
 						handleToggleHiddens: Util.YoutubeVideoFunctions.handleToggleHiddens,
+						handleVisualizer: Util.YoutubeVideoFunctions.handleVisualizer,
 						detectOnEnd: Util.YoutubeVideoFunctions.detectOnEnd,
 						adSkipper: Util.YoutubeVideoFunctions.adSkipper
 					});

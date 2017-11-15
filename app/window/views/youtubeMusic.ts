@@ -108,8 +108,8 @@ export namespace YoutubeMusic {
 				const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;				
 
 				REPLACE.playPauseListeners('ytmusic');
-				REPLACE.volumeManager(player);
-				const setupVisualizer = REPLACE.handleVisualizer();
+				const [ setupVisualizer, setGain]  = REPLACE.handleVisualizer();
+				REPLACE.volumeManager(player, setGain);
 				REPLACE.initialSizing(player, 'ytmusic', setupVisualizer);
 				REPLACE.handleResize(player);
 				REPLACE.handleToggleHiddens('h');

@@ -413,7 +413,7 @@ export namespace Util {
 			}, 500);
 		}
 
-		export function volumeManager(player: YoutubeVideoPlayer) {
+		export function volumeManager(player: YoutubeVideoPlayer, setGain: (gain: number) => void) {
 			const volumeBar = document.createElement('div');
 			const volumeBarBar = document.createElement('div');
 			const volumeBarNumber = document.createElement('div');
@@ -429,11 +429,16 @@ export namespace Util {
 			let volumeBarTimeout: number = null;
 
 			function setPlayerVolume(volume: number) {
-				player.setVolume(volume);
+				if (volume > 100) {
+					setGain(volume / 100.0);
+				} else {
+					setGain(1.0);
+				}	
+				player.setVolume(Math.min(volume, 100));
 
 				localStorage.setItem('yt-player-volume', JSON.stringify({
 					data: JSON.stringify({
-						volume: volume,
+						volume: Math.min(volume, 100),
 						muted: (volume === 0)
 					}),
 					creation: Date.now(),
@@ -463,7 +468,7 @@ export namespace Util {
 			//Code that has to be executed "inline"
 			function increaseVolume() {
 				const oldVolume = player.getVolume();
-				const newVolume = Math.min(oldVolume + getVolumeDelta(oldVolume), 100);
+				const newVolume = oldVolume + getVolumeDelta(oldVolume);
 				setPlayerVolume(roundVolume(newVolume, true));
 			}
 
@@ -476,11 +481,48 @@ export namespace Util {
 			(window as YoutubeMusicWindow).increaseVolume = increaseVolume;
 			(window as YoutubeMusicWindow).lowerVolume = lowerVolume;
 
+			function getColorAtIndex(index: number): string {
+				//Loop from red -> orange -> yellow -> green -> blue -> purple -> red
+				const colors = [
+					'#F44336',
+					'#f47c36',
+					'#f4dd36',
+					'#6ef436',
+					'#36bff4',
+					'#7f36f4'
+				];
+				return colors[index % colors.length];
+			}
+
+			function getVolumeBarLook(volume: number): {
+				foreground: string;
+				background: string;
+				progress: number;
+			} {
+				const hundreds = Math.floor(volume / 100);
+				if (hundreds === 0) {
+					return {
+						background: 'transparent',
+						foreground: '#F44336',
+						progress: volume / 100
+					}
+				}
+				return {
+					background: getColorAtIndex(hundreds - 1),
+					foreground: getColorAtIndex(hundreds),
+					progress: (volume % 100) / 100
+				}
+			}
+
 			function showVolumeBar() {
 				const volume = player.getVolume();
-				localStorage.setItem('volume', volume + '');
-				volumeBarNumber.innerHTML = volume + '';
-				volumeBarBar.style.transform = `scaleX(${volume / 100})`;
+				localStorage.setItem('volume', `${volume}`);
+				volumeBarNumber.innerHTML = `${volume}`;
+
+				const { background, foreground, progress } = getVolumeBarLook(volume);
+				volumeBar.style.backgroundColor = background;
+				volumeBarBar.style.backgroundColor = foreground;
+				volumeBarBar.style.transform = `scaleX(${progress})`;
 				volumeBar.classList.add('visible');
 				if (volumeBarTimeout !== null) {
 					window.clearTimeout(volumeBarTimeout);
@@ -596,7 +638,7 @@ export namespace Util {
 			});
 		}
 
-		export function handleVisualizer() {
+		export function handleVisualizer(gainOnly: boolean = false): [() => void, (gain: number) => void] {
 			const visualizer = document.createElement('div');
 			visualizer.classList.add('ytma_visualization_cont');
 			document.body.insertBefore(visualizer, document.body.children[0]);
@@ -645,6 +687,7 @@ export namespace Util {
 			interface AudioVisualizerSettings {
 				video: HTMLVideoElement;
 				ctx: AudioContext;
+				gainNode: GainNode;
 				analyser: AnalyserNode;
 				vidSrc: MediaElementAudioSourceNode;
 				dataArray: Float32Array;
@@ -669,15 +712,38 @@ export namespace Util {
 				}
 			}
 
-			function setupVisualizer() {
+			let dataSrc: AudioVisualizerSettings = gainOnly ? 
+				getContext() : null;
+
+			function setGain(gain: number) {
+				if (dataSrc) {
+					dataSrc.gainNode.gain.value = gain;
+				}
+			}
+
+			function getContext(analyze: boolean = false) {
 				const data: AudioVisualizerSettings = {} as any;
 				data.video = document.querySelector('video') as HTMLVideoElement;
 				data.ctx = new AudioContext();
-				data.analyser = data.ctx.createAnalyser();
+
+				if (analyze) {
+					data.analyser = data.ctx.createAnalyser();
+				}
 				data.vidSrc = data.ctx.createMediaElementSource(data.video);
 				
-				data.vidSrc.connect(data.analyser);
-				data.vidSrc.connect(data.ctx.destination);
+				data.gainNode = data.ctx.createGain();
+				if (analyze) {
+					data.vidSrc.connect(data.analyser);
+				}
+				data.vidSrc.connect(data.gainNode);
+
+				data.gainNode.connect(data.ctx.destination);
+
+				return data;
+			}
+
+			function setupVisualizer() {
+				const data = getContext(true);
 
 				data.dataArray = new Float32Array(data.analyser.frequencyBinCount);
 				data.analyser.getFloatFrequencyData(data.dataArray);
@@ -689,6 +755,8 @@ export namespace Util {
 					return bar;
 				});
 
+				dataSrc = data;
+
 				const shouldVisualize = JSON.parse(localStorage.getItem('visualizing') || JSON.stringify(false));
 				if (shouldVisualize) {
 					document.body.classList.add('showVisualizer');
@@ -699,7 +767,7 @@ export namespace Util {
 				}, 50);
 			}
 
-			return setupVisualizer;
+			return [setupVisualizer, setGain];
 		}
 
 		export function handleYoutubeMusicTasks() {

@@ -209,7 +209,8 @@ export namespace YoutubeSubscriptions {
 							const player: YoutubeVideoPlayer = document.querySelector('.html5-video-player') as YoutubeVideoPlayer;
 
 							REPLACE.playPauseListeners('youtubeSubscriptions');
-							REPLACE.volumeManager(player);
+							const setGain  = REPLACE.handleVisualizer()[1];
+							REPLACE.volumeManager(player, setGain);
 							REPLACE.initialSizing(player, null);
 							REPLACE.handleResize(player);
 							REPLACE.handleToggleHiddens('k');
@@ -219,6 +220,7 @@ export namespace YoutubeSubscriptions {
 							playPauseListeners: Util.YoutubeVideoFunctions.playPauseListeners,
 							initialSizing: Util.YoutubeVideoFunctions.initialSizing,
 							handleResize: Util.YoutubeVideoFunctions.handleResize,
+							handleVisualizer: Util.YoutubeVideoFunctions.handleVisualizer,
 							handleToggleHiddens: Util.YoutubeVideoFunctions.handleToggleHiddens,
 							adSkipper: Util.YoutubeVideoFunctions.adSkipper
 						});
