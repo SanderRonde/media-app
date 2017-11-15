@@ -180,15 +180,15 @@ export namespace AdBlocking {
 	function downloadFile(filePath: string): Promise<string> {
 		return new Promise((resolve) => {
 			let str = '';
-			const req = https.get(`https://easylist.to/easylist/${filePath}`, (res) => {
-				res.on('data', (chunk) => {
+			const req = https.get(`https://easylist.to/easylist/${filePath}` as any, (res: any) => {
+				res.on('data', (chunk: string) => {
 					str += chunk;
 				});
 				res.on('end', () => {
 					resolve(str);
 				});
 			});
-			req.once('error', (e) => {
+			req.once('error', (e: Error) => {
 				warn('Could not update adblocking list', e);
 				resolve(null);
 			});
