@@ -109,5 +109,8 @@
 	"3.0.25": [
 		"Added bass boost command",
 		"Volume can now go above 100"
+	],
+	"3.0.26": [
+		"Updated electron-builder"
 	]
 }
