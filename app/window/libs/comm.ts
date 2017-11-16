@@ -46,10 +46,8 @@ export interface CommWindow extends Window {
 		localStorage.setItem('tasks', JSON.stringify(tasks));
 	};
 
-	let loaded = false;
 	const intervalId = window.setInterval(() => {
 		if (localStorage.getItem('loaded') && localStorage.getItem('loaded') !== 'none') {
-			loaded = true;
 			window.clearInterval(intervalId);
 
 			window.sendMessage('toWindow', 'loadingCompleted', localStorage.getItem('loaded') as ViewNames);
