@@ -25,7 +25,6 @@ export interface YoutubeVideoPlayer extends HTMLElement {
 export interface YoutubeMusicWindow extends Window {
 	lowerVolume(): void;
 	increaseVolume(): void;
-	setBassBoost(bass: number): void;
 }
 
 export namespace YoutubeMusic {
@@ -435,10 +434,6 @@ export namespace YoutubeMusic {
 			} else {
 				return await viewPromise;
 			}
-		}
-
-		export async function getYoutubeView(): Promise<Electron.WebviewTag> {
-			return getView();
 		}
 	
 		export async function onKeyPress(event: MappedKeyboardEvent): Promise<boolean> {

@@ -110,10 +110,6 @@ export namespace YoutubeSubscriptions {
 				return (await SubBox.getView());
 			}
 		}
-
-		export async function getYoutubeView(): Promise<Electron.WebviewTag> {
-			return (await Video.getView());
-		}
 	
 		export async function toggleVideoVisibility() {
 			const subsCont = $('#youtubeSubsCont');

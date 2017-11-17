@@ -688,7 +688,6 @@ export namespace Util {
 				video: HTMLVideoElement;
 				ctx: AudioContext;
 				gainNode: GainNode;
-				biquadNode: BiquadFilterNode;
 				analyser: AnalyserNode;
 				vidSrc: MediaElementAudioSourceNode;
 				dataArray: Float32Array;
@@ -733,25 +732,12 @@ export namespace Util {
 				data.vidSrc = data.ctx.createMediaElementSource(data.video);
 				
 				data.gainNode = data.ctx.createGain();
-				data.biquadNode = data.ctx.createBiquadFilter();
-				data.vidSrc.connect(data.gainNode);
-				data.gainNode.connect(data.biquadNode);
-
-				(<YoutubeMusicWindow>window).setBassBoost = (bass: number) => {
-					if (bass === 0) {
-						data.biquadNode.type = 'allpass';
-						data.biquadNode.frequency.value = 0;
-					} else {
-						data.biquadNode.type = 'lowpass';
-						data.biquadNode.frequency.value = 1000;
-						data.biquadNode.gain.value = bass;
-					}
-				}
-				
 				if (analyze) {
-					data.gainNode.connect(data.analyser);
+					data.vidSrc.connect(data.analyser);
 				}
-				data.biquadNode.connect(data.ctx.destination);
+				data.vidSrc.connect(data.gainNode);
+
+				data.gainNode.connect(data.ctx.destination);
 
 				return data;
 			}

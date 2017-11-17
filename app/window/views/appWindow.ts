@@ -404,10 +404,6 @@ export namespace AppWindow {
 		return await AppWindow.getActiveViewClass().Commands.getView();
 	}
 
-	export async function getActiveViewYoutubeView(): Promise<Electron.WebviewTag>|null {
-		return await AppWindow.getActiveViewClass().Commands.getYoutubeView();
-	}
-
 	export function onFocus() {
 		getActiveViewClass().Commands.onFocus();
 	}

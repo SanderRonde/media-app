@@ -1,9 +1,9 @@
 import { KeyCombinations } from '../../backgroundLibs/shortcuts/shortcuts';
 import { MessageServer, MessageTypes } from '../../backgroundLibs/msg/msg';
-import { YoutubeMusic, YoutubeMusicWindow } from '../views/youtubeMusic';
 import { Partitions } from '../../backgroundLibs/adblocking/adblocking';
 import { SettingsType } from '../../backgroundLibs/settings/settings';
 import { toast } from './../../backgroundLibs/log/log';
+import { YoutubeMusic } from '../views/youtubeMusic';
 import { SuggestionBar } from './suggestionBar';
 import { AppWindow } from '../views/appWindow';
 import { MediaAppType } from '../../app';
@@ -236,25 +236,6 @@ export namespace Commands {
 			const sizeAfter = await Fns.getCacheSize();
 			const mb = (sizeBefore - sizeAfter) / 1024 / 1024;
 			toast(`Cleared a total of ${mb}MiB`);
-		}),
-		'Set bass boost': fn(async (level: string) => {
-			const numLevel = parseFloat(level);
-			const youtubeView = await AppWindow.getActiveViewYoutubeView();
-			if (youtubeView) {
-				youtubeView.executeJavaScript(`(${(() => {
-					(<YoutubeMusicWindow>window).setBassBoost(numLevel);
-				}).toString()})()`, false)
-			}
-		}, {
-			name: 'level'
-		}),
-		'Disable bass boost': fn(async () => {
-			const youtubeView = await AppWindow.getActiveViewYoutubeView();
-			if (youtubeView) {
-				youtubeView.executeJavaScript(`(${(() => {
-					(<YoutubeMusicWindow>window).setBassBoost(0);
-				}).toString()})()`, false)
-			}
 		})
 	};
 }

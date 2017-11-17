@@ -146,10 +146,6 @@ export namespace YoutubeSearch {
 				return SearchResultsPage.getView();
 			}
 		}
-
-		export async function getYoutubeView(): Promise<Electron.WebviewTag> {
-			return Video.getView();
-		}
 	
 		export async function toggleVideoVisibility() {
 			const subsCont = $('#youtubeSearchCont');
