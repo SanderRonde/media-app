@@ -1,6 +1,6 @@
 import { KeyCombinations } from '../../backgroundLibs/shortcuts/shortcuts';
 import { MessageServer, MessageTypes } from '../../backgroundLibs/msg/msg';
-import { Partitions } from '../../backgroundLibs/adblocking/adblocking';
+import { Partitions, AdBlocking } from '../../backgroundLibs/adblocking/adblocking';
 import { SettingsType } from '../../backgroundLibs/settings/settings';
 import { toast } from './../../backgroundLibs/log/log';
 import { YoutubeMusic } from '../views/youtubeMusic';
@@ -236,6 +236,16 @@ export namespace Commands {
 			const sizeAfter = await Fns.getCacheSize();
 			const mb = (sizeBefore - sizeAfter) / 1024 / 1024;
 			toast(`Cleared a total of ${mb}MiB`);
+		}),
+		'Disable ad-blocking': fn(async () => {
+			runRenderer(() => {
+				AdBlocking.setStatus(false);
+			});
+		}),
+		'Enable ad-blocking': fn(async () => {
+			runRenderer(() => {
+				AdBlocking.setStatus(true);
+			});
 		})
 	};
 }

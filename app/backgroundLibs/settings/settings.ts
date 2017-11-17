@@ -18,7 +18,8 @@ export namespace Settings {
 	} = {
 		launchOnBoot: 'boolean',
 		keys: 'object',
-		autoUpdate: 'boolean'
+		autoUpdate: 'boolean',
+		blockAds: 'boolean'
 	};
 
 	export interface Settings {
@@ -27,6 +28,7 @@ export namespace Settings {
 			[key in keyof MessageTypes.KeyCommands]: (keys[keyof keys][]|keys[keyof keys])[]
 		};
 		autoUpdate: boolean;
+		blockAds: boolean;
 	}
 
 	namespace Listeners {
@@ -67,7 +69,8 @@ export namespace Settings {
 			launch: [['Shift', 'Alt', 'L']],
 			pause: ['MediaStop']
 		},
-		autoUpdate: true
+		autoUpdate: true,
+		blockAds: true
 	};
 
 	async function assertLoaded(): Promise<void> {

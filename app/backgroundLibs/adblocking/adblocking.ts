@@ -1,5 +1,6 @@
 import { session, Notification, app } from 'electron';
 import filterParser = require('abp-filter-parser');
+import { Settings } from './../settings/settings';
 import { toast, warn, error } from '../log/log';
 import { route } from '../routing/routing';
 import https = require('https');
@@ -27,6 +28,8 @@ const PARTITION_MAP: {
 
 export namespace AdBlocking {
 	export let done: boolean = false;
+	let _block: boolean = true;
+	let _settings: typeof Settings = null;
 	let initialization: Promise<void> = init();
 	const rules: Partial<filterParser.FilterData> = {};
 
@@ -68,17 +71,24 @@ export namespace AdBlocking {
 		session.fromPartition(`persist:${partition}`, {
 			cache: true
 		}).webRequest.onBeforeRequest(FILTER_ALL, async (details, callback) => {
-			const shouldBeBlocked = await shouldBlock(details, hostname);
+			const shouldBeBlocked = _block ? await shouldBlock(details, hostname) : false;
 			callback({
 				cancel: shouldBeBlocked
 			});
 		});
 	}
 
-	export function blockAds() {
+	export async function setStatus(block: boolean) {
+		_block = block;
+		await _settings.set('blockAds', block);
+	}
+
+	export async function blockAds(settings: typeof Settings) {
+		_settings = settings;
 		for (let key in PARTITION_MAP) {
 			blockForPartition(key as Partitions, PARTITION_MAP[key as keyof typeof PARTITION_MAP]);
 		}
+		_block = await settings.get('blockAds');
 	}
 
 	export async function addRule(rule: string) {

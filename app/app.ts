@@ -245,7 +245,7 @@ export namespace MediaApp {
 			log('Setting up listeners');
 			Comm.setupListeners();
 			log('Setting up adblocker');
-			AdBlocking.blockAds();
+			AdBlocking.blockAds(Settings);
 			log('Initializing updater');
 			Updater.init(Refs, Settings);
 			log('Starting remote server');
