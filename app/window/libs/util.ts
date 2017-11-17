@@ -434,6 +434,7 @@ export namespace Util {
 				} else {
 					setGain(1.0);
 				}	
+				currentVolume = volume;
 				player.setVolume(Math.min(volume, 100));
 
 				localStorage.setItem('yt-player-volume', JSON.stringify({
@@ -465,7 +466,7 @@ export namespace Util {
 				return volume;
 			}
 
-			let currentVolume: number = player.getVolume();
+			let currentVolume: number = parseInt(localStorage.getItem('volume'), 10) || player.getVolume();
 
 			//Code that has to be executed "inline"
 			function increaseVolume() {
