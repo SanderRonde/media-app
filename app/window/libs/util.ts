@@ -465,15 +465,17 @@ export namespace Util {
 				return volume;
 			}
 
+			let currentVolume: number = player.getVolume();
+
 			//Code that has to be executed "inline"
 			function increaseVolume() {
-				const oldVolume = player.getVolume();
+				const oldVolume = currentVolume;
 				const newVolume = oldVolume + getVolumeDelta(oldVolume);
 				setPlayerVolume(roundVolume(newVolume, true));
 			}
 
 			function lowerVolume() {
-				const oldVolume = player.getVolume();
+				const oldVolume = currentVolume;
 				const newVolume = Math.max(oldVolume - getVolumeDelta(oldVolume), 0);
 				setPlayerVolume(roundVolume(newVolume, false));
 			}
@@ -515,7 +517,7 @@ export namespace Util {
 			}
 
 			function showVolumeBar() {
-				const volume = player.getVolume();
+				const volume = currentVolume;
 				localStorage.setItem('volume', `${volume}`);
 				volumeBarNumber.innerHTML = `${volume}`;
 
