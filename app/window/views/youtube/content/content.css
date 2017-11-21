@@ -81,7 +81,7 @@ video {
     background-color: #F44336;
 	transform: scaleX(0.5);
     transform-origin: 0 0;
-	transition: transform 50ms ease-in;
+	transition: transform 50ms ease-in, background-color 50ms ease-in;
 	z-index: -1;
 	top: 0;
 }
