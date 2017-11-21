@@ -486,6 +486,9 @@ export namespace Util {
 
 			function getColorAtIndex(index: number): string {
 				//Loop from red -> orange -> yellow -> green -> blue -> purple -> red
+				if (index === -1) {
+					return 'transparent';
+				}
 				const colors = [
 					'#F44336',
 					'#f47c36',
@@ -502,13 +505,16 @@ export namespace Util {
 				background: string;
 				progress: number;
 			} {
-				const hundreds = Math.floor(volume / 100);
+				let hundreds = Math.floor(volume / 100);
 				if (hundreds === 0) {
 					return {
 						background: 'transparent',
 						foreground: '#F44336',
 						progress: volume / 100
 					}
+				}
+				if (volume % 100 === 0) {
+					hundreds -= 1;
 				}
 				return {
 					background: getColorAtIndex(hundreds - 1),
