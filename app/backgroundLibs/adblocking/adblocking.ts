@@ -1,4 +1,4 @@
-import { session, Notification, app } from 'electron';
+import { session, app } from 'electron';
 import filterParser = require('abp-filter-parser');
 import { Settings } from './../settings/settings';
 import { toast, warn, error } from '../log/log';
@@ -307,11 +307,7 @@ export namespace AdBlocking {
 					filterParser.parse(fileContents, rules);
 				});
 			} catch(e) {
-				const notification = new Notification({
-					title: 'No Adblocking',
-					body: 'Failed to find ad blocking list'
-				});
-				notification.show();
+				toast('Failed to find ad blocking list');
 			}
 		});
 	}
