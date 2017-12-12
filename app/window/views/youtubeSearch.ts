@@ -386,7 +386,8 @@ export namespace YoutubeSearch {
 		}
 
 		export async function navTo(url: string) {
-			(await searchResultsPromise).loadURL(url);
+			const res = (await searchResultsPromise);
+			res.loadURL(url);
 		}
 
 		export function free() {

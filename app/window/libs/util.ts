@@ -382,8 +382,9 @@ export namespace Util {
 					});
 					hasListener = true;
 				}
-
-				resolve(view);
+			});
+			view.addEventListener('dom-ready', () => {
+				resolve(view);				
 			});
 
 			view.setAttribute('partition', `persist:${partition}`);
