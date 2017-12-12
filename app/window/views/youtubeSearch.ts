@@ -90,7 +90,7 @@ export namespace YoutubeSearch {
 		function orderElements(first: HTMLElement, second: HTMLElement) {
 			if (first.nextSibling === second) {
 				return;
-			} else {
+			} else if (second.nextElementSibling === first) {
 				var temp = document.createElement("div");
 				first.parentNode.insertBefore(temp, first);
 				second.parentNode.insertBefore(first, second);
@@ -100,11 +100,11 @@ export namespace YoutubeSearch {
 		}
 
 		async function assertViewOrder() {
-			const searchBarEl = SearchBar.getSearchBar();
+			const searchBarContainer = $('#searchBarCenterer');
 			const searchResultsView = await SearchResultsPage.getView();
 			const videoView = await Video.getView();
 
-			orderElements(searchBarEl, searchResultsView);
+			orderElements(searchBarContainer, searchResultsView);
 			orderElements(searchResultsView, videoView);
 		}
 
@@ -334,6 +334,7 @@ export namespace YoutubeSearch {
 	export namespace SearchResultsPage {
 		let searchResultsView: Electron.WebviewTag = null;
 		let searchResultsPromise: Promise<Electron.WebviewTag> = null;
+		let _firstSearch: boolean = true;
 
 		export async function getView(): Promise<Electron.WebviewTag> {
 			return new Promise<Electron.WebviewTag>((resolve) => {
@@ -386,6 +387,10 @@ export namespace YoutubeSearch {
 		}
 
 		export async function navTo(url: string) {
+			if (_firstSearch) {
+				await Util.wait(1500);	
+				_firstSearch = false;
+			}
 			const res = (await searchResultsPromise);
 			res.loadURL(url);
 		}
