@@ -14,7 +14,8 @@ import url = require('url');
 app.commandLine.appendSwitch('widevine-cdm-path', path.join(__dirname, 'widevine', 'widevinecdmadapter.dll'));
 app.commandLine.appendSwitch('widevine-cdm-version', '1.4.8.984');
 
-const logger = require('logger').createLogger(path.join(app.getPath('appData'), 'media-app', 'log.log'));
+const appData = app.getPath('appData');
+const logger = require('logger').createLogger(path.join(appData, 'media-app', 'log.log'));
 
 export namespace MediaApp {
 	let resolveBrowserWindow: (win: Electron.BrowserWindow) => void = null;
@@ -245,7 +246,7 @@ export namespace MediaApp {
 			log('Setting up listeners');
 			Comm.setupListeners();
 			log('Setting up adblocker');
-			AdBlocking.blockAds(Settings);
+			AdBlocking.blockAds(Settings, appData);
 			log('Initializing updater');
 			Updater.init(Refs, Settings);
 			log('Starting remote server');
