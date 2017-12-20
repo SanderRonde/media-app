@@ -514,9 +514,6 @@ export namespace Util {
 						progress: volume / 100
 					}
 				}
-				if (volume % 100 === 0) {
-					hundreds -= 1;
-				}
 				return {
 					background: getColorAtIndex(hundreds - 1),
 					foreground: getColorAtIndex(hundreds),
