@@ -106,6 +106,12 @@ async function main() {
 		}	
 	}
 
+	const [ major, minor, patch ] = VERSION.split('.');
+	if (typeof major !== 'number' || typeof minor !== 'number' || typeof patch !== 'number') {
+		console.log('Not a release');
+		return;
+	}
+
 	const fullChangelog: {
 		[key: string]: string[]
 	} = JSON.parse(fs.readFileSync(path.join(__dirname, './changelog.json'), 'utf8'));
@@ -131,11 +137,9 @@ async function main() {
 	}
 }
 
-try{
-	main().then(() => {
-		process.exit(0);
-	});
-} catch(e) {
-	console.log('Something went wrong creating a tag (probably with the API)', e);
+main().then(() => {
+	process.exit(0);
+}, (err) => {
+	console.log('Something went wrong creating a tag (probably with the API)', err);
 	process.exit(1);
-}
+});
