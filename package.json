@@ -105,6 +105,6 @@
     "grunt-contrib-copy": "^1.0.0",
     "grunt-exec": "^3.0.0",
     "semver": "^5.4.1",
-    "typescript": "2.6.1"
+    "typescript": "^2.7.1"
   }
 }
