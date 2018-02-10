@@ -191,6 +191,7 @@ export namespace MessageTypes {
 	export type IPCMessage<C extends MessageTypes.ChannelName = MessageTypes.ChannelName, M extends MessageTypes.ChannelMessageName<C> = MessageTypes.ChannelMessageName<C>> = {
 		channel: C;
 		type: M;
+		//@ts-ignore
 		data: ChannelMessage<C, M>['arg'];
 		identifier: number;
 		target: 'window'|'renderer';
@@ -205,12 +206,15 @@ export namespace MessageTypes {
 	export type MessageData = ChannelMessage<ChannelName, ChannelMessageName<ChannelName>>['arg'];
 
 	export type AllMessageListener<C extends ChannelName = ChannelName, M extends MessageTypes.ChannelMessageName<C> = MessageTypes.ChannelMessageName<C>> = 
+	//@ts-ignore
 		(type: M, data: MessageTypes.ChannelMessage<C, M>['arg']) => Promise<MessageTypes.ChannelMessage<C, M>['res']>|MessageTypes.ChannelMessage<C, M>['res']|symbol;
 	export type MessageListener<C extends ChannelName = ChannelName, M extends MessageTypes.ChannelMessageName<C> = MessageTypes.ChannelMessageName<C>> = 
+	//@ts-ignore
 		(data: MessageTypes.ChannelMessage<C, M>['arg']) => Promise<MessageTypes.ChannelMessage<C, M>['res']>|MessageTypes.ChannelMessage<C, M>['res']|symbol;
 
 	export type HandlerData<C extends ChannelName, M extends MessageTypes.ChannelMessageName<C> = MessageTypes.ChannelMessageName<C>> = {
 		type: M;
+		//@ts-ignore
 		data: MessageTypes.ChannelMessage<C, M>['arg'];
 	};
 }
@@ -518,6 +522,7 @@ class Channel<C extends MessageTypes.ChannelName> extends ListenerHandler {
 	}
 
 	private _genIpcMessage<M extends MessageTypes.ChannelMessageName<C>>(type: M, 
+		//@ts-ignore
 		data: MessageTypes.ChannelMessage<C, M>['arg'], identifier: number): MessageTypes.IPCMessage<C, M> {
 			return {
 				channel: this.channel,
@@ -530,6 +535,7 @@ class Channel<C extends MessageTypes.ChannelName> extends ListenerHandler {
 		}
 
 	public send<M extends MessageTypes.ChannelMessageName<C>>(type: M, 
+		//@ts-ignore
 		data: MessageTypes.ChannelMessage<C, M>['arg']): Promise<MessageTypes.ChannelMessage<C, M>["res"]> {
 			return new Promise(async (resolve) => {
 				const msg = this._genIpcMessage(type, data, ReturnValues.createIdentifier((data) => {
@@ -540,6 +546,7 @@ class Channel<C extends MessageTypes.ChannelName> extends ListenerHandler {
 		}
 
 	public on<M extends MessageTypes.ChannelMessageName<C>>(message: M, 
+		//@ts-ignore
 		handler: (data: MessageTypes.ChannelMessage<C, M>['arg']) => MessageTypes.ChannelMessage<C, M>['res']) {
 			this._listeners.push({
 				listenerType: message,
@@ -660,6 +667,7 @@ export class MessageServer extends ListenerHandler {
 
 export function embeddableSend<C extends MessageTypes.ChannelName, 
 	M extends MessageTypes.ChannelMessageName<C>>(channel: C, type: M, 
+		//@ts-ignore
 	data: MessageTypes.ChannelMessage<C, M>['arg']) {
 		const ipcRenderer = require('electron').ipcRenderer;
 		ipcRenderer.send('main', {
