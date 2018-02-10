@@ -382,8 +382,9 @@ export namespace Util {
 					});
 					hasListener = true;
 				}
-
-				resolve(view);
+			});
+			view.addEventListener('dom-ready', () => {
+				resolve(view);				
 			});
 
 			view.setAttribute('partition', `persist:${partition}`);
@@ -486,6 +487,9 @@ export namespace Util {
 
 			function getColorAtIndex(index: number): string {
 				//Loop from red -> orange -> yellow -> green -> blue -> purple -> red
+				if (index === -1) {
+					return 'transparent';
+				}
 				const colors = [
 					'#F44336',
 					'#f47c36',
@@ -502,7 +506,7 @@ export namespace Util {
 				background: string;
 				progress: number;
 			} {
-				const hundreds = Math.floor(volume / 100);
+				let hundreds = Math.floor(volume / 100);
 				if (hundreds === 0) {
 					return {
 						background: 'transparent',

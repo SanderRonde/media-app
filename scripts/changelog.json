@@ -112,5 +112,11 @@
 	],
 	"3.0.26": [
 		"Updated electron-builder"
+	],
+	"3.0.27": [
+		"Fixed bugs related to adblocking and the youtubeSearch view"
+	],
+	"3.0.28": [
+		"Volume scrollbar background should no longer become transparent at 100%"
 	]
 }

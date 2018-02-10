@@ -1,6 +1,6 @@
 {
   "name": "media-app",
-  "version": "3.0.26",
+  "version": "3.0.28",
   "description": "Media App",
   "main": "./out/app.js",
   "scripts": {
@@ -82,8 +82,8 @@
     "abp-filter-parser": "^0.2.0",
     "auto-launch": "^5.0.1",
     "electron-context-menu": "^0.9.1",
-    "electron-updater": "^2.8.9",
-    "firebase": "^4.2.0",
+    "electron-updater": "2.18.2",
+    "firebase": "4.8.0",
     "fs": "0.0.1-security",
     "jade": "^1.11.0",
     "logger": "^0.0.1",
@@ -96,8 +96,8 @@
   "devDependencies": {
     "@types/jade": "^0.0.30",
     "@types/md5": "^2.1.32",
-    "electron": "1.7.9",
-    "electron-builder": "19.31.1",
+    "electron": "^1.7.11",
+    "electron-builder": "^19.49.0",
     "electron-packager": "^8.2.0",
     "electron-prebuilt": "^1.4.5",
     "github": "^11.0.0",

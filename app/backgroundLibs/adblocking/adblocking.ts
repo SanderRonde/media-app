@@ -1,4 +1,4 @@
-import { session, Notification, app } from 'electron';
+import { session } from 'electron';
 import filterParser = require('abp-filter-parser');
 import { Settings } from './../settings/settings';
 import { toast, warn, error } from '../log/log';
@@ -30,6 +30,12 @@ export namespace AdBlocking {
 	export let done: boolean = false;
 	let _block: boolean = true;
 	let _settings: typeof Settings = null;
+	let __resolveAppData: (appData: string) => void = null;
+	let _appData: Promise<string> = new Promise<string>((resolve) => {
+		__resolveAppData = (appData) => {
+			resolve(appData);
+		}
+	});
 	let initialization: Promise<void> = init();
 	const rules: Partial<filterParser.FilterData> = {};
 
@@ -83,8 +89,10 @@ export namespace AdBlocking {
 		await _settings.set('blockAds', block);
 	}
 
-	export async function blockAds(settings: typeof Settings) {
+	export async function blockAds(settings: typeof Settings, appData: string) {
 		_settings = settings;
+		__resolveAppData(appData);
+		(appData);
 		for (let key in PARTITION_MAP) {
 			blockForPartition(key as Partitions, PARTITION_MAP[key as keyof typeof PARTITION_MAP]);
 		}
@@ -97,7 +105,7 @@ export namespace AdBlocking {
 	}
 
 	async function createDefaultDirectory() {
-		const listsDir = path.join(app.getPath('appData'), 'media-app', 'adLists/');
+		const listsDir = path.join(await _appData, 'media-app', 'adLists/');
 		const defaultListsDir = await route('./backgroundLibs/adblocking/defaultLists/');
 
 		await new Promise((resolve) => {
@@ -131,7 +139,7 @@ export namespace AdBlocking {
 	}
 
 	async function ensureFilesExist() {
-		const listsDir = path.join(app.getPath('appData'), 'media-app', 'adLists/');
+		const listsDir = path.join(await _appData, 'media-app', 'adLists/');
 		await new Promise((resolve) => {
 			fs.stat(listsDir, async (err, stats) => {
 				if (err) {
@@ -248,7 +256,7 @@ export namespace AdBlocking {
 	}
 
 	async function getFiles(): Promise<string[]> {
-		const listsDir = path.join(app.getPath('appData'), 'media-app', 'adLists/');
+		const listsDir = path.join(await _appData, 'media-app', 'adLists/');
 		return new Promise<string[]>((resolve) => {
 			fs.readdir(listsDir, (err, files) => {
 				if (err) {
@@ -261,7 +269,7 @@ export namespace AdBlocking {
 	}
 
 	async function updateFiles() {
-		const listsDir = path.join(app.getPath('appData'), 'media-app', 'adLists/');
+		const listsDir = path.join(await _appData, 'media-app', 'adLists/');
 		const files = await getFiles();
 		let updatedAll: boolean = true;
 		await Promise.all(files.map((file) => {
@@ -284,8 +292,8 @@ export namespace AdBlocking {
 	async function readFiles(): Promise<string[]> {
 		const files = await getFiles();
 		return Promise.all(files.map((file) => {
-			return new Promise<string>((resolve) => {
-				const filePath = path.join(app.getPath('appData'), 'media-app', 'adLists/', file);
+			return new Promise<string>(async (resolve) => {
+				const filePath = path.join(await _appData, 'media-app', 'adLists/', file);
 				fs.readFile(filePath, 'utf8', (err, data) => {
 					if (err) {
 						throw err;
@@ -307,11 +315,8 @@ export namespace AdBlocking {
 					filterParser.parse(fileContents, rules);
 				});
 			} catch(e) {
-				const notification = new Notification({
-					title: 'No Adblocking',
-					body: 'Failed to find ad blocking list'
-				});
-				notification.show();
+				warn(e);
+				toast('Failed to find ad blocking list');
 			}
 		});
 	}
