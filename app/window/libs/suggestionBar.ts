@@ -53,9 +53,6 @@ export class SuggestionBar {
 		}
 		const args: string[] = [];
 		for (let argDescriptor of argDescriptors) {
-			if (typeof argDescriptor === 'function') {
-				argDescriptor();
-			}
 			let { enums, name } = argDescriptor;
 			if (typeof name === 'function') {
 				name = await name(...args);
