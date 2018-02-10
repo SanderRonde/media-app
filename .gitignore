@@ -209,3 +209,5 @@ dist/
 out/
 
 scripts/**/*.js
+
+.vscode
