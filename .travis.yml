@@ -22,13 +22,13 @@ before_install:
 
 install:
 - npm install --ignore-engines
-- npm install typescript@latest electron-builder grunt -g
+- npm install typescript@latest electron-builder@latest grunt -g
 
 script:
   - tsc
   - (node scripts/tag.js && node scripts/createRelease.js) || echo "Not tagging"
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tsc ; grunt move && electron-builder -p "onTagOrDraft" -l; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tsc ; grunt move && electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw || electron-builder -p "onTagOrDraft" -mw; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tsc ; grunt move && travis_wait electron-builder -p "onTagOrDraft" -l; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tsc ; grunt move && travis_wait electron-builder -p "onTagOrDraft" -mw || travis_wait electron-builder -p "onTagOrDraft" -mw || travis_wait electron-builder -p "onTagOrDraft" -mw; fi
   - node scripts/publish.js
 
 branches:
