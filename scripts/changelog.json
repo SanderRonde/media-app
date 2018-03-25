@@ -118,5 +118,8 @@
 	],
 	"3.0.28": [
 		"Volume scrollbar background should no longer become transparent at 100%"
+	],
+	"3.0.29": [
+		"Simple rebuild with new dependencies etc"
 	]
 }
