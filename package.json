@@ -4,7 +4,7 @@
   "description": "Media App",
   "main": "./out/app.js",
   "scripts": {
-    "release": "tsc && grunt move && electron-builder -p \"onTagOrRelease\"",
+    "release": "tsc && grunt move && electron-builder -p \"onTagOrDraft\"",
     "build": "tsc && grunt move && electron-builder"
   },
   "build": {
