@@ -50,7 +50,7 @@ declare var window: MessageableWindow;
 			isTrusted: e.isTrusted,
 			key: e.key,
 			keyCode: e.keyCode,
-			locale: e.locale,
+			locale: '',
 			location: e.location,
 			metaKey: e.metaKey,
 			path: (e as any).path.map((element: HTMLElement) => {
