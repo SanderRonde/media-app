@@ -22,7 +22,7 @@ before_install:
 
 install:
 - npm install --ignore-engines
-- npm install typescript@latest electron-builder@latest grunt -g
+- npm install typescript@2.8.3 electron-builder@20.6.2 grunt -g
 
 script:
   - tsc
