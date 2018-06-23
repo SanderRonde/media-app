@@ -5,7 +5,7 @@ if (VERSION.startsWith('v')) {
 const fs = require('fs');
 const path = require('path');
 
-import GithubAPI = require('github')
+import GithubAPI = require('@octokit/rest')
 
 interface User {
 	login: string;
