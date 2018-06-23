@@ -80,8 +80,7 @@ interface Release {
 const gh = new GithubAPI({
 	headers: {
 		'User-Agent': 'SanderRonde'
-	},
-	Promise: Promise
+	}
 });
 
 gh.authenticate({
@@ -91,7 +90,7 @@ gh.authenticate({
 
 async function main() {
 	//Check if it already exists
-	const allReleases: GithubMeta<Release[]> = await gh.repos.getReleases({
+	const { data: allReleases}: {data: GithubMeta<Release[]>} = await gh.repos.getReleases({
 		owner: 'SanderRonde',
 		page: 0,
 		per_page: 20,

@@ -29,8 +29,7 @@ async function main() {
 	const gh = new GithubAPI({
 		headers: {
 			'User-Agent': 'SanderRonde'
-		},
-		Promise: Promise
+		}
 	});
 
 	gh.authenticate({
@@ -38,7 +37,7 @@ async function main() {
 		token: process.env.GH_ACCESS_TOKEN
 	});
 
-	const tags: Tag[] = await gh.gitdata.getTags({
+	const { data: tags }: {data: Tag[]} = await gh.gitdata.getTags({
 		owner: 'SanderRonde',
 		repo: 'media-app'
 	});
@@ -62,11 +61,11 @@ async function main() {
 		message: VERSION,
 		object: process.env.TRAVIS_COMMIT,
 		type: 'commit',
-		tagger: JSON.stringify({
+		tagger: {
 			name: 'Sander Ronde',
 			email: 'awsdfgvhbjn@gmail.com',
 			date: new Date().toISOString()
-		})
+		}
 	});
 
 	await gh.gitdata.createReference({

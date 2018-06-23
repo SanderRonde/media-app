@@ -80,8 +80,7 @@ interface Release {
 const gh = new GithubAPI({
 	headers: {
 		'User-Agent': 'SanderRonde'
-	},
-	Promise: Promise
+	}
 });
 
 gh.authenticate({
@@ -96,7 +95,7 @@ async function main() {
 		return;
 	}	
 	if (process.env.TRAVIS_OS_NAME === 'osx') {
-		const allReleases: GithubMeta<Release[]> = await gh.repos.getReleases({
+		const { data: allReleases}: {data: GithubMeta<Release[]>} = await gh.repos.getReleases({
 			owner: 'SanderRonde',
 			repo: 'media-app',
 			per_page: 20,
@@ -113,6 +112,7 @@ async function main() {
 			owner: 'SanderRonde',
 			repo: 'media-app',
 			id: latestRelease.id + '',
+			release_id: latestRelease.id + '',
 			tag_name: `v${VERSION}`,
 			draft: false
 		});
