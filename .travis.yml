@@ -21,7 +21,7 @@ before_install:
   - export PATH="$HOME/.yarn/bin:$PATH"
 
 install:
-- yarn install --ignore-engines
+- npm install --ignore-engines
 - npm install -g typescript@2.7.1 electron-builder@20.6.2 grunt
 
 script:
