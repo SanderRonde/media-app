@@ -1,5 +1,5 @@
 const semver = require('semver');
-import GithubAPI = require('@octokit/rest')
+import GithubAPI = require('github')
 
 const commitMessage = process.env.TRAVIS_COMMIT_MESSAGE || '';
 let VERSION = process.env.TRAVIS_COMMIT_MESSAGE;
