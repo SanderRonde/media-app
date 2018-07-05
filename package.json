@@ -5,7 +5,9 @@
   "main": "./out/app.js",
   "scripts": {
     "release": "tsc && grunt move && electron-builder -p \"onTagOrDraft\"",
-    "build": "tsc && grunt move && electron-builder"
+    "build": "tsc && grunt move && electron-builder",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "build": {
     "appId": "com.sanderronde.mediaapp",
@@ -92,7 +94,8 @@
     "path": "^0.12.7",
     "sw-toolbox": "^3.6.0",
     "url": "^0.11.0",
-    "websocket": "^1.0.24"
+    "websocket": "^1.0.24",
+    "snyk": "^1.88.1"
   },
   "devDependencies": {
     "@types/jade": "^0.0.30",
@@ -107,5 +110,6 @@
     "grunt-exec": "^3.0.0",
     "semver": "^5.4.1",
     "typescript": "2.7.1"
-  }
+  },
+  "snyk": true
 }
