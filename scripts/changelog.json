@@ -121,5 +121,8 @@
 	],
 	"3.0.29": [
 		"Simple rebuild with new dependencies etc"
+	],
+	"3.0.30": [
+		"Adapt to new youtube layout"
 	]
 }
