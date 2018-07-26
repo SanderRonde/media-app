@@ -31,7 +31,7 @@ html {
 	display: none;
 }
 
-video, #player {
+video, #player, #player-container-outer {
 	min-width: 100vw!important;
 	min-height: 100vh!important;
 	left: 0!important;
