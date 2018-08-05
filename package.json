@@ -97,6 +97,7 @@
   "devDependencies": {
     "@types/jade": "^0.0.30",
     "@types/md5": "^2.1.32",
+    "@types/semver": "5.5.0",
     "electron": "^1.8.4",
     "electron-builder": "^20.6.2",
     "electron-packager": "^11.2.0",
