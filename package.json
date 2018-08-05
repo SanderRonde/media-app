@@ -100,7 +100,6 @@
     "electron": "^1.8.4",
     "electron-builder": "^20.6.2",
     "electron-packager": "^11.2.0",
-    "electron-prebuilt": "^1.4.13",
     "github": "^11.0.0",
     "grunt": "^1.0.1",
     "grunt-contrib-copy": "^1.0.0",
